@@ -19,6 +19,8 @@ public:
         return m_db;
     }
 
+    void highlight(int x, int y);
+
 private:
     unsigned int m_width;
     unsigned int m_height;
@@ -29,6 +31,9 @@ private:
     vl::ref<vl::ResourceDatabase> m_db;
 
     unsigned char getCorner(int x, int y, int i);
+
+    int m_highlight_x = -1;
+    int m_highlight_y = -1;
 };
 
 

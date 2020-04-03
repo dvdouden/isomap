@@ -375,6 +375,11 @@ void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount
                 g = 128;
                 b = 0;
             }
+            if ( x == m_highlight_x && y == m_highlight_y ) {
+                r = 255;
+                g = 0;
+                b = 255;
+            }
             c[0] = vl::ubvec4( r, g, b, 255 );
             c[1] = vl::ubvec4( r, g, b, 255 );
             c[2] = vl::ubvec4( r, g, b, 255 );
@@ -623,5 +628,10 @@ unsigned char game_map::safe_height( unsigned int x, unsigned int y ) const {
     if ( x < 0 ) x = 0;
     if ( x >= m_width ) x = m_width - 1;
     return m_heightmap[ y * m_width + x ];
+}
+
+void game_map::highlight(int x, int y) {
+    m_highlight_x = x;
+    m_highlight_y = y;
 }
 

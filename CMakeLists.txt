@@ -22,10 +22,9 @@ else()
     include_directories(${GLUT_INCLUDE_DIR})
 endif()
 
-add_executable(TestProject win32_main.cpp game_map.cpp game_map.h util/math.h util/math.cpp)
+add_executable(TestProject win32_main.cpp game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h)
 
 if ( MINGW )
-    message( "hello: ${VL_LIBRARIES}" )
     target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )
 else()
     target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} -static )
