@@ -67,30 +67,13 @@ void MainWindow::updateProjection() {
 }
 
 void MainWindow::updateCamera() {
-    vl::real distance = 100.0;
-    vl::real eye_x, eye_y;
-    switch ( m_orientation ) {
-        default:
-        case 0:
-            eye_x = distance;
-            eye_y = -distance;
-            break;
-        case 1:
-            eye_x = distance;
-            eye_y = distance;
-            break;
-        case 2:
-            eye_x = -distance;
-            eye_y = distance;
-            break;
-        case 3:
-            eye_x = -distance;
-            eye_y = -distance;
-            break;
-    }
+    vl::real distance = MAP_WIDTH;
+    
+    vl::real eye_x = cos( (m_angle - 45.0) * vl::dDEG_TO_RAD ) * distance;
+    vl::real eye_y = sin( (m_angle - 45.0) * vl::dDEG_TO_RAD ) * distance;
 
     /* define the camera position and orientation */
-    vl::real ratio = ::sqrt( 2.0 / 3.0 );
+    vl::real ratio = ::sqrt( 1.0 / 3.0 );
 
     // the center of any tile is at x.5, y.5
     vl::real x = m_x + m_x_off;
@@ -106,6 +89,71 @@ void MainWindow::updateCamera() {
 
 // called every frame
 void MainWindow::updateScene() {
+
+    switch ( m_orientation ) {
+        default:
+        case 0:
+            if ( m_angle != 0 ) {
+                if (m_angle > 180) {
+                    m_angle++;
+                } else {
+                    m_angle--;
+                }
+                if ( m_angle < 0 ) {
+                    m_angle += 360;
+                } else if ( m_angle >= 360 ) {
+                    m_angle -= 360;
+                }
+                updateCamera();
+            }
+            break;
+        case 1:
+            if ( m_angle != 90 ) {
+                if (m_angle > 270 || m_angle < 90) {
+                    m_angle++;
+                } else {
+                    m_angle--;
+                }
+                if ( m_angle < 0 ) {
+                    m_angle += 360;
+                } else if ( m_angle >= 360 ) {
+                    m_angle -= 360;
+                }
+                updateCamera();
+            }
+            break;
+        case 2:
+            if ( m_angle != 180 ) {
+                if (m_angle < 180 ) {
+                    m_angle++;
+                } else {
+                    m_angle--;
+                }
+                if ( m_angle < 0 ) {
+                    m_angle += 360;
+                } else if ( m_angle >= 360 ) {
+                    m_angle -= 360;
+                }
+                updateCamera();
+            }
+            break;
+        case 3:
+            if ( m_angle != 270 ) {
+                if (m_angle < 90 || m_angle > 270 ) {
+                    m_angle--;
+                } else {
+                    m_angle++;
+                }
+                if ( m_angle < 0 ) {
+                    m_angle += 360;
+                } else if ( m_angle >= 360 ) {
+                    m_angle -= 360;
+                }
+                updateCamera();
+            }
+            break;
+    }
+
     static int seed = 0;
     world->generate( 5, (seed) / 256, 128 );
 

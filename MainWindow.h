@@ -54,6 +54,8 @@ protected:
     vl::real m_x_off = 0.5;
     vl::real m_y_off = 0.5;
 
+    int m_angle = 45;
+
 };
 
 
