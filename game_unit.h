@@ -7,31 +7,38 @@
 #include <vlGraphics/Geometry.hpp>
 #include <vlGraphics/RenderingAbstract.hpp>
 
-// forward declarations
-class game_map;
+#include "types.h"
 
-class game_unit {
-public:
-    game_unit( vl::RenderingAbstract* rendering, game_map* world );
+namespace isomap {
 
-    void setPosition( int x, int y, int z );
-    void moveTo( int x, int y );
-    void update();
+    class game_unit {
+    public:
+        game_unit(vl::RenderingAbstract *rendering, game_map *world);
 
-private:
-    int m_x = 0;
-    int m_y = 0;
-    int m_z = 0;
+        void setPosition(int x, int y, int z);
 
-    int m_targetX = 0;
-    int m_targetY = 0;
+        void moveTo(int x, int y);
 
-    vl::ref<vl::Geometry> m_geom;
-    vl::ref<vl::Transform> m_transform;
-    vl::ref<vl::Effect> m_effect;
+        void update();
 
-    game_map* m_world;
-};
+    private:
+        real m_x = 0;
+        real m_y = 0;
+        real m_z = 0;
 
+        real m_orientation = 0;
+
+        int m_targetX = 0;
+        int m_targetY = 0;
+        int m_targetOrientation = 0;
+
+        vl::ref<vl::Geometry> m_geom;
+        vl::ref<vl::Transform> m_transform;
+        vl::ref<vl::Effect> m_effect;
+
+        game_map *m_world;
+    };
+
+}
 
 #endif //TESTPROJECT_GAME_UNIT_H

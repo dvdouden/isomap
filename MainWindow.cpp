@@ -1,11 +1,13 @@
 #include "MainWindow.h"
 
+#include "game_map.h"
+#include "game_unit.h"
 
 
 const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
 
 void MainWindow::initEvent() {
-    m_world = new game_map( m_width, m_height );
+    m_world = new isomap::game_map( m_width, m_height );
     m_zoom = 6;
     m_x = 0;
     m_y = 0;
@@ -13,7 +15,7 @@ void MainWindow::initEvent() {
 
     sceneManager()->setCullingEnabled( false );
 
-    m_unit = new game_unit( rendering(), m_world );
+    m_unit = new isomap::game_unit( rendering(), m_world );
 }
 
 void dump(const vl::mat4 &m) {
