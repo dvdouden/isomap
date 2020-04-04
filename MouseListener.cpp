@@ -35,10 +35,32 @@ void MouseListener::mouseMoveEvent(int x, int y) {
     switch ( m_mode ) {
         case Mode_rotate:
             if ( x - m_x > 10 ) {
-                m_window->rotateRight();
+                if ( y > (mCamera->viewport()->height() / 2) ) {
+                    m_window->rotateRight();
+                } else {
+                    m_window->rotateLeft();
+                }
                 m_mode = Mode_none;
             } else if ( m_x - x > 10 ) {
-                m_window->rotateLeft();
+                if ( y > (mCamera->viewport()->height() / 2) ) {
+                    m_window->rotateLeft();
+                } else {
+                    m_window->rotateRight();
+                }
+                m_mode = Mode_none;
+            } else if ( m_y - y > 10 ) {
+                if ( x > (mCamera->viewport()->width() / 2) ) {
+                    m_window->rotateRight();
+                } else {
+                    m_window->rotateLeft();
+                }
+                m_mode = Mode_none;
+            } else if ( y - m_y > 10 ) {
+                if ( x > (mCamera->viewport()->width() / 2) ) {
+                    m_window->rotateLeft();
+                } else {
+                    m_window->rotateRight();
+                }
                 m_mode = Mode_none;
             }
             break;

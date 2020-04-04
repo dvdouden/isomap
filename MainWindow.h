@@ -54,7 +54,10 @@ protected:
     vl::real m_x_off = 0.5;
     vl::real m_y_off = 0.5;
 
-    int m_angle = 45;
+    int m_angle = 0;
+    unsigned char m_smooth = 128;
+    int m_width = 128;
+    int m_height = 128;
 
 };
 

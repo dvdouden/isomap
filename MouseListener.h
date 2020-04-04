@@ -45,7 +45,6 @@ public:
     void visibilityEvent(bool) override {}
 
 private:
-    vl::ref<vl::Camera> m_camera;
     MainWindow* m_window;
 
     enum Mode {

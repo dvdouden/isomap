@@ -21,6 +21,8 @@ public:
 
     void highlight(int x, int y);
 
+    void setSize(unsigned int width, unsigned int height);
+
 private:
     unsigned int m_width;
     unsigned int m_height;

@@ -3,6 +3,7 @@
 #include <vlGraphics/DrawArrays.hpp>
 #include <vlGraphics/Effect.hpp>
 #include <vlGraphics/Geometry.hpp>
+#include <iostream>
 
 
 #include "game_map.h"
@@ -176,6 +177,7 @@ void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount
 
     delete[] height_map;
     delete[] smooth_map;
+
 
 
     // smooth out the map, get rid of peaks and holes
@@ -633,5 +635,17 @@ unsigned char game_map::safe_height( unsigned int x, unsigned int y ) const {
 void game_map::highlight(int x, int y) {
     m_highlight_x = x;
     m_highlight_y = y;
+}
+
+void game_map::setSize(unsigned int width, unsigned int height) {
+    if ( width * height > m_width * m_height ) {
+        // don't bother resizing the buffers when the new buffers would be smaller...
+        delete[] m_heightmap;
+        delete[] m_corners;
+        m_heightmap = new unsigned char[ width * height ];
+        m_corners = new unsigned char[ width * height * 4];
+    }
+    m_width = width;
+    m_height = height;
 }
 

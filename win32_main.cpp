@@ -53,6 +53,7 @@ int APIENTRY WinMain(HINSTANCE /*hCurrentInst*/, HINSTANCE /*hPreviousInst*/, LP
     vl::ref<vl::Applet> applet = w;
     applet->initialize();
     applet->setTrackball( new MouseListener( w ) );
+    applet->trackball()->setCamera( applet->rendering()->as<vl::Rendering>()->camera() );
 
     /* create a native Win32 window */
     vl::ref<vlWin32::Win32Window> win32_window = new vlWin32::Win32Window;

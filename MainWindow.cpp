@@ -1,13 +1,11 @@
 #include "MainWindow.h"
 
 
-#define MAP_WIDTH 128
-#define MAP_HEIGHT 128
 
 const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
 
 void MainWindow::initEvent() {
-    world = new game_map( MAP_WIDTH, MAP_HEIGHT );
+    world = new game_map( m_width, m_height );
     m_zoom = 6;
     m_x = 0;
     m_y = 0;
@@ -31,19 +29,40 @@ void MainWindow::resizeEvent(int w, int h) {
 void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
     switch( key ) {
         case vl::Key_Left:
-            left();
+            m_width /= 2;
+            if ( m_width < 64 ) {
+                m_width = 64;
+            }
             break;
         case vl::Key_Right:
-            right();
+            m_width *= 2;
+            if ( m_width > 4096 ) {
+                m_width = 4096;
+            }
             break;
 
         case vl::Key_Up:
-            up();
+            m_height *= 2;
+            if ( m_height > 4096 ) {
+                m_height = 4096;
+            }
             break;
 
         case vl::Key_Down:
-            down();
+            m_height /= 2;
+            if ( m_height < 64 ) {
+                m_height = 64;
+            }
             break;
+
+        case vl::Key_PageUp:
+            m_smooth += 4;
+            break;
+
+        case vl::Key_PageDown:
+            m_smooth -= 4;
+            break;
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -67,8 +86,8 @@ void MainWindow::updateProjection() {
 }
 
 void MainWindow::updateCamera() {
-    vl::real distance = MAP_WIDTH;
-    
+    vl::real distance = m_width > m_height ? m_width : m_height;
+
     vl::real eye_x = cos( (m_angle - 45.0) * vl::dDEG_TO_RAD ) * distance;
     vl::real eye_y = sin( (m_angle - 45.0) * vl::dDEG_TO_RAD ) * distance;
 
@@ -155,7 +174,8 @@ void MainWindow::updateScene() {
     }
 
     static int seed = 0;
-    world->generate( 5, (seed) / 256, 128 );
+    world->setSize( m_width, m_height );
+    world->generate( 5, (seed) / 256, m_smooth );
 
     sceneManager()->tree()->actors()->clear();
 
@@ -199,13 +219,13 @@ void MainWindow::zoomOut() {
 }
 
 void MainWindow::rotateLeft() {
-    --m_orientation;
+    ++m_orientation;
     m_orientation %= 4;
     updateCamera();
 }
 
 void MainWindow::rotateRight() {
-    ++m_orientation;
+    --m_orientation;
     m_orientation %= 4;
     updateCamera();
 }
@@ -303,8 +323,8 @@ void MainWindow::focusTileAt(int tile_x, int tile_y, int screen_x, int screen_y)
     m_x -= tx - tile_x;
     m_y -= ty - tile_y;
     if ( m_x < 0 ) m_x = 0;
-    if ( m_x >= MAP_WIDTH ) m_x = MAP_WIDTH - 1;
+    if ( m_x >= m_width ) m_x = m_width - 1;
     if ( m_y < 0 ) m_y = 0;
-    if ( m_y >= MAP_HEIGHT ) m_y = MAP_HEIGHT - 1;
+    if ( m_y >= m_height ) m_y = m_height - 1;
     updateCamera();
 }
