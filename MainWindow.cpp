@@ -5,11 +5,15 @@
 const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
 
 void MainWindow::initEvent() {
-    world = new game_map( m_width, m_height );
+    m_world = new game_map( m_width, m_height );
     m_zoom = 6;
     m_x = 0;
     m_y = 0;
     m_orientation = 0;
+
+    sceneManager()->setCullingEnabled( false );
+
+    m_unit = new game_unit( rendering(), m_world );
 }
 
 void dump(const vl::mat4 &m) {
@@ -174,12 +178,12 @@ void MainWindow::updateScene() {
     }
 
     static int seed = 0;
-    world->setSize( m_width, m_height );
-    world->generate( 5, (seed) / 256, m_smooth );
+    m_world->setSize( m_width, m_height );
+    m_world->generate( 5, (seed) / 256, m_smooth );
 
     sceneManager()->tree()->actors()->clear();
 
-    vl::ref<vl::ResourceDatabase> resource_db = world->getDb();
+    vl::ref<vl::ResourceDatabase> resource_db = m_world->getDb();
     for(size_t ires=0; ires<resource_db->resources().size(); ++ires) {
         vl::Actor *act = resource_db->resources()[ires]->as<vl::Actor>();
 
@@ -187,19 +191,14 @@ void MainWindow::updateScene() {
             continue;
         sceneManager()->tree()->addActor(act);
     }
+
+    m_unit->update();
 /*
-        if ( (seed % 1000) == 0) {
-            printf("view matrix\n" );
-            dump(rendering()->as<vl::Rendering>()->camera()->viewMatrix());
-            printf("projection matrix\n" );
-            dump(rendering()->as<vl::Rendering>()->camera()->projectionMatrix());
-
-            printf( "viewport: %d %d\n\n",
-                    rendering()->as<vl::Rendering>()->camera()->viewport()->width(),
-                    rendering()->as<vl::Rendering>()->camera()->viewport()->height());
-        }
-*/
-
+    printf("view matrix\n" );
+    dump(rendering()->as<vl::Rendering>()->camera()->viewMatrix());
+    printf("projection matrix\n" );
+    dump(rendering()->as<vl::Rendering>()->camera()->projectionMatrix());
+    */
 }
 
 void MainWindow::zoomIn() {
@@ -312,7 +311,10 @@ void MainWindow::screenToWorld(int screen_x, int screen_y, int& world_x, int& wo
 }
 
 void MainWindow::highlight(int x, int y) {
-    world->highlight( x, y );
+    m_world->highlight( x, y );
+    if ( m_world->isInside( x, y ) ) {
+        m_unit->moveTo( x, y );
+    }
 }
 
 void MainWindow::focusTileAt(int tile_x, int tile_y, int screen_x, int screen_y) {

@@ -3,6 +3,7 @@
 
 #include <vlGraphics/Applet.hpp>
 #include "game_map.h"
+#include "game_unit.h"
 
 
 
@@ -46,7 +47,8 @@ protected:
     void updateProjection();
     void updateCamera();
 
-    game_map* world;
+    game_map* m_world;
+    game_unit* m_unit;
     int m_zoom;
     unsigned int m_orientation;
     int m_x;

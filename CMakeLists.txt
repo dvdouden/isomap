@@ -22,7 +22,7 @@ else()
     include_directories(${GLUT_INCLUDE_DIR})
 endif()
 
-add_executable(TestProject win32_main.cpp game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h)
+add_executable(TestProject win32_main.cpp game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h)
 
 if ( MINGW )
     target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )

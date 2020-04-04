@@ -3,8 +3,6 @@
 #include <vlGraphics/DrawArrays.hpp>
 #include <vlGraphics/Effect.hpp>
 #include <vlGraphics/Geometry.hpp>
-#include <iostream>
-
 
 #include "game_map.h"
 #include "util/math.h"
@@ -27,11 +25,17 @@ unsigned char clamp(int a) {
     return a > 255 ? 255 : (a < 0 ? 0 : a);
 }
 
-void diamond( unsigned char* data, int width, int height, int scale, int depth, math::rng& rnd ) {
+void diamond(
+        unsigned char* data,
+        unsigned int width,
+        unsigned int height,
+        unsigned int scale,
+        int depth,
+        math::rng& rnd ) {
     // diamond
-    int hs = scale / 2;
-    for ( int y = hs; y < height; y += scale ) {
-        for ( int x = hs; x < width; x += scale ) {
+    unsigned int hs = scale / 2;
+    for ( auto y = hs; y < height; y += scale ) {
+        for ( auto x = hs; x < width; x += scale ) {
             int i0 = data[(y - hs) * width + (x - hs)];
             int i1 = data[(y - hs) * width + (x + hs)];
             int i2 = data[(y + hs) * width + (x - hs)];
@@ -44,12 +48,18 @@ void diamond( unsigned char* data, int width, int height, int scale, int depth, 
 
 
 
-void square( unsigned char* data, int width, int height, int scale, int depth, math::rng& rnd ) {
+void square(
+        unsigned char* data,
+        unsigned int width,
+        unsigned int height,
+        unsigned int scale,
+        int depth,
+        math::rng& rnd ) {
     // diamond
-    for ( int y = 0; y < height; y += scale ) {
-        for ( int x = 0; x < width; x += scale ) {
+    for ( unsigned int y = 0; y < height; y += scale ) {
+        for ( unsigned int x = 0; x < width; x += scale ) {
             if ( x < width - 1 ) {
-                int x1 = x + scale / 2;
+                unsigned int x1 = x + scale / 2;
                 // square the one on the right
                 int avg = data[y * width + x] + data[y * width + x + scale];
                 int cnt = 2;
@@ -65,7 +75,7 @@ void square( unsigned char* data, int width, int height, int scale, int depth, m
                 data[y * width + x1] = clamp( avg + rnd( -depth, depth ) );
             }
             if ( y < height - 1 ) {
-                int y1 = y + scale / 2;
+                unsigned int y1 = y + scale / 2;
                 // square the one below
                 int avg = data[y * width + x] + data[(y + scale) * width + x];
                 int cnt = 2;
@@ -85,25 +95,25 @@ void square( unsigned char* data, int width, int height, int scale, int depth, m
 }
 
 
-unsigned char* squareDiamond( int width, int height, int scale, math::rng& rnd) {
-    unsigned char* tmp = new unsigned char[width * height];
+unsigned char* squareDiamond( unsigned int width, unsigned int height, unsigned int scale, math::rng& rnd) {
+    auto* tmp = new unsigned char[width * height];
     for ( int i = 0; i < width * height; ++i ) {
         tmp[i] = 0;
     }
 
     // initial corner values
-    for ( int y = 0; y < height; y += scale ) {
-        for ( int x = 0; x < width; x += scale ) {
+    for ( unsigned int y = 0; y < height; y += scale ) {
+        for ( unsigned int x = 0; x < width; x += scale ) {
             tmp[y * width + x] =  rnd( 256 );
         }
     }
 
-    int magnitude = 128;
+    unsigned int magnitude = 128;
     while ( scale > 1 ) {
-        diamond(tmp, width, height, scale, magnitude, rnd);
-        square(tmp, width, height, scale, magnitude, rnd);
-        scale >>= 1;
-        magnitude >>= 1;
+        diamond(tmp, width, height, scale, (int)magnitude, rnd);
+        square(tmp, width, height, scale, (int)magnitude, rnd);
+        scale >>= 1u;
+        magnitude >>= 1u;
     }
     return tmp;
 }
@@ -118,7 +128,7 @@ unsigned char game_map::getCorner(int x, int y, int i) {
             i = 3;
         }
     } else if ( x >= m_width ) {
-        x = m_width - 1;
+        x = (int)m_width - 1;
         if ( i == 0 ) {
             i = 1;
         } else if ( i == 3 ) {
@@ -133,7 +143,7 @@ unsigned char game_map::getCorner(int x, int y, int i) {
             i = 0;
         }
     }  else if ( y >= m_height ) {
-        y = m_height - 1;
+        y = (int)m_height - 1;
         if ( i == 0 ) {
             i = 3;
         } else if ( i == 1) {
@@ -145,20 +155,20 @@ unsigned char game_map::getCorner(int x, int y, int i) {
 
 
 // TODO: move to map generator
-void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount ) {
+void game_map::generate( unsigned int depth, unsigned int seed, unsigned char cliffAmount ) {
     math::rng rnd( seed );
     // use diamond-square algorithm
     // scale up to a multiple of 2^depth + 1
-    int scale = 1 << depth;
-    int width = ((m_width + (scale - 1)) / scale) * scale + 1;
-    int height = ((m_height + (scale -1)) / scale) * scale + 1;
+    unsigned int scale = 1u << depth;
+    unsigned int width = ((m_width + (scale - 1)) / scale) * scale + 1;
+    unsigned int height = ((m_height + (scale -1)) / scale) * scale + 1;
     unsigned char* height_map = squareDiamond( width, height, scale, rnd );
     unsigned char* smooth_map = squareDiamond( width, height, scale / 2, rnd );
     unsigned char* scr_h = height_map;
     unsigned char* scr_s = smooth_map;
     for ( int i = 0; i < width * height; ++i ) {
         if ( *scr_s >= cliffAmount ) {
-            *scr_h >>= 6;
+            *scr_h >>= 6u;
         } else {
             if ( *scr_h >= 128 ) {
                 *scr_h = 3;
@@ -355,7 +365,7 @@ void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount
             n[2] = vl::fvec3( 0, 0, 1 );
             n[3] = vl::fvec3( 0, 0, 1 );
             n += 4;
-            auto col = h << 6;
+            auto col = h << 6u;
             col += 16;
             auto r = col;
             auto g = col;
@@ -579,19 +589,19 @@ void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount
     v[1] = vl::fvec3( 0, 0, -5 );
     v[2] = vl::fvec3( -1, 0, -5 );
     v[3] = vl::fvec3( -1, 0, 0 );
-    v += 4;
+
     n[0] = vl::fvec3( 0, -1, 0 );
     n[1] = vl::fvec3( 0, -1, 0 );
     n[2] = vl::fvec3( 0, -1, 0 );
     n[3] = vl::fvec3( 0, -1, 0 );
-    n += 4;
+
     c[0] = vl::ubvec4( 0, 0, 128, 255 );
     c[1] = vl::ubvec4( 0, 0, 128, 255 );
     c[2] = vl::ubvec4( 0, 0, 128, 255 );
     c[3] = vl::ubvec4( 0, 0, 128, 255 );
-    c += 4;
 
-    vl::ref<vl::DrawArrays> de = new vl::DrawArrays(vl::PT_QUADS,0,quad_count * 4);
+
+    vl::ref<vl::DrawArrays> de = new vl::DrawArrays(vl::PT_QUADS,0,(int)quad_count * 4);
     vl::ref<vl::Geometry> geom = new vl::Geometry;
     geom->drawCalls().push_back(de.get());
     geom->setVertexArray(verts.get());
@@ -613,13 +623,13 @@ void game_map::generate( int depth, unsigned int seed, unsigned char cliffAmount
     effect->shader(0,1)->gocColor()->setValue(vl::lightgreen);
     effect->shader(0,1)->setRenderState( effect->shader()->getMaterial() );
     effect->shader(0,1)->setRenderState( effect->shader()->getLight(0), 0 );
-    m_db->resources().push_back( geom );
-    m_db->resources().push_back( new vl::Actor(geom.get(), effect.get(), NULL ) );
-    m_db->resources().push_back( effect.get() );
+    m_db->resources().emplace_back( geom );
+    m_db->resources().push_back( new vl::Actor(geom.get(), effect.get(), nullptr ) );
+    m_db->resources().emplace_back( effect.get() );
 }
 
 unsigned char game_map::height( unsigned int x, unsigned int y ) const {
-    return m_heightmap[ y * m_width + x ] << 6;
+    return m_heightmap[ y * m_width + x ];
 }
 
 
@@ -647,5 +657,9 @@ void game_map::setSize(unsigned int width, unsigned int height) {
     }
     m_width = width;
     m_height = height;
+}
+
+bool game_map::isInside(int x, int y) const {
+    return x >= 0 && x < m_width && y >= 0 && y < m_height;
 }
 
