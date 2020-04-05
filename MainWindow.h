@@ -56,6 +56,8 @@ protected:
 
     int m_angle = 0;
     unsigned char m_smooth = 128;
+    unsigned char m_oreAmount = 32;
+    unsigned char m_oreDensity = 128;
     int m_width = 128;
     int m_height = 128;
 

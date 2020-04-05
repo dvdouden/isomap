@@ -15,6 +15,7 @@ namespace isomap {
 
         m_heightmap = new unsigned char[m_width * m_height];
         m_corners = new unsigned char[m_width * m_height * 4];
+        m_oremap = new unsigned char[m_width * m_height];
     }
 
     game_map::~game_map() {
@@ -156,15 +157,20 @@ namespace isomap {
 
 
 // TODO: move to map generator
-    void game_map::generate(unsigned int depth, unsigned int seed, unsigned char cliffAmount) {
+    void game_map::generate(
+            unsigned int depth,
+            unsigned int seed,
+            unsigned char cliffAmount,
+            unsigned char oreAmount,
+            unsigned char oreDensity) {
         math::rng rnd(seed);
         // use diamond-square algorithm
         // scale up to a multiple of 2^depth + 1
         unsigned int scale = 1u << depth;
         unsigned int width = ((m_width + (scale - 1)) / scale) * scale + 1;
         unsigned int height = ((m_height + (scale - 1)) / scale) * scale + 1;
-        unsigned char *height_map = squareDiamond(width, height, scale, rnd);
-        unsigned char *smooth_map = squareDiamond(width, height, scale / 2, rnd);
+        unsigned char* height_map = squareDiamond(width, height, scale, rnd);
+        unsigned char* smooth_map = squareDiamond(width, height, scale / 2, rnd);
         unsigned char *scr_h = height_map;
         unsigned char *scr_s = smooth_map;
         for (int i = 0; i < width * height; ++i) {
@@ -188,6 +194,37 @@ namespace isomap {
 
         delete[] height_map;
         delete[] smooth_map;
+
+        // create ore map
+        unsigned char* ore_map = squareDiamond(width, height, scale, rnd);
+        unsigned char *scr_o = ore_map;
+        for (int i = 0; i < width * height; ++i) {
+            if (*scr_o >= oreAmount) {
+                *scr_o = 0;
+            } else {
+                // tiles with 0 have highest concentration
+                // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
+                unsigned int amount = (oreAmount - *scr_o);
+                // linear interpolation from (oreDensity * 2) to 1
+                amount = ((oreDensity * 2) * amount) / oreAmount;
+                if ( amount > 255 ) {
+                    // clamp at 255
+                    amount = 255;
+                } else if ( amount == 0 ) {
+                    // ensure a minimum of 1
+                    amount = 1;
+                }
+                *scr_o = amount;
+            }
+            ++scr_o;
+        }
+
+        // copy data to actual oremap
+        for (int y = 0; y < m_height; ++y) {
+            memcpy(m_oremap + (y * m_width), ore_map + (y * width), m_width);
+        }
+
+        delete[] ore_map;
 
 
 
@@ -346,6 +383,7 @@ namespace isomap {
         for (int y = 0; y < m_height; ++y) {
             for (int x = 0; x < m_width; ++x) {
                 auto h = m_heightmap[y * m_width + x];
+                auto ore = m_oremap[y * m_width + x];
                 auto ha = scr_c[0];
                 auto hb = scr_c[1];
                 auto hc = scr_c[2];
@@ -387,6 +425,11 @@ namespace isomap {
                     r = 0;
                     g = 128;
                     b = 0;
+                }
+                if ( ore > 0 ) {
+                    r = ore;
+                    g = ore;
+                    b = 255;
                 }
                 if (x == m_highlight_x && y == m_highlight_y) {
                     r = 255;
@@ -652,8 +695,10 @@ namespace isomap {
             // don't bother resizing the buffers when the new buffers would be smaller...
             delete[] m_heightmap;
             delete[] m_corners;
+            delete[] m_oremap;
             m_heightmap = new unsigned char[width * height];
             m_corners = new unsigned char[width * height * 4];
+            m_oremap = new unsigned char[width * height];
         }
         m_width = width;
         m_height = height;

@@ -17,7 +17,11 @@ namespace isomap {
 
         const game_map &operator=(const game_map &) = delete;
 
-        void generate(unsigned int depth, unsigned int seed, unsigned char cliffs);
+        void generate(unsigned int depth,
+                unsigned int seed,
+                unsigned char cliffs,
+                unsigned char oreAmount,
+                unsigned char oreDensity);
 
         unsigned char height(unsigned int x, unsigned int y) const;
 
@@ -37,8 +41,9 @@ namespace isomap {
         unsigned int m_width;
         unsigned int m_height;
 
-        unsigned char *m_heightmap;
-        unsigned char *m_corners;
+        unsigned char* m_heightmap = 0;
+        unsigned char* m_corners = 0;
+        unsigned char* m_oremap = 0;
 
         vl::ref<vl::ResourceDatabase> m_db;
 

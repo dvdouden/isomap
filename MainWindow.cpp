@@ -69,6 +69,11 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
             m_smooth -= 4;
             break;
 
+        case vl::Key_Insert:    m_oreAmount += 4;   break;
+        case vl::Key_Delete:    m_oreAmount -= 4;   break;
+        case vl::Key_Home:      m_oreDensity += 4;  break;
+        case vl::Key_End:       m_oreDensity -= 4;  break;
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -181,7 +186,7 @@ void MainWindow::updateScene() {
 
     static int seed = 0;
     m_world->setSize( m_width, m_height );
-    m_world->generate( 5, (seed) / 256, m_smooth );
+    m_world->generate( 5, (seed) / 256, m_smooth, m_oreAmount, m_oreDensity );
 
     sceneManager()->tree()->actors()->clear();
 
