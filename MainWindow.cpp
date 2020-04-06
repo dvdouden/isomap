@@ -36,8 +36,8 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
     switch( key ) {
         case vl::Key_Left:
             m_width /= 2;
-            if ( m_width < 64 ) {
-                m_width = 64;
+            if ( m_width < 8 ) {
+                m_width = 8;
             }
             break;
         case vl::Key_Right:
@@ -56,8 +56,8 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
 
         case vl::Key_Down:
             m_height /= 2;
-            if ( m_height < 64 ) {
-                m_height = 64;
+            if ( m_height < 8 ) {
+                m_height = 8;
             }
             break;
 

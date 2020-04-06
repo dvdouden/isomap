@@ -32,6 +32,8 @@ namespace isomap {
         int m_targetY = 0;
         int m_targetOrientation = 0;
 
+        unsigned char* m_movement = 0;
+
         vl::ref<vl::Geometry> m_geom;
         vl::ref<vl::Transform> m_transform;
         vl::ref<vl::Effect> m_effect;

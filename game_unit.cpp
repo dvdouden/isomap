@@ -1,6 +1,7 @@
 #include <vlGraphics/GeometryPrimitives.hpp>
 #include <vlGraphics/Rendering.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
+#include <queue>
 #include "game_map.h"
 #include "game_unit.h"
 
@@ -43,67 +44,105 @@ namespace isomap {
         m_z = z;
     }
 
-    void game_unit::update() {
-        // TODO: need to make corners and stuff
-        if ( m_x < m_targetX ) {
-            if ( m_y < m_targetY ) {
-                m_targetOrientation = 45;
-            } else if ( m_y > m_targetY ) {
-                m_targetOrientation = 315;
-            } else {
-                m_targetOrientation = 0;
-            }
-        } else if ( m_x > m_targetX ) {
-            if ( m_y < m_targetY ) {
-                m_targetOrientation = 135;
-            } else if ( m_y > m_targetY ) {
-                m_targetOrientation = 225;
-            } else {
-                m_targetOrientation = 180;
-            }
-        } else {
-            if ( m_y < m_targetY ) {
-                m_targetOrientation = 90;
-            } else if ( m_y > m_targetY ) {
-                m_targetOrientation = 270;
-            }
+    unsigned char getDirection( int x, int y ) {
+        if ( x == 1 && y == 0 ) {
+            return 0;
+        } else if ( x == 1 && y == 1 ) {
+            return 1;
+        } else if ( x == 0 && y == 1 ) {
+            return 2;
+        } else if ( x == -1 && y == 1 ) {
+            return 3;
+        } else if ( x == -1 && y == 0 ) {
+            return 4;
+        } else if ( x == -1 && y == -1 ) {
+            return 5;
+        } else if ( x == 0 && y == -1 ) {
+            return 6;
+        } else if ( x == 1 && y == -1 ) {
+            return 7;
         }
+        return 0;
+    }
 
-        if ( m_orientation != m_targetOrientation ) {
-            auto delta = m_targetOrientation - m_orientation;
-            if ( delta < 0 ) {
-                delta += 360;
-            }
-            if ( delta < 180 ) {
-                m_orientation += 5;
-                if ( m_orientation >= 360 ) {
-                    m_orientation -= 360;
-                }
-            } else {
-                m_orientation -= 5;
-                if ( m_orientation < 0 ) {
-                    m_orientation += 360;
-                }
-            }
-        } else if ( m_x != m_targetX || m_y != m_targetY ) {
+    void getMotion(unsigned char direction, int& x, int& y ) {
+        switch ( direction ) {
+            default:
+            case 0: x =  1; y =  0; break;
+            case 1: x =  1; y =  1; break;
+            case 2: x =  0; y =  1; break;
+            case 3: x = -1; y =  1; break;
+            case 4: x = -1; y =  0; break;
+            case 5: x = -1; y = -1; break;
+            case 6: x =  0; y = -1; break;
+            case 7: x =  1; y = -1; break;
+        }
+    }
+
+    void game_unit::update() {
+        real intx, inty;
+        real modx = std::modf( m_x, &intx );
+        real mody = std::modf( m_y, &inty );
+
+        if ( modx != 0.0 || mody != 0.0 ) {
+            // not at a tile boundary, keep moving
             // so this is silly; we're totally going to overshoot our target because of floating point errors.
             real speed = 0.125;
-            switch ( (int)m_orientation ) {
-                default:
-                case   0: m_x += speed;               break;
-                case  45: m_x += speed; m_y += speed; break;
-                case  90:               m_y += speed; break;
-                case 135: m_x -= speed; m_y += speed; break;
-                case 180: m_x -= speed;               break;
-                case 225: m_x -= speed; m_y -= speed; break;
-                case 270:               m_y -= speed; break;
-                case 315: m_x += speed; m_y -= speed; break;
+            int x = 0;
+            int y = 0;
+            getMotion( m_orientation / 45, x, y );
+            m_x += (real)x * speed;
+            m_y += (real)y * speed;
+
+            if (m_world->isInside(m_x, m_y)) {
+                m_z = m_world->height(m_x, m_y);
             }
-        }
+        } else {
+            // tile boundary, read next movement info
+            unsigned int tile_x = (int) intx;
+            unsigned int tile_y = (int) inty;
 
+            unsigned int width = m_world->width();
+            if (m_movement == nullptr) {
+                return;
+            }
 
-        if (m_world->isInside(m_x, m_y)) {
-            m_z = m_world->height(m_x, m_y);
+            unsigned char movement = m_movement[tile_y * width + tile_x];
+            if (movement == 0) {
+                return;
+            }
+            --movement;
+            m_targetOrientation = movement * 45;
+
+            if (m_orientation != m_targetOrientation) {
+                auto delta = m_targetOrientation - m_orientation;
+                if (delta < 0) {
+                    delta += 360;
+                }
+                if (delta < 180) {
+                    m_orientation += 5;
+                    if (m_orientation >= 360) {
+                        m_orientation -= 360;
+                    }
+                } else {
+                    m_orientation -= 5;
+                    if (m_orientation < 0) {
+                        m_orientation += 360;
+                    }
+                }
+            } else {
+                // already have target orientation, start moving!
+                real speed = 0.125;
+                int x = 0;
+                int y = 0;
+                getMotion( m_orientation / 45, x, y );
+                m_x += (real)x * speed;
+                m_y += (real)y * speed;
+
+                if (m_world->isInside(m_x, m_y)) {
+                    m_z = m_world->height(m_x, m_y);
+                }
+            }
         }
 
         vl::mat4 matrix = vl::mat4::getTranslation(m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt(2.0 / 3.0) / 2.0);
@@ -112,8 +151,141 @@ namespace isomap {
     }
 
     void game_unit::moveTo(int x, int y) {
+        printf( "Move to %d %d\n", x, y );
+
         m_targetX = x;
         m_targetY = y;
+
+        auto width = m_world->width();
+        auto height = m_world->height();
+
+        if ( m_movement == nullptr ) {
+            m_movement = new unsigned char[width * height];
+        }
+        memset( m_movement, 0, width * height);
+
+        // create buffer for A* algorithm
+        struct node {
+            unsigned int value = 0;
+            unsigned int from = 0;
+
+            bool operator >( const node& rhs ) const {
+                return value > rhs.value;
+            }
+        };
+
+        auto* tmp = new node[width * height];
+        memset( tmp, 0, width * height * sizeof(unsigned int) );
+
+        // create a todo list for the algorithm
+        std::priority_queue<node, std::vector<node>, std::greater<>> todo;
+        todo.push( {1, ((unsigned int)m_y) * width + ((unsigned int)m_x) } );
+        while ( !todo.empty() ) {
+            auto tile = todo.top();
+            todo.pop();
+            auto value = tmp[tile.from];
+            unsigned int tile_x = tile.from % width;
+            unsigned int tile_y = tile.from / width;
+            //printf( "Test %d %d\n", tile_x, tile_y);
+            if ( tile_x == m_targetX && tile_y == m_targetY ) {
+                break;
+            }
+            unsigned char canReach = m_world->canReach( (int)tile_x, (int)tile_y );
+            //printf( "[%2d,%2d] %02X\n", tile_x, tile_y, canReach );
+
+            // for now we're going to move in every direction, as long as we haven't traveled there yet.
+            if ( canReach & 0b0000'0001u ) {
+                //printf( "down left\n" );
+                auto idx = (tile_y - 1) * width + tile_x - 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 14;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 14, idx } );
+                }
+            }
+            if ( canReach & 0b0000'0010u ) {
+                //printf( "down\n" );
+                auto idx = (tile_y - 1) * width + tile_x;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 10;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 10, idx } );
+                }
+            }
+            if ( canReach & 0b0000'0100u ) {
+                //printf( "down right\n" );
+                auto idx = (tile_y - 1) * width + tile_x + 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 14;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 14, idx } );
+                }
+            }
+            if ( canReach & 0b0000'1000u ) {
+                //printf( "right\n" );
+                auto idx = (tile_y) * width + tile_x + 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 10;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 10, idx } );
+                }
+            }
+            if ( canReach & 0b0001'0000u ) {
+                //printf( "right up\n" );
+                auto idx = (tile_y + 1) * width + tile_x + 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 14;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 14, idx } );
+                }
+            }
+            if ( canReach & 0b0010'0000u ) {
+                //printf( "up\n" );
+                auto idx = (tile_y + 1) * width + tile_x;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 10;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 10, idx } );
+                }
+            }
+            if ( canReach & 0b0100'0000u ) {
+                //printf( "up left\n" );
+                auto idx = (tile_y + 1) * width + tile_x - 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 14;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 14, idx } );
+                }
+            }
+            if ( canReach & 0b1000'0000u ) {
+                //printf( "left\n" );
+                auto idx = (tile_y) * width + tile_x - 1;
+                if ( tmp[idx].value == 0 ) {
+                    tmp[idx].value = value.value + 10;
+                    tmp[idx].from = tile.from;
+                    todo.push( { value.value + 10, idx } );
+                }
+            }
+        }
+        unsigned int targetIdx = m_targetY * width + m_targetX;
+        unsigned int startIdx = ((unsigned int)m_y) * width + ((unsigned int)m_x);
+        if ( tmp[targetIdx].value > 0 ) {
+            printf( "Found a route!\n" );
+            while ( targetIdx != startIdx ) {
+                int newx = (int)(targetIdx % width);
+                int newy = (int)(targetIdx / width);
+                targetIdx = tmp[targetIdx].from;
+                int tile_x = (int)(targetIdx % width);
+                int tile_y = (int)(targetIdx / width);
+                // get direction + 1, since 0 will be "stop"
+                m_movement[targetIdx] = getDirection( newx - tile_x, newy - tile_y ) + 1;
+                printf( "[%d]: %d %d\n", tmp[targetIdx].value, tile_x, tile_y );
+            }
+        } else {
+            printf( "No route!\n" );
+        }
+
+        delete[] tmp;
     }
 
 }

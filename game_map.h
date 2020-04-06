@@ -4,6 +4,7 @@
 #include <vlCore/ResourceDatabase.hpp>
 
 #include "types.h"
+#include "util/math.h"
 
 namespace isomap {
 
@@ -37,13 +38,29 @@ namespace isomap {
 
         bool isInside(int x, int y) const;
 
+        unsigned int width() const {
+            return m_width;
+        }
+
+        unsigned int height() const {
+            return m_height;
+        }
+
+        unsigned char canReach( int x, int y ) const {
+            if ( x < 0 || x >= m_width || y < 0 || y >= m_height ) {
+                return 0;
+            }
+            return m_pathmap[y * m_width + x];
+        }
+
     private:
         unsigned int m_width;
         unsigned int m_height;
 
-        unsigned char* m_heightmap = 0;
-        unsigned char* m_corners = 0;
-        unsigned char* m_oremap = 0;
+        unsigned char* m_heightmap = nullptr;
+        unsigned char* m_corners = nullptr;
+        unsigned char* m_oremap = nullptr;
+        unsigned char* m_pathmap = nullptr;
 
         vl::ref<vl::ResourceDatabase> m_db;
 
@@ -51,6 +68,12 @@ namespace isomap {
 
         int m_highlight_x = -1;
         int m_highlight_y = -1;
+
+        void updatePathMap();
+
+        void generateOreMap(unsigned int width, unsigned int height, unsigned int scale, math::rng &rng,
+                            unsigned char amount,
+                            unsigned char density);
     };
 
 }

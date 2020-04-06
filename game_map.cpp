@@ -16,11 +16,14 @@ namespace isomap {
         m_heightmap = new unsigned char[m_width * m_height];
         m_corners = new unsigned char[m_width * m_height * 4];
         m_oremap = new unsigned char[m_width * m_height];
+        m_pathmap = new unsigned char[m_width * m_height];
     }
 
     game_map::~game_map() {
         delete[] m_heightmap;
         delete[] m_corners;
+        delete[] m_oremap;
+        delete[] m_pathmap;
     }
 
 
@@ -195,38 +198,7 @@ namespace isomap {
         delete[] height_map;
         delete[] smooth_map;
 
-        // create ore map
-        unsigned char* ore_map = squareDiamond(width, height, scale, rnd);
-        unsigned char *scr_o = ore_map;
-        for (int i = 0; i < width * height; ++i) {
-            if (*scr_o >= oreAmount) {
-                *scr_o = 0;
-            } else {
-                // tiles with 0 have highest concentration
-                // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
-                unsigned int amount = (oreAmount - *scr_o);
-                // linear interpolation from (oreDensity * 2) to 1
-                amount = ((oreDensity * 2) * amount) / oreAmount;
-                if ( amount > 255 ) {
-                    // clamp at 255
-                    amount = 255;
-                } else if ( amount == 0 ) {
-                    // ensure a minimum of 1
-                    amount = 1;
-                }
-                *scr_o = amount;
-            }
-            ++scr_o;
-        }
-
-        // copy data to actual oremap
-        for (int y = 0; y < m_height; ++y) {
-            memcpy(m_oremap + (y * m_width), ore_map + (y * width), m_width);
-        }
-
-        delete[] ore_map;
-
-
+        generateOreMap( width, height, scale, rnd, oreAmount, oreDensity );
 
         // smooth out the map, get rid of peaks and holes
         for (int p = 0; p < 4; ++p) {
@@ -366,6 +338,8 @@ namespace isomap {
                 }
             }
         }
+
+        updatePathMap();
 
         unsigned int quad_count = m_width * m_height + 6 + cliffs;
 
@@ -696,9 +670,11 @@ namespace isomap {
             delete[] m_heightmap;
             delete[] m_corners;
             delete[] m_oremap;
+            delete[] m_pathmap;
             m_heightmap = new unsigned char[width * height];
             m_corners = new unsigned char[width * height * 4];
             m_oremap = new unsigned char[width * height];
+            m_pathmap = new unsigned char[width * height];
         }
         m_width = width;
         m_height = height;
@@ -706,6 +682,109 @@ namespace isomap {
 
     bool game_map::isInside(int x, int y) const {
         return x >= 0 && x < m_width && y >= 0 && y < m_height;
+    }
+
+    void game_map::updatePathMap() {
+        // update pathmap
+        unsigned char* scr_p = m_pathmap;
+        for (int y = 0; y < m_height; ++y) {
+            for (int x = 0; x < m_width; ++x) {
+                unsigned char canReach = 0;
+                auto h = m_heightmap[y * m_width + x];
+
+                if ( x > 0 && y > 0 ) {
+                    auto h0 = safe_height( x - 1, y - 1 );
+                    if ( h0 == h || h0 - h == 1 || h - h0 == 1 ) {
+                        canReach |= 0b0000'0001u;
+                    }
+                }
+                if ( y > 0 ) {
+                    auto h1 = safe_height( x, y - 1 );
+                    if ( h1 == h || h1 - h == 1 || h - h1 == 1 ) {
+                        canReach |= 0b0000'0010u;
+                    }
+                }
+                if ( x < m_width - 1 && y > 0 ) {
+                    auto h2 = safe_height( x + 1, y - 1 );
+                    if ( h2 == h || h2 - h == 1 || h - h2 == 1 ) {
+                        canReach |= 0b0000'0100u;
+                    }
+                }
+                if ( x < m_width - 1 ) {
+                    auto h3 = safe_height( x + 1, y );
+                    if ( h3 == h || h3 - h == 1 || h - h3 == 1 ) {
+                        canReach |= 0b0000'1000u;
+                    }
+                }
+                if ( x < m_width - 1 && y < m_height - 1 ) {
+                    auto h4 = safe_height( x + 1, y + 1 );
+                    if ( h4 == h || h4 - h == 1 || h - h4 == 1 ) {
+                        canReach |= 0b0001'0000u;
+                    }
+                }
+                if ( y < m_height - 1 ) {
+                    auto h5 = safe_height( x, y + 1 );
+                    if ( h5 == h || h5 - h == 1 || h - 54 == 1 ) {
+                        canReach |= 0b0010'0000u;
+                    }
+                }
+                if ( x > 0 && y < m_height - 1 ) {
+                    auto h6 = safe_height( x - 1, y + 1 );
+                    if ( h6 == h || h6 - h == 1 || h - h6 == 1 ) {
+                        canReach |= 0b0100'0000u;
+                    }
+                }
+                if ( x > 0 ) {
+                    auto h7 = safe_height( x - 1, y );
+                    if ( h7 == h || h7 - h == 1 || h - h7 == 1 ) {
+                        canReach |= 0b1000'0000u;
+                    }
+                }
+
+                *scr_p = canReach;
+                ++scr_p;
+            }
+        }
+    }
+
+    void game_map::generateOreMap(
+            unsigned int width,
+            unsigned int height,
+            unsigned int scale,
+            math::rng &rnd,
+            unsigned char oreAmount,
+            unsigned char oreDensity) {
+
+        // create ore map
+        unsigned char* ore_map = squareDiamond(width, height, scale, rnd);
+        unsigned char *scr_o = ore_map;
+        for (int i = 0; i < width * height; ++i) {
+            if (*scr_o >= oreAmount) {
+                *scr_o = 0;
+            } else {
+                // tiles with 0 have highest concentration
+                // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
+                unsigned int amount = (oreAmount - *scr_o);
+                // linear interpolation from (oreDensity * 2) to 1
+                amount = ((oreDensity * 2) * amount) / oreAmount;
+                if ( amount > 255 ) {
+                    // clamp at 255
+                    amount = 255;
+                } else if ( amount == 0 ) {
+                    // ensure a minimum of 1
+                    amount = 1;
+                }
+                *scr_o = amount;
+            }
+            ++scr_o;
+        }
+
+        // copy data to actual oremap
+        for (int y = 0; y < m_height; ++y) {
+            memcpy(m_oremap + (y * m_width), ore_map + (y * width), m_width);
+        }
+
+        delete[] ore_map;
     }
 
 }
