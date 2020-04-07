@@ -53,6 +53,10 @@ namespace isomap {
             return m_pathmap[y * m_width + x];
         }
 
+        void unfog( int x, int y, int radius );
+
+        void update();
+
     private:
         unsigned int m_width;
         unsigned int m_height;
@@ -61,6 +65,8 @@ namespace isomap {
         unsigned char* m_corners = nullptr;
         unsigned char* m_oremap = nullptr;
         unsigned char* m_pathmap = nullptr;
+        unsigned char* m_fogmap = nullptr;
+        unsigned char* m_fowmap = nullptr;
 
         vl::ref<vl::ResourceDatabase> m_db;
 

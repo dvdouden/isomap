@@ -16,14 +16,10 @@ void MainWindow::initEvent() {
     sceneManager()->setCullingEnabled( false );
 
     m_unit = new isomap::game_unit( rendering(), m_world );
-}
 
-void dump(const vl::mat4 &m) {
-    printf( "%5f %5f %5f %5f\n", m.e(0, 0), m.e(0, 1), m.e(0, 2), m.e(0, 3)  );
-    printf( "%5f %5f %5f %5f\n", m.e(1, 0), m.e(1, 1), m.e(1, 2), m.e(1, 3)  );
-    printf( "%5f %5f %5f %5f\n", m.e(2, 0), m.e(2, 1), m.e(2, 2), m.e(2, 3)  );
-    printf( "%5f %5f %5f %5f\n", m.e(3, 0), m.e(3, 1), m.e(3, 2), m.e(3, 3)  );
-    printf("\n" );
+    for ( int i = 0 ; i < 100; ++i ) {
+        m_units.push_back( new isomap::game_unit( rendering(), m_world ) );
+    }
 }
 
 void MainWindow::resizeEvent(int w, int h) {
@@ -193,19 +189,20 @@ void MainWindow::updateScene() {
     vl::ref<vl::ResourceDatabase> resource_db = m_world->getDb();
     for(size_t ires=0; ires<resource_db->resources().size(); ++ires) {
         vl::Actor *act = resource_db->resources()[ires]->as<vl::Actor>();
-
         if (!act)
             continue;
         sceneManager()->tree()->addActor(act);
     }
 
-    m_unit->update();
-/*
-    printf("view matrix\n" );
-    dump(rendering()->as<vl::Rendering>()->camera()->viewMatrix());
-    printf("projection matrix\n" );
-    dump(rendering()->as<vl::Rendering>()->camera()->projectionMatrix());
-    */
+    m_world->update();
+    m_unit->update( true );
+    for ( isomap::game_unit* unit : m_units ) {
+        if ( unit->hasReachedTarget() ) {
+            static math::rng rnd(0);
+            unit->moveTo(rnd( 0, m_width - 1), rnd( 0, m_height ) );
+        }
+        unit->update( true );
+    }
 }
 
 void MainWindow::zoomIn() {

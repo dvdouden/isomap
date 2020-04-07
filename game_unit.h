@@ -19,20 +19,28 @@ namespace isomap {
 
         void moveTo(int x, int y);
 
-        void update();
+        void update( bool removeFow );
+
+        bool hasReachedTarget() const;
 
     private:
         real m_x = 0;
         real m_y = 0;
         real m_z = 0;
 
+        struct WayPoint {
+            int x;
+            int y;
+            unsigned char direction;
+        };
+
+        std::vector<WayPoint> m_wayPoints;
+
         real m_orientation = 0;
 
         int m_targetX = 0;
         int m_targetY = 0;
         int m_targetOrientation = 0;
-
-        unsigned char* m_movement = 0;
 
         vl::ref<vl::Geometry> m_geom;
         vl::ref<vl::Transform> m_transform;

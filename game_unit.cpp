@@ -46,21 +46,21 @@ namespace isomap {
 
     unsigned char getDirection( int x, int y ) {
         if ( x == 1 && y == 0 ) {
-            return 0;
-        } else if ( x == 1 && y == 1 ) {
-            return 1;
-        } else if ( x == 0 && y == 1 ) {
-            return 2;
-        } else if ( x == -1 && y == 1 ) {
             return 3;
-        } else if ( x == -1 && y == 0 ) {
+        } else if ( x == 1 && y == 1 ) {
             return 4;
-        } else if ( x == -1 && y == -1 ) {
+        } else if ( x == 0 && y == 1 ) {
             return 5;
-        } else if ( x == 0 && y == -1 ) {
+        } else if ( x == -1 && y == 1 ) {
             return 6;
-        } else if ( x == 1 && y == -1 ) {
+        } else if ( x == -1 && y == 0 ) {
             return 7;
+        } else if ( x == -1 && y == -1 ) {
+            return 0;
+        } else if ( x == 0 && y == -1 ) {
+            return 1;
+        } else if ( x == 1 && y == -1 ) {
+            return 2;
         }
         return 0;
     }
@@ -68,21 +68,35 @@ namespace isomap {
     void getMotion(unsigned char direction, int& x, int& y ) {
         switch ( direction ) {
             default:
-            case 0: x =  1; y =  0; break;
-            case 1: x =  1; y =  1; break;
-            case 2: x =  0; y =  1; break;
-            case 3: x = -1; y =  1; break;
-            case 4: x = -1; y =  0; break;
-            case 5: x = -1; y = -1; break;
-            case 6: x =  0; y = -1; break;
-            case 7: x =  1; y = -1; break;
+            case 3: x =  1; y =  0; break;
+            case 4: x =  1; y =  1; break;
+            case 5: x =  0; y =  1; break;
+            case 6: x = -1; y =  1; break;
+            case 7: x = -1; y =  0; break;
+            case 0: x = -1; y = -1; break;
+            case 1: x =  0; y = -1; break;
+            case 2: x =  1; y = -1; break;
         }
     }
 
-    void game_unit::update() {
+    bool game_unit::hasReachedTarget() const {
         real intx, inty;
         real modx = std::modf( m_x, &intx );
         real mody = std::modf( m_y, &inty );
+        if( modx != 0.0 || mody != 0.0 ) {
+            return false;
+        }
+        return intx == m_targetX && inty == m_targetY;
+    }
+
+    void game_unit::update( bool removeFow ) {
+        real intx, inty;
+        real modx = std::modf( m_x, &intx );
+        real mody = std::modf( m_y, &inty );
+
+        if ( removeFow ) {
+            m_world->unfog((int) m_x, (int) m_y, 6);
+        }
 
         if ( modx != 0.0 || mody != 0.0 ) {
             // not at a tile boundary, keep moving
@@ -94,8 +108,8 @@ namespace isomap {
             m_x += (real)x * speed;
             m_y += (real)y * speed;
 
-            if (m_world->isInside(m_x, m_y)) {
-                m_z = m_world->height(m_x, m_y);
+            if (m_world->isInside((int)m_x, (int)m_y)) {
+                m_z = m_world->height((int)m_x, (int)m_y);
             }
         } else {
             // tile boundary, read next movement info
@@ -103,16 +117,18 @@ namespace isomap {
             unsigned int tile_y = (int) inty;
 
             unsigned int width = m_world->width();
-            if (m_movement == nullptr) {
+            if ( m_wayPoints.empty() ) {
                 return;
+            }
+            if ( m_wayPoints.back().x == tile_x && m_wayPoints.back().y == tile_y ) {
+                m_wayPoints.pop_back();
+                if ( m_wayPoints.empty() ) {
+                    // reached destination
+                    return;
+                }
             }
 
-            unsigned char movement = m_movement[tile_y * width + tile_x];
-            if (movement == 0) {
-                return;
-            }
-            --movement;
-            m_targetOrientation = movement * 45;
+            m_targetOrientation = m_wayPoints.back().direction * 45;
 
             if (m_orientation != m_targetOrientation) {
                 auto delta = m_targetOrientation - m_orientation;
@@ -135,34 +151,39 @@ namespace isomap {
                 real speed = 0.125;
                 int x = 0;
                 int y = 0;
-                getMotion( m_orientation / 45, x, y );
+                int ori = m_orientation / 45;
+                getMotion( ori, x, y );
+                unsigned char canReach = m_world->canReach( (int)tile_x + x, (int)tile_y + y );
+                if ( (canReach & (1 << ori) == 0 ) ) {
+                    // can no longer reach destination
+                    m_targetX = tile_x;
+                    m_targetY = tile_y;
+                    m_wayPoints.clear();
+                    return;
+                }
+
                 m_x += (real)x * speed;
                 m_y += (real)y * speed;
 
-                if (m_world->isInside(m_x, m_y)) {
-                    m_z = m_world->height(m_x, m_y);
+                if (m_world->isInside((int)m_x, (int)m_y)) {
+                    m_z = m_world->height((int)m_x, (int)m_y);
                 }
             }
         }
 
         vl::mat4 matrix = vl::mat4::getTranslation(m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt(2.0 / 3.0) / 2.0);
-        matrix *= vl::mat4::getRotation( m_orientation, 0, 0, 1 );
+        matrix *= vl::mat4::getRotation( m_orientation - 135, 0, 0, 1 );
         m_transform->setLocalMatrix(matrix);
     }
 
     void game_unit::moveTo(int x, int y) {
-        printf( "Move to %d %d\n", x, y );
+        //printf( "Move to %d %d\n", x, y );
 
-        m_targetX = x;
-        m_targetY = y;
 
         auto width = m_world->width();
         auto height = m_world->height();
 
-        if ( m_movement == nullptr ) {
-            m_movement = new unsigned char[width * height];
-        }
-        memset( m_movement, 0, width * height);
+        m_wayPoints.clear();
 
         // create buffer for A* algorithm
         struct node {
@@ -187,7 +208,7 @@ namespace isomap {
             unsigned int tile_x = tile.from % width;
             unsigned int tile_y = tile.from / width;
             //printf( "Test %d %d\n", tile_x, tile_y);
-            if ( tile_x == m_targetX && tile_y == m_targetY ) {
+            if ( tile_x == x && tile_y == y ) {
                 break;
             }
             unsigned char canReach = m_world->canReach( (int)tile_x, (int)tile_y );
@@ -267,22 +288,29 @@ namespace isomap {
                 }
             }
         }
-        unsigned int targetIdx = m_targetY * width + m_targetX;
+        unsigned int targetIdx = y * width + x;
         unsigned int startIdx = ((unsigned int)m_y) * width + ((unsigned int)m_x);
         if ( tmp[targetIdx].value > 0 ) {
-            printf( "Found a route!\n" );
+            //printf( "Found a route!\n" );
             while ( targetIdx != startIdx ) {
                 int newx = (int)(targetIdx % width);
                 int newy = (int)(targetIdx / width);
                 targetIdx = tmp[targetIdx].from;
                 int tile_x = (int)(targetIdx % width);
                 int tile_y = (int)(targetIdx / width);
-                // get direction + 1, since 0 will be "stop"
-                m_movement[targetIdx] = getDirection( newx - tile_x, newy - tile_y ) + 1;
-                printf( "[%d]: %d %d\n", tmp[targetIdx].value, tile_x, tile_y );
+                unsigned char direction = getDirection( newx - tile_x, newy - tile_y );
+                if ( m_wayPoints.empty() || direction != m_wayPoints.back().direction ) {
+                    m_wayPoints.push_back( {newx, newy, direction} );
+                }
+                //printf( "[%d]: %d %d\n", tmp[targetIdx].value, tile_x, tile_y );
             }
+            printf( "[Found route in %d waypoints\n", m_wayPoints.size() );
+
+            m_targetX = x;
+            m_targetY = y;
+
         } else {
-            printf( "No route!\n" );
+            //printf( "No route!\n" );
         }
 
         delete[] tmp;

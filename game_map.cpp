@@ -17,6 +17,12 @@ namespace isomap {
         m_corners = new unsigned char[m_width * m_height * 4];
         m_oremap = new unsigned char[m_width * m_height];
         m_pathmap = new unsigned char[m_width * m_height];
+        m_fogmap = new unsigned char[m_width * m_height];
+        m_fowmap = new unsigned char[m_width * m_height];
+
+
+        memset( m_fogmap, 0, m_width * m_height);
+        memset( m_fowmap, 0, m_width * m_height);
     }
 
     game_map::~game_map() {
@@ -24,6 +30,8 @@ namespace isomap {
         delete[] m_corners;
         delete[] m_oremap;
         delete[] m_pathmap;
+        delete[] m_fogmap;
+        delete[] m_fowmap;
     }
 
 
@@ -341,6 +349,7 @@ namespace isomap {
 
         updatePathMap();
 
+
         unsigned int quad_count = m_width * m_height + 6 + cliffs;
 
         vl::ref<vl::ArrayFloat3> verts = new vl::ArrayFloat3;
@@ -354,8 +363,10 @@ namespace isomap {
         auto *n = &normals->at(0);
         auto *c = &colors->at(0);
         scr_c = m_corners;
+        unsigned int quads = 0;
         for (int y = 0; y < m_height; ++y) {
             for (int x = 0; x < m_width; ++x) {
+
                 auto h = m_heightmap[y * m_width + x];
                 auto ore = m_oremap[y * m_width + x];
                 auto ha = scr_c[0];
@@ -363,6 +374,12 @@ namespace isomap {
                 auto hc = scr_c[2];
                 auto hd = scr_c[3];
                 scr_c += 4;
+
+                auto fog = m_fogmap[y * m_width + x];
+                if ( !fog ) {
+                    continue;
+                }
+                auto fow = m_fowmap[y * m_width + x];
 
                 vl::real hra = ha * ::sqrt(2.0 / 3.0) / 2.0;
                 vl::real hrb = hb * ::sqrt(2.0 / 3.0) / 2.0;
@@ -381,7 +398,7 @@ namespace isomap {
                 auto col = h << 6u;
                 col += 16;
                 auto r = col;
-                auto g = col;
+                auto g = 255;
                 auto b = col;
                 if (x == 0) {
                     r = 255;
@@ -410,11 +427,19 @@ namespace isomap {
                     g = 0;
                     b = 255;
                 }
+
+                r = ((r * fow) + (r / 4 * (255 - fow))) >> 8;
+                g = ((g * fow) + (g / 4 * (255 - fow))) >> 8;
+                b = ((b * fow) + (b / 4 * (255 - fow))) >> 8;
+
+
                 c[0] = vl::ubvec4(r, g, b, 255);
                 c[1] = vl::ubvec4(r, g, b, 255);
                 c[2] = vl::ubvec4(r, g, b, 255);
                 c[3] = vl::ubvec4(r, g, b, 255);
                 c += 4;
+
+                ++quads;
 
 
                 // get adjacent corners
@@ -457,6 +482,7 @@ namespace isomap {
                     c[2] = vl::ubvec4(r, g, b, 255);
                     c[3] = vl::ubvec4(r, g, b, 255);
                     c += 4;
+                    ++quads;
                 }
                 if (hb > c10 || hc > c13) {
                     // TODO: figure out if we need a quad or a tri...
@@ -475,6 +501,7 @@ namespace isomap {
                     c[2] = vl::ubvec4(r, g, b, 255);
                     c[3] = vl::ubvec4(r, g, b, 255);
                     c += 4;
+                    ++quads;
                 }
                 if (hc > c21 || hd > c20) {
                     // TODO: figure out if we need a quad or a tri...
@@ -493,6 +520,7 @@ namespace isomap {
                     c[2] = vl::ubvec4(r, g, b, 255);
                     c[3] = vl::ubvec4(r, g, b, 255);
                     c += 4;
+                    ++quads;
                 }
                 if (hd > c32 || ha > c31) {
                     // TODO: figure out if we need a quad or a tri...
@@ -511,6 +539,7 @@ namespace isomap {
                     c[2] = vl::ubvec4(r, g, b, 255);
                     c[3] = vl::ubvec4(r, g, b, 255);
                     c += 4;
+                    ++quads;
                 }
             }
         }
@@ -618,8 +647,10 @@ namespace isomap {
         c[2] = vl::ubvec4(0, 0, 128, 255);
         c[3] = vl::ubvec4(0, 0, 128, 255);
 
+        quads += 6;
 
-        vl::ref<vl::DrawArrays> de = new vl::DrawArrays(vl::PT_QUADS, 0, (int) quad_count * 4);
+
+        vl::ref<vl::DrawArrays> de = new vl::DrawArrays(vl::PT_QUADS, 0, (int) quads * 4);
         vl::ref<vl::Geometry> geom = new vl::Geometry;
         geom->drawCalls().push_back(de.get());
         geom->setVertexArray(verts.get());
@@ -664,20 +695,66 @@ namespace isomap {
         m_highlight_y = y;
     }
 
+    void game_map::unfog( int x, int y, int radius ) {
+        int cnt = 0;
+        int radiusSquared = radius * radius;
+        for ( int tile_y = y - radius; tile_y <= y + radius; ++tile_y ) {
+            if ( tile_y < 0 || tile_y >= m_height ) {
+                continue;
+            }
+
+            int deltay = (tile_y - y) * (tile_y - y);
+            for ( int tile_x = x - radius; tile_x <= x + radius; ++tile_x ) {
+
+                if ( tile_x < 0 || tile_x >= m_width ) {
+                    continue;
+                }
+                ++cnt;
+                int deltax = (tile_x - x) * (tile_x - x);
+                if ( deltax + deltay <= radiusSquared ) {
+                    m_fogmap[ tile_y * m_width + tile_x ] = 1;
+                    m_fowmap[ tile_y * m_width + tile_x ] = 255;
+                }
+            }
+        }
+    }
+
     void game_map::setSize(unsigned int width, unsigned int height) {
+        if ( width == m_width && height == m_height ) {
+            return;
+        }
         if (width * height > m_width * m_height) {
             // don't bother resizing the buffers when the new buffers would be smaller...
             delete[] m_heightmap;
             delete[] m_corners;
             delete[] m_oremap;
             delete[] m_pathmap;
+            delete[] m_fogmap;
+            delete[] m_fowmap;
             m_heightmap = new unsigned char[width * height];
             m_corners = new unsigned char[width * height * 4];
             m_oremap = new unsigned char[width * height];
             m_pathmap = new unsigned char[width * height];
+            m_fogmap = new unsigned char[m_width * m_height];
+            m_fowmap = new unsigned char[m_width * m_height];
+
         }
         m_width = width;
         m_height = height;
+        memset( m_fogmap, 0, m_width * m_height);
+        memset( m_fowmap, 0, m_width * m_height);
+    }
+
+    void game_map::update() {
+        auto* scratch = m_fowmap;
+        for ( int y = 0; y < m_height; ++y ) {
+            for ( int x = 0; x < m_width; ++x ) {
+                if ( *scratch > 0 ) {
+                    *scratch -= 1;
+                }
+                ++scratch;
+            }
+        }
     }
 
     bool game_map::isInside(int x, int y) const {

@@ -47,6 +47,7 @@ protected:
 
     isomap::game_map* m_world;
     isomap::game_unit* m_unit;
+    std::vector<isomap::game_unit*> m_units;
     int m_zoom;
     unsigned int m_orientation;
     int m_x;
