@@ -70,6 +70,10 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
         case vl::Key_Home:      m_oreDensity += 4;  break;
         case vl::Key_End:       m_oreDensity -= 4;  break;
 
+        case vl::Key_Space:
+            m_paused = !m_paused;
+            break;
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -194,14 +198,16 @@ void MainWindow::updateScene() {
         sceneManager()->tree()->addActor(act);
     }
 
-    m_world->update();
-    m_unit->update( true );
-    for ( isomap::game_unit* unit : m_units ) {
-        if ( unit->hasReachedTarget() ) {
-            static math::rng rnd(0);
-            unit->moveTo(rnd( 0, m_width - 1), rnd( 0, m_height ) );
+    if ( !m_paused ) {
+        m_world->update();
+        m_unit->update(true);
+        for (isomap::game_unit *unit : m_units) {
+            if (unit->hasReachedTarget()) {
+                static math::rng rnd(0);
+                unit->moveTo(rnd(0, m_width - 1), rnd(0, m_height));
+            }
+            unit->update(true);
         }
-        unit->update( true );
     }
 }
 
