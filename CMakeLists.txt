@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14.2)
-project(TestProject)
+project(IsoMap)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -43,12 +43,12 @@ elseif( USE_SDL )
     set( PLATFORM_ENTRY sdl_main.cpp )
 endif()
 
-add_executable(TestProject ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h)
+add_executable(IsoMap ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h server/unit.cpp server/unit.h)
 
 if ( MINGW )
-    target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )
+    target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )
 elseif( USE_GLUT )
-    target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} )
+    target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} )
 elseif( USE_SDL )
-    target_link_libraries(TestProject ${VL_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL_LIBRARY} )
+    target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL_LIBRARY} )
 endif()
