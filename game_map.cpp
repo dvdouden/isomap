@@ -735,8 +735,8 @@ namespace isomap {
             m_corners = new unsigned char[width * height * 4];
             m_oremap = new unsigned char[width * height];
             m_pathmap = new unsigned char[width * height];
-            m_fogmap = new unsigned char[m_width * m_height];
-            m_fowmap = new unsigned char[m_width * m_height];
+            m_fogmap = new unsigned char[width * height];
+            m_fowmap = new unsigned char[width * height];
 
         }
         m_width = width;

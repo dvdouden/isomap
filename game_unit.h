@@ -23,6 +23,8 @@ namespace isomap {
 
         bool hasReachedTarget() const;
 
+        void updateWorldSize();
+
     private:
         real m_x = 0;
         real m_y = 0;

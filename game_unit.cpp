@@ -316,4 +316,16 @@ namespace isomap {
         delete[] tmp;
     }
 
+    void game_unit::updateWorldSize() {
+        if ( ((int)m_x) >= m_world->width() ) {
+            m_x = m_world->width() - 1;
+        }
+        if ( ((int)m_y) >= m_world->height() ) {
+            m_y = m_world->height() - 1;
+        }
+        m_targetX = m_x;
+        m_targetY = m_y;
+        m_wayPoints.clear();
+    }
+
 }

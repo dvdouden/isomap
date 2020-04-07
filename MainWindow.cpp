@@ -185,7 +185,13 @@ void MainWindow::updateScene() {
     }
 
     static int seed = 0;
-    m_world->setSize( m_width, m_height );
+    if ( m_width != m_world->width() || m_height != m_world->height() ) {
+        m_world->setSize(m_width, m_height);
+        m_unit->updateWorldSize();
+        for (isomap::game_unit *unit : m_units) {
+            unit->updateWorldSize();
+        }
+    }
     m_world->generate( 5, (seed) / 256, m_smooth, m_oreAmount, m_oreDensity );
 
     sceneManager()->tree()->actors()->clear();
