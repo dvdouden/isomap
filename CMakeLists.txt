@@ -43,7 +43,7 @@ elseif( USE_SDL )
     set( PLATFORM_ENTRY sdl_main.cpp )
 endif()
 
-add_executable(IsoMap ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h server/unit.cpp server/unit.h)
+add_executable(IsoMap ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h server/Unit.cpp server/Unit.h server/UnitType.cpp server/UnitType.h server/Structure.cpp server/Structure.h server/StructureType.cpp server/StructureType.h server/Object.cpp server/Object.h server/World.cpp server/World.h server/Match.cpp server/Match.h server/types.h server/Player.cpp server/Player.h)
 
 if ( MINGW )
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )

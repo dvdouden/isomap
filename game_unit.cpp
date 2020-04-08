@@ -304,7 +304,6 @@ namespace isomap {
                 }
                 //printf( "[%d]: %d %d\n", tmp[targetIdx].value, tile_x, tile_y );
             }
-            printf( "[Found route in %d waypoints\n", m_wayPoints.size() );
 
             m_targetX = x;
             m_targetY = y;
