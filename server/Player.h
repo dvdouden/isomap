@@ -1,6 +1,7 @@
 #pragma once
 
-#include "types.h"
+#include <vector>
+#include "../common/types.h"
 
 namespace isomap { namespace server {
     class Player {
@@ -11,9 +12,18 @@ namespace isomap { namespace server {
         Player( const Player& ) = delete;
         const Player& operator=( const Player& ) = delete;
 
+        void init( Terrain* terrain );
+        void update();
+
+        void unfog( int32_t tile_x, int32_t tile_y, int32_t radius );
+
+        common::TerrainMessage* createTerrainMessage();
+
     private:
         uint8_t* m_fogMap = nullptr;
-        uint8_t* m_fowMap = nullptr;
+        Terrain* m_terrain = nullptr;
+
+        std::vector<uint32_t> m_uncoveredTiles;
     };
 
 } }

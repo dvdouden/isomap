@@ -2,7 +2,8 @@
 
 namespace isomap { namespace server {
 
-    void Structure::update( World* world ) {
+    bool Structure::update(Terrain* world ) {
+        return false;
 
     }
 

@@ -6,14 +6,14 @@ namespace isomap { namespace server {
 
     class Structure : public Object {
     public:
-        Structure( id_t owner ) :
+        Structure( Player* owner ) :
         Object( owner ) {}
         ~Structure() override = default;
 
         Structure( const Structure& ) = delete;
         const Structure& operator=( const Structure& ) = delete;
 
-        void update( World * world ) override;
+        bool update(Terrain * world ) override;
 
         // position
         // health

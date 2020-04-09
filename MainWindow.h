@@ -3,6 +3,7 @@
 
 #include <vlGraphics/Applet.hpp>
 #include "types.h"
+#include "common/types.h"
 
 
 class MainWindow : public vl::Applet {
@@ -63,6 +64,10 @@ protected:
     int m_height = 128;
     bool m_paused = true;
 
+    isomap::server::Match* m_match;
+    isomap::server::Player* m_player;
+
+    isomap::client::Terrain* m_terrain;
 };
 
 

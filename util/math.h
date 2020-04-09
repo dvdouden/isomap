@@ -19,6 +19,28 @@ namespace math {
     private:
         std::mt19937 engine;
     };
+
+
+    //! Greek Pi constant using \p double precision.
+    const double dPi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093845;
+    //! Constant to convert degree into radian using \p double precision.
+    const double dDEG_TO_RAD = dPi / 180.0;
+    //! Constant to convert radian into degree using \p double precision.
+    const double dRAD_TO_DEG = 180.0 / dPi;
+
+
+    //! Greek Pi constant using \p float precision.
+    const float fPi = (float)3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093845;
+    //! Constant to convert degree into radian using \p float precision.
+    const float fDEG_TO_RAD = float(dPi / 180.0);
+    //! Constant to convert radian into degree using \p float precision.
+    const float fRAD_TO_DEG = float(180.0 / dPi);
+
+    namespace fix {
+        int64_t mul( int32_t lhs, int32_t rhs );
+        int32_t div( int32_t lhs, int32_t rhs );
+        int64_t div( int64_t lhs, int32_t rhs );
+    }
 }
 
 #endif //TESTPROJECT_MATH_H

@@ -40,10 +40,10 @@ elseif( USE_GLUT )
     set( PLATFORM_ENTRY glut_main.cpp )
 elseif( USE_SDL )
     include_directories(${SDL_INCLUDE_DIR})
-    set( PLATFORM_ENTRY sdl_main.cpp )
+    set( PLATFORM_ENTRY sdl_main.cpp common/TerrainMessage.cpp common/TerrainMessage.h)
 endif()
 
-add_executable(IsoMap ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h server/Unit.cpp server/Unit.h server/UnitType.cpp server/UnitType.h server/Structure.cpp server/Structure.h server/StructureType.cpp server/StructureType.h server/Object.cpp server/Object.h server/World.cpp server/World.h server/Match.cpp server/Match.h server/types.h server/Player.cpp server/Player.h)
+add_executable(IsoMap ${PLATFORM_ENTRY} game_map.cpp game_map.h util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h game_unit.cpp game_unit.h types.h server/Unit.cpp server/Unit.h server/UnitType.cpp server/UnitType.h server/Structure.cpp server/Structure.h server/StructureType.cpp server/StructureType.h server/Object.cpp server/Object.h server/Terrain.cpp server/Terrain.h server/Match.cpp server/Match.h common/types.h server/Player.cpp server/Player.h server/TerrainGenerator.cpp server/TerrainGenerator.h client/Terrain.cpp client/Terrain.h common/TerrainMessage.cpp common/TerrainMessage.h common/UnitMessage.cpp common/UnitMessage.h client/Unit.cpp client/Unit.h)
 
 if ( MINGW )
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static )

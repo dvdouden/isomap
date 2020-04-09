@@ -3,6 +3,14 @@
 #include "game_map.h"
 #include "game_unit.h"
 
+#include "server/Match.h"
+#include "server/Player.h"
+#include "server/Terrain.h"
+
+#include "client/Terrain.h"
+
+#include "common/TerrainMessage.h"
+
 
 const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
 
@@ -20,6 +28,24 @@ void MainWindow::initEvent() {
     for ( int i = 0 ; i < 100; ++i ) {
         m_units.push_back( new isomap::game_unit( rendering(), m_world ) );
     }
+
+    m_match = new isomap::server::Match();
+    m_match->generateWorld( m_width, m_height );
+    m_player = new isomap::server::Player();
+    m_match->addPlayer( m_player );
+    m_match->start();
+
+    m_terrain = new isomap::client::Terrain();
+    isomap::common::TerrainMessage* msg = m_match->terrain()->createMessage();
+    m_terrain->processMessage( msg );
+    delete msg;
+
+    m_player->unfog( 10, 10, 20 );
+    msg = m_player->createTerrainMessage();
+    m_terrain->processMessage( msg );
+    delete msg;
+
+    m_terrain->render( rendering() );
 }
 
 void MainWindow::resizeEvent(int w, int h) {

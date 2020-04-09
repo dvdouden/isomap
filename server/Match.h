@@ -1,8 +1,9 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
-#include "types.h"
+#include "../common/types.h"
 
 namespace isomap { namespace server {
     class Match {
@@ -13,9 +14,20 @@ namespace isomap { namespace server {
         Match( const Match& ) = delete;
         const Match& operator=( const Match& ) = delete;
 
+        void generateWorld( uint32_t width, uint32_t height );
+        void addPlayer( Player* player );
+        void start();
+        void update();
+
+        Terrain* terrain() {
+            return m_terrain;
+        }
+
     private:
-        World* m_world = nullptr;
+        uint32_t m_time = 0;
+        Terrain* m_terrain = nullptr;
         std::map<id_t, Object*> m_objects;
+        std::vector<Player*> m_players;
     };
 
 } }

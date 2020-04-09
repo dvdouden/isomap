@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "types.h"
+#include "../common/types.h"
 
 namespace isomap { namespace server {
     class UnitType {
@@ -45,8 +45,6 @@ namespace isomap { namespace server {
         int32_t turningRadius( Surface surface ) const;
         int32_t turningSpeed( Surface surface ) const;
 
-
-    private:
         struct speedParameters {
             int32_t minSpeed = 0;
             int32_t maxSpeed = 0;
@@ -55,6 +53,9 @@ namespace isomap { namespace server {
             int32_t turningRadius = 0;
             int32_t turningSpeed = 0;
         };
+
+
+    private:
         std::map<Surface, speedParameters> m_speedParams;
 
     };

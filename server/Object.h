@@ -1,11 +1,11 @@
 #pragma once
 
-#include "types.h"
+#include "../common/types.h"
 
 namespace isomap { namespace server {
     class Object {
     public:
-        Object( id_t owner );
+        Object( Player* owner );
         virtual ~Object() = default;
 
         Object( const Object& ) = delete;
@@ -16,18 +16,18 @@ namespace isomap { namespace server {
             return m_id;
         }
 
-        id_t owner() const {
+        Player* owner() const {
             return m_owner;
         }
 
-        virtual void update( World* world ) = 0;
+        virtual bool update(Terrain* world ) = 0;
 
         // health
         //
 
     private:
         id_t m_id;
-        id_t m_owner;
+        Player* m_owner;
 
     };
 } }
