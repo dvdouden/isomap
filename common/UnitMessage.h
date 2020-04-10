@@ -13,7 +13,7 @@ namespace isomap {
                 Move,
             };
 
-            UnitCommandMessage( Type type ) :
+            explicit UnitCommandMessage( Type type ) :
                     m_type( type ) { }
 
             Type type() const {
@@ -43,7 +43,7 @@ namespace isomap {
                 Status
             };
 
-            UnitServerMessage( Type type ) :
+            explicit UnitServerMessage( Type type ) :
                     m_type( type ) { }
 
             Type type() const {

@@ -2,32 +2,36 @@
 
 #include "../common/types.h"
 
-namespace isomap { namespace server {
-    class Object {
-    public:
-        Object( Player* player );
-        virtual ~Object() = default;
+namespace isomap {
+    namespace server {
+        class Object {
+        public:
+            Object( Player* player );
 
-        Object( const Object& ) = delete;
-        const Object& operator=( const Object& ) = delete;
+            virtual ~Object() = default;
+
+            Object( const Object& ) = delete;
+
+            const Object& operator=( const Object& ) = delete;
 
 
-        id_t id() const {
-            return m_id;
-        }
+            id_t id() const {
+                return m_id;
+            }
 
-        Player* player() const {
-            return m_player;
-        }
+            Player* player() const {
+                return m_player;
+            }
 
-        virtual bool update(Terrain* world ) = 0;
+            virtual bool update( Terrain* world ) = 0;
 
-        // health
-        //
+            // health
+            //
 
-    private:
-        id_t m_id;
-        Player* m_player;
+        private:
+            id_t m_id;
+            Player* m_player;
 
-    };
-} }
+        };
+    }
+}

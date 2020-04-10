@@ -22,9 +22,11 @@ namespace isomap {
                     m_width = msg->width();
                     m_height = msg->height();
                     m_heightMap = new uint8_t[m_width * m_height];
+                    m_slopeMap = new uint8_t[m_width * m_height];
                     m_oreMap = new uint8_t[m_width * m_height];
                     m_fogMap = new uint8_t[m_width * m_height];
                     ::memset( m_heightMap, 0, m_width * m_height );
+                    ::memset( m_slopeMap, 0, m_width * m_height );
                     ::memset( m_oreMap, 0, m_width * m_height );
                     ::memset( m_fogMap, 0, m_width * m_height );
                     break;
@@ -33,6 +35,7 @@ namespace isomap {
                     for ( const auto& cell : msg->cells() ) {
                         m_heightMap[cell.id] = cell.height;
                         m_oreMap[cell.id] = cell.ore;
+                        m_slopeMap[cell.id] = cell.slope;
                         m_fogMap[cell.id] = 255;
                     }
                     break;
@@ -44,64 +47,111 @@ namespace isomap {
 
         void Terrain::initRender( vl::RenderingAbstract* rendering ) {
             m_sceneManager = new vl::SceneManagerActorTree;
-            m_sceneManager->setCullingEnabled(false);
-            rendering->as<vl::Rendering>()->sceneManagers()->push_back(m_sceneManager.get());
+            m_sceneManager->setCullingEnabled( false );
+            rendering->as<vl::Rendering>()->sceneManagers()->push_back( m_sceneManager.get() );
+        }
+
+        uint8_t Terrain::getCorner( int x, int y, int i ) const {
+            if ( x < 0 ) {
+                x = 0;
+                if ( i == 1 ) {
+                    i = 0;
+                } else if ( i == 2 ) {
+                    i = 3;
+                }
+            } else if ( x >= m_width ) {
+                x = (int)m_width - 1;
+                if ( i == 0 ) {
+                    i = 1;
+                } else if ( i == 3 ) {
+                    i = 2;
+                }
+            }
+            if ( y < 0 ) {
+                y = 0;
+                if ( i == 2 ) {
+                    i = 1;
+                } else if ( i == 3 ) {
+                    i = 0;
+                }
+            } else if ( y >= m_height ) {
+                y = (int)m_height - 1;
+                if ( i == 0 ) {
+                    i = 3;
+                } else if ( i == 1 ) {
+                    i = 2;
+                }
+            }
+            return m_heightMap[y * m_width + x] -
+                   (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( i ) ) & 0b0000'0001u);
         }
 
         void Terrain::render() {
-            uint32_t quad_count = m_width * m_height;
+            uint32_t quad_count = m_width * m_height * 3; // worst case scenario: all quads have 2 cliffs
             vl::ref<vl::ArrayFloat3> verts = new vl::ArrayFloat3;
             vl::ref<vl::ArrayFloat3> normals = new vl::ArrayFloat3;
             vl::ref<vl::ArrayUByte4> colors = new vl::ArrayUByte4;
-            verts->resize(quad_count * 4);
-            normals->resize(quad_count * 4);
-            colors->resize(quad_count * 4);
+            verts->resize( quad_count * 4 );
+            normals->resize( quad_count * 4 );
+            colors->resize( quad_count * 4 );
 
-            auto *v = &verts->at(0);
-            auto *n = &normals->at(0);
-            auto *c = &colors->at(0);
+            auto* v = &verts->at( 0 );
+            auto* n = &normals->at( 0 );
+            auto* c = &colors->at( 0 );
             uint32_t quads = 0;
-            for (int y = 0; y < m_height; ++y) {
-                for (int x = 0; x < m_width; ++x) {
-                    if ( m_fogMap[y * m_width + x] == 0 ) {
+            for ( int y = 0; y < m_height; ++y ) {
+                for ( int x = 0; x < m_width; ++x ) {
+                    uint32_t idx = y * m_width + x;
+                    uint8_t fog = m_fogMap[idx];
+                    if ( fog == 0 ) {
                         continue;
                     }
 
-                    auto h = m_heightMap[y * m_width + x];
-                    auto ore = m_oreMap[y * m_width + x];
+                    uint8_t h = m_heightMap[idx];
+                    uint8_t slope = m_slopeMap[idx];
+                    uint8_t ore = m_oreMap[idx];
 
-                    vl::real hra = h * ::sqrt(2.0 / 3.0) / 2.0;
-                    vl::real hrb = h * ::sqrt(2.0 / 3.0) / 2.0;
-                    vl::real hrc = h * ::sqrt(2.0 / 3.0) / 2.0;
-                    vl::real hrd = h * ::sqrt(2.0 / 3.0) / 2.0;
-                    v[0] = vl::fvec3((vl::real) x, (vl::real) y, hra);
-                    v[1] = vl::fvec3((vl::real) x + 1, (vl::real) y, hrb);
-                    v[2] = vl::fvec3((vl::real) x + 1, (vl::real) y + 1, hrc);
-                    v[3] = vl::fvec3((vl::real) x, (vl::real) y + 1, hrd);
+                    uint8_t ha = h - (slope & 0b0000'0001u);
+                    slope >>= 1u;
+                    uint8_t hb = h - (slope & 0b0000'0001u);
+                    slope >>= 1u;
+                    uint8_t hc = h - (slope & 0b0000'0001u);
+                    slope >>= 1u;
+                    uint8_t hd = h - (slope & 0b0000'0001u);
+                    slope <<= 3u;
+
+                    vl::real hra = ha * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                    vl::real hrb = hb * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                    vl::real hrc = hc * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                    vl::real hrd = hd * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                    v[0] = vl::fvec3( (vl::real)x, (vl::real)y, hra );
+                    v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hrb );
+                    v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hrc );
+                    v[3] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hrd );
                     v += 4;
-                    n[0] = vl::fvec3(0, 0, 1);
-                    n[1] = vl::fvec3(0, 0, 1);
-                    n[2] = vl::fvec3(0, 0, 1);
-                    n[3] = vl::fvec3(0, 0, 1);
+                    n[0] = vl::fvec3( 0, 0, 1 );
+                    n[1] = vl::fvec3( 0, 0, 1 );
+                    n[2] = vl::fvec3( 0, 0, 1 );
+                    n[3] = vl::fvec3( 0, 0, 1 );
                     n += 4;
                     auto col = h << 6u;
                     col += 16;
                     auto r = col;
                     auto g = 255;
                     auto b = col;
-                    if (x == 0) {
+                    if ( x == 0 ) {
                         r = 255;
                         g = 0;
                         b = 0;
-                    } else if (x == m_width - 1) {
+                    } else if ( x == m_width - 1 ) {
                         r = 128;
                         g = 0;
                         b = 0;
-                    } else if (y == 0) {
+                    } else if ( y == 0 ) {
                         r = 0;
                         g = 255;
                         b = 0;
-                    } else if (y == m_height - 1) {
+                    } else if ( y == m_height - 1 ) {
                         r = 0;
                         g = 128;
                         b = 0;
@@ -112,42 +162,149 @@ namespace isomap {
                         b = 255;
                     }
 
-                    c[0] = vl::ubvec4(r, g, b, 255);
-                    c[1] = vl::ubvec4(r, g, b, 255);
-                    c[2] = vl::ubvec4(r, g, b, 255);
-                    c[3] = vl::ubvec4(r, g, b, 255);
+                    r = ((r * fog) + (r / 4u * (255 - fog))) >> 8u;
+                    g = ((g * fog) + (g / 4u * (255 - fog))) >> 8u;
+                    b = ((b * fog) + (b / 4u * (255 - fog))) >> 8u;
+
+                    c[0] = vl::ubvec4( r, g, b, 255 );
+                    c[1] = vl::ubvec4( r, g, b, 255 );
+                    c[2] = vl::ubvec4( r, g, b, 255 );
+                    c[3] = vl::ubvec4( r, g, b, 255 );
                     c += 4;
 
                     ++quads;
 
+                    if ( slope & 0b0001'0000u ) {
+                        auto c03 = getCorner( x, y - 1, 3 );
+                        auto c02 = getCorner( x, y - 1, 2 );
+                        vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        vl::real hc02 = c02 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        // TODO: figure out if we need a quad or a tri...
+                        v[0] = vl::fvec3( (vl::real)x, (vl::real)y, hra );
+                        v[1] = vl::fvec3( (vl::real)x, (vl::real)y, hc03 );
+                        v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc02 );
+                        v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hrb );
+                        v += 4;
+                        n[0] = vl::fvec3( 0, -1, 0 );
+                        n[1] = vl::fvec3( 0, -1, 0 );
+                        n[2] = vl::fvec3( 0, -1, 0 );
+                        n[3] = vl::fvec3( 0, -1, 0 );
+                        n += 4;
+                        c[0] = vl::ubvec4( r, g, b, 255 );
+                        c[1] = vl::ubvec4( r, g, b, 255 );
+                        c[2] = vl::ubvec4( r, g, b, 255 );
+                        c[3] = vl::ubvec4( r, g, b, 255 );
+                        c += 4;
+                        ++quads;
+                    }
+                    if ( slope & 0b0010'0000u ) {
+                        auto c10 = getCorner( x + 1, y, 0 );
+                        auto c13 = getCorner( x + 1, y, 3 );
+                        vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        vl::real hc13 = c13 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        // TODO: figure out if we need a quad or a tri...
+                        v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hrb );
+                        v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc10 );
+                        v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc13 );
+                        v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hrc );
+                        v += 4;
+                        n[0] = vl::fvec3( 1, 0, 0 );
+                        n[1] = vl::fvec3( 1, 0, 0 );
+                        n[2] = vl::fvec3( 1, 0, 0 );
+                        n[3] = vl::fvec3( 1, 0, 0 );
+                        n += 4;
+                        c[0] = vl::ubvec4( r, g, b, 255 );
+                        c[1] = vl::ubvec4( r, g, b, 255 );
+                        c[2] = vl::ubvec4( r, g, b, 255 );
+                        c[3] = vl::ubvec4( r, g, b, 255 );
+                        c += 4;
+                        ++quads;
+                    }
+                    if ( slope & 0b0100'0000u ) {
+                        auto c21 = getCorner( x, y + 1, 1 );
+                        auto c20 = getCorner( x, y + 1, 0 );
+                        vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        vl::real hc20 = c20 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+
+                        // TODO: figure out if we need a quad or a tri...
+                        v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hrc );
+                        v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc21 );
+                        v[2] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc20 );
+                        v[3] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hrd );
+                        v += 4;
+                        n[0] = vl::fvec3( 0, 1, 0 );
+                        n[1] = vl::fvec3( 0, 1, 0 );
+                        n[2] = vl::fvec3( 0, 1, 0 );
+                        n[3] = vl::fvec3( 0, 1, 0 );
+                        n += 4;
+                        c[0] = vl::ubvec4( r, g, b, 255 );
+                        c[1] = vl::ubvec4( r, g, b, 255 );
+                        c[2] = vl::ubvec4( r, g, b, 255 );
+                        c[3] = vl::ubvec4( r, g, b, 255 );
+                        c += 4;
+                        ++quads;
+                    }
+                    if ( slope & 0b1000'0000u ) {
+                        auto c32 = getCorner( x - 1, y, 2 );
+                        auto c31 = getCorner( x - 1, y, 1 );
+                        // TODO: figure out if we need a quad or a tri...
+                        vl::real hc32 = c32 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                        vl::real hc31 = c31 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+
+                        v[0] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hrd );
+                        v[1] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc32 );
+                        v[2] = vl::fvec3( (vl::real)x, (vl::real)y, hc31 );
+                        v[3] = vl::fvec3( (vl::real)x, (vl::real)y, hra );
+                        v += 4;
+                        n[0] = vl::fvec3( -1, 0, 0 );
+                        n[1] = vl::fvec3( -1, 0, 0 );
+                        n[2] = vl::fvec3( -1, 0, 0 );
+                        n[3] = vl::fvec3( -1, 0, 0 );
+                        n += 4;
+                        c[0] = vl::ubvec4( r, g, b, 255 );
+                        c[1] = vl::ubvec4( r, g, b, 255 );
+                        c[2] = vl::ubvec4( r, g, b, 255 );
+                        c[3] = vl::ubvec4( r, g, b, 255 );
+                        c += 4;
+                        ++quads;
+                    }
                 }
             }
 
-            vl::ref<vl::DrawArrays> de = new vl::DrawArrays(vl::PT_QUADS, 0, (int) quads * 4);
+            vl::ref<vl::DrawArrays> de = new vl::DrawArrays( vl::PT_QUADS, 0, (int)quads * 4 );
             vl::ref<vl::Geometry> geom = new vl::Geometry;
-            geom->drawCalls().push_back(de.get());
-            geom->setVertexArray(verts.get());
-            geom->setNormalArray(normals.get());
-            geom->setColorArray(colors.get());
+            geom->drawCalls().push_back( de.get() );
+            geom->setVertexArray( verts.get() );
+            geom->setNormalArray( normals.get() );
+            geom->setColorArray( colors.get() );
 
             vl::ref<vl::Effect> effect = new vl::Effect;
-            effect->shader()->gocMaterial()->setColorMaterialEnabled(true);
-            effect->shader()->enable(vl::EN_DEPTH_TEST);
-            effect->shader()->enable(vl::EN_LIGHTING);
-            effect->lod(0)->push_back(new vl::Shader);
-            effect->shader(0, 1)->enable(vl::EN_BLEND);
+            effect->shader()->gocMaterial()->setColorMaterialEnabled( true );
+            effect->shader()->enable( vl::EN_DEPTH_TEST );
+            effect->shader()->enable( vl::EN_LIGHTING );
+            effect->lod( 0 )->push_back( new vl::Shader );
+            effect->shader( 0, 1 )->enable( vl::EN_BLEND );
             //effect->shader(0,1)->enable(vl::EN_LINE_SMOOTH);
-            effect->shader(0, 1)->enable(vl::EN_DEPTH_TEST);
-            effect->shader(0, 1)->enable(vl::EN_POLYGON_OFFSET_LINE);
-            effect->shader(0, 1)->gocPolygonOffset()->set(-1.0f, -1.0f);
-            effect->shader(0, 1)->gocPolygonMode()->set(vl::PM_LINE, vl::PM_LINE);
-            effect->shader(0, 1)->gocColor()->setValue(vl::lightgreen);
-            effect->shader(0, 1)->setRenderState(effect->shader()->getMaterial());
-            effect->shader(0, 1)->setRenderState(effect->shader()->getLight(0), 0);
+            effect->shader( 0, 1 )->enable( vl::EN_DEPTH_TEST );
+            effect->shader( 0, 1 )->enable( vl::EN_POLYGON_OFFSET_LINE );
+            effect->shader( 0, 1 )->gocPolygonOffset()->set( -1.0f, -1.0f );
+            effect->shader( 0, 1 )->gocPolygonMode()->set( vl::PM_LINE, vl::PM_LINE );
+            effect->shader( 0, 1 )->gocColor()->setValue( vl::lightgreen );
+            effect->shader( 0, 1 )->setRenderState( effect->shader()->getMaterial() );
+            effect->shader( 0, 1 )->setRenderState( effect->shader()->getLight( 0 ), 0 );
 
             m_sceneManager->tree()->actors()->clear();
-            m_sceneManager->tree()->addActor(geom.get(), effect.get(), nullptr);
+            m_sceneManager->tree()->addActor( geom.get(), effect.get(), nullptr );
+        }
+
+        void Terrain::updateFog() {
+            for ( unsigned int i = 0; i < m_width * m_height; ++i ) {
+                if ( m_fogMap[i] > 1 ) {
+                    m_fogMap[i]--;
+                }
+            }
         }
 
     }
+
 }

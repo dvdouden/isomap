@@ -2,24 +2,28 @@
 
 #include "Object.h"
 
-namespace isomap { namespace server {
+namespace isomap {
+    namespace server {
 
-    class Structure : public Object {
-    public:
-        Structure( Player* owner ) :
-        Object( owner ) {}
-        ~Structure() override = default;
+        class Structure : public Object {
+        public:
+            Structure( Player* owner ) :
+                    Object( owner ) { }
 
-        Structure( const Structure& ) = delete;
-        const Structure& operator=( const Structure& ) = delete;
+            ~Structure() override = default;
 
-        bool update(Terrain * world ) override;
+            Structure( const Structure& ) = delete;
 
-        // position
-        // health
-        // type
-        // state
-    };
-} }
+            const Structure& operator=( const Structure& ) = delete;
+
+            bool update( Terrain* world ) override;
+
+            // position
+            // health
+            // type
+            // state
+        };
+    }
+}
 
 

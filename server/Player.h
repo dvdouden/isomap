@@ -3,27 +3,32 @@
 #include <vector>
 #include "../common/types.h"
 
-namespace isomap { namespace server {
-    class Player {
-    public:
-        Player();
-        ~Player();
+namespace isomap {
+    namespace server {
+        class Player {
+        public:
+            Player();
 
-        Player( const Player& ) = delete;
-        const Player& operator=( const Player& ) = delete;
+            ~Player();
 
-        void init( Terrain* terrain );
-        void update();
+            Player( const Player& ) = delete;
 
-        void unfog( int32_t tile_x, int32_t tile_y, int32_t radius );
+            const Player& operator=( const Player& ) = delete;
 
-        common::TerrainMessage* createTerrainMessage();
+            void init( Terrain* terrain );
 
-    private:
-        uint8_t* m_fogMap = nullptr;
-        Terrain* m_terrain = nullptr;
+            void update();
 
-        std::vector<uint32_t> m_uncoveredTiles;
-    };
+            void unfog( int32_t tile_x, int32_t tile_y, int32_t radius );
 
-} }
+            common::TerrainMessage* createTerrainMessage();
+
+        private:
+            uint8_t* m_fogMap = nullptr;
+            Terrain* m_terrain = nullptr;
+
+            std::vector<uint32_t> m_uncoveredTiles;
+        };
+
+    }
+}

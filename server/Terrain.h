@@ -28,11 +28,16 @@ namespace isomap {
                 return m_heightMap;
             }
 
+            uint8_t* slopeMap() const {
+                return m_slopeMap;
+            }
+
             uint8_t* oreMap() const {
                 return m_oreMap;
             }
 
             common::TerrainMessage* createMessage() const;
+
             common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
 
         private:
@@ -40,6 +45,7 @@ namespace isomap {
             uint32_t m_height;
 
             uint8_t* m_heightMap = nullptr;
+            uint8_t* m_slopeMap = nullptr;
             uint8_t* m_oreMap = nullptr;
         };
     }

@@ -1,6 +1,6 @@
 #include "MouseListener.h"
 
-void MouseListener::mouseDownEvent(vl::EMouseButton btn, int x, int y) {
+void MouseListener::mouseDownEvent( vl::EMouseButton btn, int x, int y ) {
     if ( btn == vl::MiddleButton ) {
         m_mode = Mode_rotate;
         m_x = x;
@@ -9,7 +9,7 @@ void MouseListener::mouseDownEvent(vl::EMouseButton btn, int x, int y) {
         m_mode = Mode_translate;
         m_x = x;
         m_y = y;
-        m_window->screenToWorld(x, y, m_tile_x, m_tile_y);
+        m_window->screenToWorld( x, y, m_tile_x, m_tile_y );
     } else if ( btn == vl::LeftButton ) {
         int wx = 0;
         int wy = 0;
@@ -19,19 +19,17 @@ void MouseListener::mouseDownEvent(vl::EMouseButton btn, int x, int y) {
     }
 }
 
-void MouseListener::mouseUpEvent(vl::EMouseButton btn, int x, int y) {
+void MouseListener::mouseUpEvent( vl::EMouseButton btn, int x, int y ) {
     if ( btn == vl::MiddleButton && m_mode == Mode_rotate ) {
         m_mode = Mode_none;
-    }
-    else if ( btn == vl::RightButton && m_mode == Mode_translate ) {
+    } else if ( btn == vl::RightButton && m_mode == Mode_translate ) {
         m_mode = Mode_none;
-    }
-    else if ( btn == vl::LeftButton && m_mode == Mode_highlight ) {
+    } else if ( btn == vl::LeftButton && m_mode == Mode_highlight ) {
         m_mode = Mode_none;
     }
 }
 
-void MouseListener::mouseMoveEvent(int x, int y) {
+void MouseListener::mouseMoveEvent( int x, int y ) {
     switch ( m_mode ) {
         case Mode_rotate:
             if ( x - m_x > 10 ) {
@@ -70,8 +68,8 @@ void MouseListener::mouseMoveEvent(int x, int y) {
         case Mode_highlight: {
             int wx = 0;
             int wy = 0;
-            m_window->screenToWorld(x, y, wx, wy);
-            m_window->highlight(wx, wy);
+            m_window->screenToWorld( x, y, wx, wy );
+            m_window->highlight( wx, wy );
             break;
         }
         default:
@@ -79,11 +77,11 @@ void MouseListener::mouseMoveEvent(int x, int y) {
     }
 }
 
-void MouseListener::enableEvent(bool enabled) {
+void MouseListener::enableEvent( bool enabled ) {
 
 }
 
-void MouseListener::mouseWheelEvent(int rotation)  {
+void MouseListener::mouseWheelEvent( int rotation ) {
     if ( rotation > 0 ) {
         m_window->zoomIn();
     } else {

@@ -3,7 +3,7 @@
 namespace math {
 
     rng::rng( unsigned int seed ) :
-    engine( seed ) {}
+            engine( seed ) { }
 
     rng& rng::operator>>( int& nr ) {
         nr = engine();
@@ -15,11 +15,11 @@ namespace math {
         return *this;
     }
 
-    int rng::operator()(int max) {
+    int rng::operator()( int max ) {
         return engine() % max;
     }
 
-    int rng::operator()(int min, int max) {
+    int rng::operator()( int min, int max ) {
         return min + (engine() % (max - min));
     }
 
@@ -30,7 +30,7 @@ namespace math {
         }
 
         int32_t div( int32_t lhs, int32_t rhs ) {
-            return static_cast<int32_t>(int64_t(lhs * 65536) / rhs);
+            return static_cast<int32_t>(int64_t( lhs * 65536 ) / rhs);
         }
 
         int64_t div( int64_t lhs, int32_t rhs ) {

@@ -1,5 +1,7 @@
 #include "StructureType.h"
 
-namespace isomap { namespace server {
+namespace isomap {
+    namespace server {
 
-} }
+    }
+}

@@ -13,11 +13,11 @@ namespace isomap {
 
     class game_unit {
     public:
-        game_unit(vl::RenderingAbstract *rendering, game_map *world);
+        game_unit( vl::RenderingAbstract* rendering, game_map* world );
 
-        void setPosition(int x, int y, int z);
+        void setPosition( int x, int y, int z );
 
-        void moveTo(int x, int y);
+        void moveTo( int x, int y );
 
         void update( bool removeFow );
 
@@ -48,7 +48,7 @@ namespace isomap {
         vl::ref<vl::Transform> m_transform;
         vl::ref<vl::Effect> m_effect;
 
-        game_map *m_world;
+        game_map* m_world;
     };
 
 }

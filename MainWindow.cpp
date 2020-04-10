@@ -15,7 +15,7 @@
 #include "common/UnitMessage.h"
 
 
-const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
+const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
 
 void MainWindow::initEvent() {
     //m_world = new isomap::game_map( m_width, m_height );
@@ -56,14 +56,14 @@ void MainWindow::initEvent() {
     m_clientUnit->initRender( rendering() );
 }
 
-void MainWindow::resizeEvent(int w, int h) {
+void MainWindow::resizeEvent( int w, int h ) {
     rendering()->as<vl::Rendering>()->camera()->viewport()->set( 0, 0, w, h );
     updateProjection();
 }
 
 
-void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
-    switch( key ) {
+void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
+    switch ( key ) {
         case vl::Key_Left:
             m_width /= 2;
             if ( m_width < 8 ) {
@@ -99,10 +99,18 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
             m_smooth -= 4;
             break;
 
-        case vl::Key_Insert:    m_oreAmount += 4;   break;
-        case vl::Key_Delete:    m_oreAmount -= 4;   break;
-        case vl::Key_Home:      m_oreDensity += 4;  break;
-        case vl::Key_End:       m_oreDensity -= 4;  break;
+        case vl::Key_Insert:
+            m_oreAmount += 4;
+            break;
+        case vl::Key_Delete:
+            m_oreAmount -= 4;
+            break;
+        case vl::Key_Home:
+            m_oreDensity += 4;
+            break;
+        case vl::Key_End:
+            m_oreDensity -= 4;
+            break;
 
         case vl::Key_Space:
             m_paused = !m_paused;
@@ -121,8 +129,8 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
 void MainWindow::updateProjection() {
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
     int h = rendering()->as<vl::Rendering>()->camera()->viewport()->height();
-    vl::real hx = (w / (ZOOMLEVELS[m_zoom] / ::sqrt( 2.0 ) )) / 2.0;
-    vl::real hy = (h / (ZOOMLEVELS[m_zoom] / ::sqrt( 2.0 ) )) / 2.0;
+    vl::real hx = (w / (ZOOM_LEVELS[m_zoom] / ::sqrt( 2.0 ))) / 2.0;
+    vl::real hy = (h / (ZOOM_LEVELS[m_zoom] / ::sqrt( 2.0 ))) / 2.0;
     rendering()->as<vl::Rendering>()->camera()->setProjectionOrtho(
             -hx,
             hx,
@@ -147,10 +155,10 @@ void MainWindow::updateCamera() {
     vl::real x = m_x + m_x_off;
     vl::real y = m_y + m_y_off;
 
-    vl::vec3 eye    = vl::vec3(x + eye_x, y + eye_y, distance * ratio); // camera position
-    vl::vec3 center = vl::vec3(x, y,0);   // point the camera is looking at
-    vl::vec3 up     = vl::vec3(0,0,1);   // up direction
-    vl::mat4 view_mat = vl::mat4::getLookAt(eye, center, up);
+    vl::vec3 eye = vl::vec3( x + eye_x, y + eye_y, distance * ratio ); // camera position
+    vl::vec3 center = vl::vec3( x, y, 0 );   // point the camera is looking at
+    vl::vec3 up = vl::vec3( 0, 0, 1 );   // up direction
+    vl::mat4 view_mat = vl::mat4::getLookAt( eye, center, up );
 
     rendering()->as<vl::Rendering>()->camera()->setViewMatrix( view_mat );
 }
@@ -162,7 +170,7 @@ void MainWindow::updateScene() {
         default:
         case 0:
             if ( m_angle != 0 ) {
-                if (m_angle > 180) {
+                if ( m_angle > 180 ) {
                     m_angle++;
                 } else {
                     m_angle--;
@@ -177,7 +185,7 @@ void MainWindow::updateScene() {
             break;
         case 1:
             if ( m_angle != 90 ) {
-                if (m_angle > 270 || m_angle < 90) {
+                if ( m_angle > 270 || m_angle < 90 ) {
                     m_angle++;
                 } else {
                     m_angle--;
@@ -192,7 +200,7 @@ void MainWindow::updateScene() {
             break;
         case 2:
             if ( m_angle != 180 ) {
-                if (m_angle < 180 ) {
+                if ( m_angle < 180 ) {
                     m_angle++;
                 } else {
                     m_angle--;
@@ -207,7 +215,7 @@ void MainWindow::updateScene() {
             break;
         case 3:
             if ( m_angle != 270 ) {
-                if (m_angle < 90 || m_angle > 270 ) {
+                if ( m_angle < 90 || m_angle > 270 ) {
                     m_angle--;
                 } else {
                     m_angle++;
@@ -265,14 +273,15 @@ void MainWindow::updateScene() {
     m_terrain->processMessage( terrainMessage );
     delete terrainMessage;
 
+    m_terrain->updateFog();
     m_terrain->render();
     m_clientUnit->render();
 }
 
 void MainWindow::zoomIn() {
     ++m_zoom;
-    if ( m_zoom >= (sizeof(ZOOMLEVELS) / sizeof(ZOOMLEVELS[0])) ) {
-        m_zoom = (sizeof(ZOOMLEVELS) / sizeof(ZOOMLEVELS[0])) - 1;
+    if ( m_zoom >= (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) ) {
+        m_zoom = (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) - 1;
     }
     updateProjection();
 }
@@ -299,22 +308,40 @@ void MainWindow::rotateRight() {
 
 void MainWindow::left() {
     switch ( m_orientation ) {
-        case 0: m_x++; break;
-        case 1: m_y++; break;
-        case 2: m_x--; break;
-        case 3: m_y--; break;
-        default: break;
+        case 0:
+            m_x++;
+            break;
+        case 1:
+            m_y++;
+            break;
+        case 2:
+            m_x--;
+            break;
+        case 3:
+            m_y--;
+            break;
+        default:
+            break;
     }
     updateCamera();
 }
 
 void MainWindow::up() {
     switch ( m_orientation ) {
-        case 1: m_x++; break;
-        case 2: m_y++; break;
-        case 3: m_x--; break;
-        case 0: m_y--; break;
-        default: break;
+        case 1:
+            m_x++;
+            break;
+        case 2:
+            m_y++;
+            break;
+        case 3:
+            m_x--;
+            break;
+        case 0:
+            m_y--;
+            break;
+        default:
+            break;
     }
     updateCamera();
 }
@@ -322,11 +349,20 @@ void MainWindow::up() {
 
 void MainWindow::right() {
     switch ( m_orientation ) {
-        case 2: m_x++; break;
-        case 3: m_y++; break;
-        case 0: m_x--; break;
-        case 1: m_y--; break;
-        default: break;
+        case 2:
+            m_x++;
+            break;
+        case 3:
+            m_y++;
+            break;
+        case 0:
+            m_x--;
+            break;
+        case 1:
+            m_y--;
+            break;
+        default:
+            break;
     }
     updateCamera();
 }
@@ -334,16 +370,25 @@ void MainWindow::right() {
 
 void MainWindow::down() {
     switch ( m_orientation ) {
-        case 3: m_x++; break;
-        case 0: m_y++; break;
-        case 1: m_x--; break;
-        case 2: m_y--; break;
-        default: break;
+        case 3:
+            m_x++;
+            break;
+        case 0:
+            m_y++;
+            break;
+        case 1:
+            m_x--;
+            break;
+        case 2:
+            m_y--;
+            break;
+        default:
+            break;
     }
     updateCamera();
 }
 
-void MainWindow::screenToWorld(int screen_x, int screen_y, int& world_x, int& world_y ) {
+void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
     int h = rendering()->as<vl::Rendering>()->camera()->viewport()->height();
@@ -356,7 +401,7 @@ void MainWindow::screenToWorld(int screen_x, int screen_y, int& world_x, int& wo
     int dx = screen_x - hw;
     int dy = screen_y - hh;
 
-    vl::real tile_width = ZOOMLEVELS[m_zoom];
+    vl::real tile_width = ZOOM_LEVELS[m_zoom];
     vl::real tile_height = tile_width / 2.0;
 
     // translate screen coordinates to tile coordinates
@@ -365,20 +410,32 @@ void MainWindow::screenToWorld(int screen_x, int screen_y, int& world_x, int& wo
 
     // we have to offset the tile positions because the center of a tile is at the center of the screen
     // we have to use floor, otherwise both 0.5 and -0.5 will become 0. -0.5 should become -1
-    int tx = (int)::floor(wy + wx + m_x_off);
-    int ty = (int)::floor(wy - wx + m_y_off);
+    int tx = (int)::floor( wy + wx + m_x_off );
+    int ty = (int)::floor( wy - wx + m_y_off );
 
     // and then there's this monstrosity, don't ask...
     switch ( m_orientation ) {
         default:
-        case 0: world_x = m_x + tx; world_y = m_y - ty; break;
-        case 1: world_x = m_x + ty; world_y = m_y + tx; break;
-        case 2: world_x = m_x - tx; world_y = m_y + ty; break;
-        case 3: world_x = m_x - ty; world_y = m_y - tx; break;
+        case 0:
+            world_x = m_x + tx;
+            world_y = m_y - ty;
+            break;
+        case 1:
+            world_x = m_x + ty;
+            world_y = m_y + tx;
+            break;
+        case 2:
+            world_x = m_x - tx;
+            world_y = m_y + ty;
+            break;
+        case 3:
+            world_x = m_x - ty;
+            world_y = m_y - tx;
+            break;
     }
 }
 
-void MainWindow::highlight(int x, int y) {
+void MainWindow::highlight( int x, int y ) {
     /*m_world->highlight( x, y );
     if ( m_world->isInside( x, y ) ) {
         m_unit->moveTo( x, y );
@@ -389,7 +446,7 @@ void MainWindow::highlight(int x, int y) {
     delete comMsg;
 }
 
-void MainWindow::focusTileAt(int tile_x, int tile_y, int screen_x, int screen_y) {
+void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y ) {
     // move the camera so the given tile is at the given screen position
     int tx = 0;
     int ty = 0;

@@ -7,38 +7,38 @@
 
 namespace isomap {
 
-    game_unit::game_unit(vl::RenderingAbstract *rendering, game_map *world) :
-            m_world(world) {
+    game_unit::game_unit( vl::RenderingAbstract* rendering, game_map* world ) :
+            m_world( world ) {
         m_transform = new vl::Transform;
-        rendering->as<vl::Rendering>()->transform()->addChild(m_transform.get());
+        rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
-        m_geom = vl::makeBox(vl::vec3(0, 0, 0), 1, 1, 1);
+        m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), 1, 1, 1 );
         m_geom->computeNormals();
 
         m_effect = new vl::Effect;
-        m_effect->shader()->gocMaterial()->setColorMaterialEnabled(true);
-        m_effect->shader()->gocMaterial()->setDiffuse(vl::crimson);
-        m_effect->shader()->enable(vl::EN_DEPTH_TEST);
-        m_effect->shader()->enable(vl::EN_LIGHTING);
-        m_effect->lod(0)->push_back(new vl::Shader);
-        m_effect->shader(0, 1)->enable(vl::EN_BLEND);
+        m_effect->shader()->gocMaterial()->setColorMaterialEnabled( true );
+        m_effect->shader()->gocMaterial()->setDiffuse( vl::crimson );
+        m_effect->shader()->enable( vl::EN_DEPTH_TEST );
+        m_effect->shader()->enable( vl::EN_LIGHTING );
+        m_effect->lod( 0 )->push_back( new vl::Shader );
+        m_effect->shader( 0, 1 )->enable( vl::EN_BLEND );
         //m_effect->shader(0,1)->enable(vl::EN_LINE_SMOOTH);
-        m_effect->shader(0, 1)->enable(vl::EN_DEPTH_TEST);
-        m_effect->shader(0, 1)->enable(vl::EN_POLYGON_OFFSET_LINE);
-        m_effect->shader(0, 1)->gocPolygonOffset()->set(-1.0f, -1.0f);
-        m_effect->shader(0, 1)->gocPolygonMode()->set(vl::PM_LINE, vl::PM_LINE);
-        m_effect->shader(0, 1)->gocColor()->setValue(vl::lightgreen);
-        m_effect->shader(0, 1)->setRenderState(m_effect->shader()->getMaterial());
-        m_effect->shader(0, 1)->setRenderState(m_effect->shader()->getLight(0), 0);
+        m_effect->shader( 0, 1 )->enable( vl::EN_DEPTH_TEST );
+        m_effect->shader( 0, 1 )->enable( vl::EN_POLYGON_OFFSET_LINE );
+        m_effect->shader( 0, 1 )->gocPolygonOffset()->set( -1.0f, -1.0f );
+        m_effect->shader( 0, 1 )->gocPolygonMode()->set( vl::PM_LINE, vl::PM_LINE );
+        m_effect->shader( 0, 1 )->gocColor()->setValue( vl::lightgreen );
+        m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
+        m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
 
 
         vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
-        scene_manager->setCullingEnabled(false);
-        rendering->as<vl::Rendering>()->sceneManagers()->push_back(scene_manager.get());
-        scene_manager->tree()->addActor(m_geom.get(), m_effect.get(), m_transform.get());
+        scene_manager->setCullingEnabled( false );
+        rendering->as<vl::Rendering>()->sceneManagers()->push_back( scene_manager.get() );
+        scene_manager->tree()->addActor( m_geom.get(), m_effect.get(), m_transform.get() );
     }
 
-    void game_unit::setPosition(int x, int y, int z) {
+    void game_unit::setPosition( int x, int y, int z ) {
         m_x = x;
         m_y = y;
         m_z = z;
@@ -65,17 +65,41 @@ namespace isomap {
         return 0;
     }
 
-    void getMotion(unsigned char direction, int& x, int& y ) {
+    void getMotion( unsigned char direction, int& x, int& y ) {
         switch ( direction ) {
             default:
-            case 3: x =  1; y =  0; break;
-            case 4: x =  1; y =  1; break;
-            case 5: x =  0; y =  1; break;
-            case 6: x = -1; y =  1; break;
-            case 7: x = -1; y =  0; break;
-            case 0: x = -1; y = -1; break;
-            case 1: x =  0; y = -1; break;
-            case 2: x =  1; y = -1; break;
+            case 3:
+                x = 1;
+                y = 0;
+                break;
+            case 4:
+                x = 1;
+                y = 1;
+                break;
+            case 5:
+                x = 0;
+                y = 1;
+                break;
+            case 6:
+                x = -1;
+                y = 1;
+                break;
+            case 7:
+                x = -1;
+                y = 0;
+                break;
+            case 0:
+                x = -1;
+                y = -1;
+                break;
+            case 1:
+                x = 0;
+                y = -1;
+                break;
+            case 2:
+                x = 1;
+                y = -1;
+                break;
         }
     }
 
@@ -83,7 +107,7 @@ namespace isomap {
         real intx, inty;
         real modx = std::modf( m_x, &intx );
         real mody = std::modf( m_y, &inty );
-        if( modx != 0.0 || mody != 0.0 ) {
+        if ( modx != 0.0 || mody != 0.0 ) {
             return false;
         }
         return intx == m_targetX && inty == m_targetY;
@@ -95,7 +119,7 @@ namespace isomap {
         real mody = std::modf( m_y, &inty );
 
         if ( removeFow ) {
-            m_world->unfog((int) m_x, (int) m_y, 6);
+            m_world->unfog( (int)m_x, (int)m_y, 6 );
         }
 
         if ( modx != 0.0 || mody != 0.0 ) {
@@ -108,13 +132,13 @@ namespace isomap {
             m_x += (real)x * speed;
             m_y += (real)y * speed;
 
-            if (m_world->isInside((int)m_x, (int)m_y)) {
-                m_z = m_world->height((int)m_x, (int)m_y);
+            if ( m_world->isInside( (int)m_x, (int)m_y ) ) {
+                m_z = m_world->height( (int)m_x, (int)m_y );
             }
         } else {
             // tile boundary, read next movement info
-            unsigned int tile_x = (int) intx;
-            unsigned int tile_y = (int) inty;
+            unsigned int tile_x = (int)intx;
+            unsigned int tile_y = (int)inty;
 
             unsigned int width = m_world->width();
             if ( m_wayPoints.empty() ) {
@@ -130,19 +154,19 @@ namespace isomap {
 
             m_targetOrientation = m_wayPoints.back().direction * 45;
 
-            if (m_orientation != m_targetOrientation) {
+            if ( m_orientation != m_targetOrientation ) {
                 auto delta = m_targetOrientation - m_orientation;
-                if (delta < 0) {
+                if ( delta < 0 ) {
                     delta += 360;
                 }
-                if (delta < 180) {
+                if ( delta < 180 ) {
                     m_orientation += 5;
-                    if (m_orientation >= 360) {
+                    if ( m_orientation >= 360 ) {
                         m_orientation -= 360;
                     }
                 } else {
                     m_orientation -= 5;
-                    if (m_orientation < 0) {
+                    if ( m_orientation < 0 ) {
                         m_orientation += 360;
                     }
                 }
@@ -154,7 +178,7 @@ namespace isomap {
                 int ori = m_orientation / 45;
                 getMotion( ori, x, y );
                 unsigned char canReach = m_world->canReach( (int)tile_x + x, (int)tile_y + y );
-                if ( (canReach & (1 << ori) == 0 ) ) {
+                if ( (canReach & (1 << ori) == 0) ) {
                     // can no longer reach destination
                     m_targetX = tile_x;
                     m_targetY = tile_y;
@@ -165,18 +189,18 @@ namespace isomap {
                 m_x += (real)x * speed;
                 m_y += (real)y * speed;
 
-                if (m_world->isInside((int)m_x, (int)m_y)) {
-                    m_z = m_world->height((int)m_x, (int)m_y);
+                if ( m_world->isInside( (int)m_x, (int)m_y ) ) {
+                    m_z = m_world->height( (int)m_x, (int)m_y );
                 }
             }
         }
 
-        vl::mat4 matrix = vl::mat4::getTranslation(m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt(2.0 / 3.0) / 2.0);
+        vl::mat4 matrix = vl::mat4::getTranslation( m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
         matrix *= vl::mat4::getRotation( m_orientation - 135, 0, 0, 1 );
-        m_transform->setLocalMatrix(matrix);
+        m_transform->setLocalMatrix( matrix );
     }
 
-    void game_unit::moveTo(int x, int y) {
+    void game_unit::moveTo( int x, int y ) {
         //printf( "Move to %d %d\n", x, y );
 
 
@@ -190,17 +214,17 @@ namespace isomap {
             unsigned int value = 0;
             unsigned int from = 0;
 
-            bool operator >( const node& rhs ) const {
+            bool operator>( const node& rhs ) const {
                 return value > rhs.value;
             }
         };
 
         auto* tmp = new node[width * height];
-        memset( tmp, 0, width * height * sizeof(unsigned int) );
+        memset( tmp, 0, width * height * sizeof( unsigned int ) );
 
         // create a todo list for the algorithm
         std::priority_queue<node, std::vector<node>, std::greater<>> todo;
-        todo.push( {1, ((unsigned int)m_y) * width + ((unsigned int)m_x) } );
+        todo.push( {1, ((unsigned int)m_y) * width + ((unsigned int)m_x)} );
         while ( !todo.empty() ) {
             auto tile = todo.top();
             todo.pop();
@@ -221,7 +245,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 14;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 14, idx } );
+                    todo.push( {value.value + 14, idx} );
                 }
             }
             if ( canReach & 0b0000'0010u ) {
@@ -230,7 +254,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 10;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 10, idx } );
+                    todo.push( {value.value + 10, idx} );
                 }
             }
             if ( canReach & 0b0000'0100u ) {
@@ -239,7 +263,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 14;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 14, idx } );
+                    todo.push( {value.value + 14, idx} );
                 }
             }
             if ( canReach & 0b0000'1000u ) {
@@ -248,7 +272,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 10;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 10, idx } );
+                    todo.push( {value.value + 10, idx} );
                 }
             }
             if ( canReach & 0b0001'0000u ) {
@@ -257,7 +281,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 14;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 14, idx } );
+                    todo.push( {value.value + 14, idx} );
                 }
             }
             if ( canReach & 0b0010'0000u ) {
@@ -266,7 +290,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 10;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 10, idx } );
+                    todo.push( {value.value + 10, idx} );
                 }
             }
             if ( canReach & 0b0100'0000u ) {
@@ -275,7 +299,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 14;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 14, idx } );
+                    todo.push( {value.value + 14, idx} );
                 }
             }
             if ( canReach & 0b1000'0000u ) {
@@ -284,7 +308,7 @@ namespace isomap {
                 if ( tmp[idx].value == 0 ) {
                     tmp[idx].value = value.value + 10;
                     tmp[idx].from = tile.from;
-                    todo.push( { value.value + 10, idx } );
+                    todo.push( {value.value + 10, idx} );
                 }
             }
         }

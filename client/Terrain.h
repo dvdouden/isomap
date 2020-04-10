@@ -29,6 +29,10 @@ namespace isomap {
                 return m_heightMap;
             }
 
+            uint8_t* slopeMap() const {
+                return m_slopeMap;
+            }
+
             uint8_t* oreMap() const {
                 return m_oreMap;
             }
@@ -37,11 +41,16 @@ namespace isomap {
 
             void render();
 
+            void updateFog();
+
         private:
+            uint8_t getCorner( int x, int y, int c ) const;
+
             uint32_t m_width = 0;
             uint32_t m_height = 0;
 
             uint8_t* m_heightMap = nullptr;
+            uint8_t* m_slopeMap = nullptr;
             uint8_t* m_oreMap = nullptr;
             uint8_t* m_fogMap = nullptr;
 

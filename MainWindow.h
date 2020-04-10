@@ -12,10 +12,10 @@ public:
     // called once after the OpenGL window has been opened
     void initEvent() override;
 
-    void keyPressEvent(unsigned short, vl::EKey) override;
+    void keyPressEvent( unsigned short, vl::EKey ) override;
 
 
-    void resizeEvent(int w, int h) override;
+    void resizeEvent( int w, int h ) override;
 
     void updateScene();
 
@@ -36,14 +36,15 @@ public:
 
     void down();
 
-    void screenToWorld(int screen_x, int screen_y, int& world_x, int& world_y);
+    void screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y );
 
     void highlight( int x, int y );
 
-    void focusTileAt(int tile_x, int tile_y, int screen_x, int screen_y);
+    void focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y );
 
 protected:
     void updateProjection();
+
     void updateCamera();
 
     //isomap::game_map* m_world;

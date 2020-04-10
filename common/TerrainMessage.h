@@ -12,7 +12,7 @@ namespace isomap {
                 Update = 1
             };
 
-            TerrainMessage( Type type ) :
+            explicit TerrainMessage( Type type ) :
                     m_type( type ) { }
 
             Type type() const {
@@ -22,6 +22,7 @@ namespace isomap {
             struct Cell {
                 uint32_t id;
                 uint8_t height;
+                uint8_t slope;
                 uint8_t ore;
             };
 
@@ -29,9 +30,9 @@ namespace isomap {
 
             static TerrainMessage* updateMsg( std::vector<Cell>& cells );
 
-            static TerrainMessage* unmarshal( uint8_t* buffer, uint32_t size );
+            //static TerrainMessage* unmarshal( uint8_t* buffer, uint32_t size );
 
-            static uint32_t marshal( TerrainMessage* message, uint8_t*& buffer, uint32_t& size );
+            //static uint32_t marshal( TerrainMessage* message, uint8_t*& buffer, uint32_t& size );
 
             uint32_t width() const {
                 return m_width;
@@ -47,8 +48,8 @@ namespace isomap {
 
         private:
             Type m_type;
-            uint32_t m_width;
-            uint32_t m_height;
+            uint32_t m_width = 0;
+            uint32_t m_height = 0;
             std::vector<Cell> m_cells;
 
         };

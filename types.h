@@ -9,6 +9,7 @@ namespace isomap {
 
     // forward declarations
     class game_map;
+
     class game_unit;
 
 }
