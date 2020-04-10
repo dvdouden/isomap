@@ -1,3 +1,4 @@
+#include "Player.h"
 #include "Unit.h"
 #include "UnitType.h"
 #include "../util/math.h"
@@ -9,16 +10,20 @@ namespace isomap {
         void Unit::processMessage( common::UnitCommandMessage* msg ) {
             switch ( msg->type() ) {
                 case common::UnitCommandMessage::Move:
-                        m_wayPoints.clear();
-                        for ( const auto& wayPoint : msg->wayPoints() ) {
-                            // TODO: fix orientation
-                            m_wayPoints.push_back( { wayPoint.x, wayPoint.y, 0 } );
-                        }
+                    m_wayPoints.clear();
+                    for ( const auto& wayPoint : msg->wayPoints() ) {
+                        // TODO: fix orientation
+                        m_wayPoints.push_back( {wayPoint.x, wayPoint.y, 0} );
+                    }
                     break;
 
                 default:
                     break;
             }
+        }
+
+        common::UnitServerMessage* Unit::statusMessage() {
+            return common::UnitServerMessage::statusMsg( m_x, m_y );
         }
 
         bool Unit::update( Terrain* terrain ) {
@@ -43,6 +48,7 @@ namespace isomap {
                     --m_y;
                 }
             }
+            player()->unfog( m_x, m_y, 20 );
             if ( m_x == wayPoint.x && m_y == wayPoint.y ) {
                 m_wayPoints.pop_back();
                 return true;

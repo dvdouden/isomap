@@ -10,6 +10,7 @@ namespace isomap {
     namespace server {
         class Terrain;
         class Object;
+        class Unit;
         class UnitType;
         class StructureType;
         class Player;
@@ -18,6 +19,7 @@ namespace isomap {
 
     namespace client {
         class Terrain;
+        class Unit;
     }
 
     namespace common {

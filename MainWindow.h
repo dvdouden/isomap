@@ -46,9 +46,9 @@ protected:
     void updateProjection();
     void updateCamera();
 
-    isomap::game_map* m_world;
-    isomap::game_unit* m_unit;
-    std::vector<isomap::game_unit*> m_units;
+    //isomap::game_map* m_world;
+    //isomap::game_unit* m_unit;
+    //std::vector<isomap::game_unit*> m_units;
     int m_zoom;
     unsigned int m_orientation;
     int m_x;
@@ -60,14 +60,16 @@ protected:
     unsigned char m_smooth = 128;
     unsigned char m_oreAmount = 32;
     unsigned char m_oreDensity = 128;
-    int m_width = 128;
-    int m_height = 128;
+    int m_width = 512;
+    int m_height = 512;
     bool m_paused = true;
 
     isomap::server::Match* m_match;
     isomap::server::Player* m_player;
 
     isomap::client::Terrain* m_terrain;
+    isomap::server::Unit* m_serverUnit;
+    isomap::client::Unit* m_clientUnit;
 };
 
 

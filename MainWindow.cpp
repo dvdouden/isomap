@@ -6,16 +6,19 @@
 #include "server/Match.h"
 #include "server/Player.h"
 #include "server/Terrain.h"
+#include "server/Unit.h"
 
 #include "client/Terrain.h"
+#include "client/Unit.h"
 
 #include "common/TerrainMessage.h"
+#include "common/UnitMessage.h"
 
 
 const int ZOOMLEVELS[] = { 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256 };
 
 void MainWindow::initEvent() {
-    m_world = new isomap::game_map( m_width, m_height );
+    //m_world = new isomap::game_map( m_width, m_height );
     m_zoom = 6;
     m_x = 0;
     m_y = 0;
@@ -23,11 +26,11 @@ void MainWindow::initEvent() {
 
     sceneManager()->setCullingEnabled( false );
 
-    m_unit = new isomap::game_unit( rendering(), m_world );
+    /*m_unit = new isomap::game_unit( rendering(), m_world );
 
     for ( int i = 0 ; i < 100; ++i ) {
         m_units.push_back( new isomap::game_unit( rendering(), m_world ) );
-    }
+    }*/
 
     m_match = new isomap::server::Match();
     m_match->generateWorld( m_width, m_height );
@@ -45,7 +48,12 @@ void MainWindow::initEvent() {
     m_terrain->processMessage( msg );
     delete msg;
 
-    m_terrain->render( rendering() );
+    m_terrain->initRender( rendering() );
+
+    m_serverUnit = new isomap::server::Unit( m_player, nullptr );
+    m_match->addObject( m_serverUnit );
+    m_clientUnit = new isomap::client::Unit;
+    m_clientUnit->initRender( rendering() );
 }
 
 void MainWindow::resizeEvent(int w, int h) {
@@ -98,6 +106,10 @@ void MainWindow::keyPressEvent(unsigned short ch, vl::EKey key) {
 
         case vl::Key_Space:
             m_paused = !m_paused;
+            break;
+
+        case vl::Key_Return:
+            m_match->update();
             break;
 
         default:
@@ -210,6 +222,7 @@ void MainWindow::updateScene() {
             break;
     }
 
+    /*
     static int seed = 0;
     if ( m_width != m_world->width() || m_height != m_world->height() ) {
         m_world->setSize(m_width, m_height);
@@ -241,6 +254,19 @@ void MainWindow::updateScene() {
             unit->update(true);
         }
     }
+*/
+    m_match->update();
+
+    isomap::common::UnitServerMessage* unitMsg = m_serverUnit->statusMessage();
+    m_clientUnit->processMessage( unitMsg );
+    delete unitMsg;
+
+    isomap::common::TerrainMessage* terrainMessage = m_player->createTerrainMessage();
+    m_terrain->processMessage( terrainMessage );
+    delete terrainMessage;
+
+    m_terrain->render();
+    m_clientUnit->render();
 }
 
 void MainWindow::zoomIn() {
@@ -353,10 +379,14 @@ void MainWindow::screenToWorld(int screen_x, int screen_y, int& world_x, int& wo
 }
 
 void MainWindow::highlight(int x, int y) {
-    m_world->highlight( x, y );
+    /*m_world->highlight( x, y );
     if ( m_world->isInside( x, y ) ) {
         m_unit->moveTo( x, y );
-    }
+    }*/
+
+    isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
+    m_serverUnit->processMessage( comMsg );
+    delete comMsg;
 }
 
 void MainWindow::focusTileAt(int tile_x, int tile_y, int screen_x, int screen_y) {

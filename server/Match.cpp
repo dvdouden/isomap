@@ -30,6 +30,10 @@ namespace isomap {
             m_players.push_back( player );
         }
 
+        void Match::addObject( Object* object ) {
+            m_objects[object->id()] = object;
+        }
+
         void Match::start() {
             for ( auto* player : m_players ) {
                 player->init( m_terrain );

@@ -1,11 +1,9 @@
 #include <cstring>
 
 #include <vlCore/Say.hpp>
-#include <vlGraphics/Actor.hpp>
 #include <vlGraphics/DrawArrays.hpp>
 #include <vlGraphics/Effect.hpp>
 #include <vlGraphics/Geometry.hpp>
-#include <vlCore/ResourceDatabase.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 #include <vlGraphics/Rendering.hpp>
 
@@ -16,20 +14,26 @@ namespace isomap {
     namespace client {
 
         void Terrain::processMessage( isomap::common::TerrainMessage* msg ) {
+            if ( msg == nullptr ) {
+                return;
+            }
             switch ( msg->type() ) {
                 case common::TerrainMessage::Create:
                     m_width = msg->width();
                     m_height = msg->height();
                     m_heightMap = new uint8_t[m_width * m_height];
                     m_oreMap = new uint8_t[m_width * m_height];
+                    m_fogMap = new uint8_t[m_width * m_height];
                     ::memset( m_heightMap, 0, m_width * m_height );
                     ::memset( m_oreMap, 0, m_width * m_height );
+                    ::memset( m_fogMap, 0, m_width * m_height );
                     break;
 
                 case common::TerrainMessage::Update:
                     for ( const auto& cell : msg->cells() ) {
                         m_heightMap[cell.id] = cell.height;
                         m_oreMap[cell.id] = cell.ore;
+                        m_fogMap[cell.id] = 255;
                     }
                     break;
 
@@ -38,8 +42,13 @@ namespace isomap {
             }
         }
 
-        void Terrain::render( vl::RenderingAbstract* rendering ) {
+        void Terrain::initRender( vl::RenderingAbstract* rendering ) {
+            m_sceneManager = new vl::SceneManagerActorTree;
+            m_sceneManager->setCullingEnabled(false);
+            rendering->as<vl::Rendering>()->sceneManagers()->push_back(m_sceneManager.get());
+        }
 
+        void Terrain::render() {
             uint32_t quad_count = m_width * m_height;
             vl::ref<vl::ArrayFloat3> verts = new vl::ArrayFloat3;
             vl::ref<vl::ArrayFloat3> normals = new vl::ArrayFloat3;
@@ -54,6 +63,9 @@ namespace isomap {
             uint32_t quads = 0;
             for (int y = 0; y < m_height; ++y) {
                 for (int x = 0; x < m_width; ++x) {
+                    if ( m_fogMap[y * m_width + x] == 0 ) {
+                        continue;
+                    }
 
                     auto h = m_heightMap[y * m_width + x];
                     auto ore = m_oreMap[y * m_width + x];
@@ -133,10 +145,8 @@ namespace isomap {
             effect->shader(0, 1)->setRenderState(effect->shader()->getMaterial());
             effect->shader(0, 1)->setRenderState(effect->shader()->getLight(0), 0);
 
-            vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
-            scene_manager->setCullingEnabled(false);
-            rendering->as<vl::Rendering>()->sceneManagers()->push_back(scene_manager.get());
-            scene_manager->tree()->addActor(geom.get(), effect.get(), nullptr);
+            m_sceneManager->tree()->actors()->clear();
+            m_sceneManager->tree()->addActor(geom.get(), effect.get(), nullptr);
         }
 
     }

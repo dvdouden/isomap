@@ -8,8 +8,8 @@ namespace isomap {
     namespace server {
         class Unit : public Object {
         public:
-            Unit( Player* owner, UnitType* type ) :
-                    Object( owner ),
+            Unit( Player* player, UnitType* type ) :
+                    Object( player ),
                     m_type( type ) {
 
             }
@@ -21,6 +21,8 @@ namespace isomap {
             const Unit& operator=( const Unit& ) = delete;
 
             void processMessage( common::UnitCommandMessage* msg );
+
+            common::UnitServerMessage* statusMessage();
 
             bool update( Terrain* terrain ) override;
 

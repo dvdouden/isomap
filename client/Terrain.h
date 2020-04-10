@@ -33,7 +33,9 @@ namespace isomap {
                 return m_oreMap;
             }
 
-            void render( vl::RenderingAbstract* rendering );
+            void initRender( vl::RenderingAbstract* rendering );
+
+            void render();
 
         private:
             uint32_t m_width = 0;
@@ -41,6 +43,9 @@ namespace isomap {
 
             uint8_t* m_heightMap = nullptr;
             uint8_t* m_oreMap = nullptr;
+            uint8_t* m_fogMap = nullptr;
+
+            vl::ref<vl::SceneManagerActorTree> m_sceneManager;
         };
     }
 }

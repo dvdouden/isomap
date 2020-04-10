@@ -9,6 +9,13 @@ namespace isomap {
             std::swap( msg->m_wayPoints, wayPoints );
             return msg;
         }
+
+        UnitServerMessage* UnitServerMessage::statusMsg( int32_t x, int32_t y ) {
+            auto* msg = new UnitServerMessage( Status );
+            msg->m_x = x;
+            msg->m_y = y;
+            return msg;
+        }
     }
 }
 

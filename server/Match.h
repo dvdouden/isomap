@@ -16,6 +16,7 @@ namespace isomap { namespace server {
 
         void generateWorld( uint32_t width, uint32_t height );
         void addPlayer( Player* player );
+        void addObject( Object* object );
         void start();
         void update();
 

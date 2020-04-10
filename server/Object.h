@@ -5,7 +5,7 @@
 namespace isomap { namespace server {
     class Object {
     public:
-        Object( Player* owner );
+        Object( Player* player );
         virtual ~Object() = default;
 
         Object( const Object& ) = delete;
@@ -16,8 +16,8 @@ namespace isomap { namespace server {
             return m_id;
         }
 
-        Player* owner() const {
-            return m_owner;
+        Player* player() const {
+            return m_player;
         }
 
         virtual bool update(Terrain* world ) = 0;
@@ -27,7 +27,7 @@ namespace isomap { namespace server {
 
     private:
         id_t m_id;
-        Player* m_owner;
+        Player* m_player;
 
     };
 } }
