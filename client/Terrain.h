@@ -48,11 +48,16 @@ namespace isomap {
 
             uint32_t m_width = 0;
             uint32_t m_height = 0;
+            uint32_t m_fogUpdateMapScale = 64;
+            uint32_t m_fogUpdateMapWidth = 0;
+            uint32_t m_fogUpdateMapHeight = 0;
 
             uint8_t* m_heightMap = nullptr;
             uint8_t* m_slopeMap = nullptr;
             uint8_t* m_oreMap = nullptr;
             uint8_t* m_fogMap = nullptr;
+            uint8_t* m_fogUpdateMap = nullptr;
+
 
             vl::ref<vl::SceneManagerActorTree> m_sceneManager;
         };

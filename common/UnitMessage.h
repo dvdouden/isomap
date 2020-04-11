@@ -58,13 +58,18 @@ namespace isomap {
                 return m_y;
             }
 
-            static UnitServerMessage* statusMsg( int32_t x, int32_t y );
+            int32_t z() const {
+                return m_z;
+            }
+
+            static UnitServerMessage* statusMsg( int32_t x, int32_t y, int32_t z );
 
         private:
             Type m_type;
 
             int32_t m_x;
             int32_t m_y;
+            int32_t m_z;
 
         };
     }

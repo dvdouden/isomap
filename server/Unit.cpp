@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Terrain.h"
 #include "Unit.h"
 #include "UnitType.h"
 #include "../util/math.h"
@@ -23,7 +24,7 @@ namespace isomap {
         }
 
         common::UnitServerMessage* Unit::statusMessage() {
-            return common::UnitServerMessage::statusMsg( m_x, m_y );
+            return common::UnitServerMessage::statusMsg( m_x, m_y, m_z );
         }
 
         bool Unit::update( Terrain* terrain ) {
@@ -48,6 +49,17 @@ namespace isomap {
                     --m_y;
                 }
             }
+            if ( m_x < 0 ) {
+                m_x = 0;
+            } else if ( m_x >= terrain->width() ) {
+                m_x = terrain->width() - 1;
+            }
+            if ( m_y < 0 ) {
+                m_y = 0;
+            } else if ( m_y >= terrain->height() ) {
+                m_y = terrain->height() - 1;
+            }
+            m_z = terrain->heightMap()[m_y * terrain->width() + m_x];
             player()->unfog( m_x, m_y, 20 );
             if ( m_x == wayPoint.x && m_y == wayPoint.y ) {
                 m_wayPoints.pop_back();

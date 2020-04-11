@@ -25,10 +25,14 @@ namespace isomap {
                     m_slopeMap = new uint8_t[m_width * m_height];
                     m_oreMap = new uint8_t[m_width * m_height];
                     m_fogMap = new uint8_t[m_width * m_height];
+                    m_fogUpdateMapWidth = (m_width + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
+                    m_fogUpdateMapHeight = (m_height + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
+                    m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight];
                     ::memset( m_heightMap, 0, m_width * m_height );
                     ::memset( m_slopeMap, 0, m_width * m_height );
                     ::memset( m_oreMap, 0, m_width * m_height );
                     ::memset( m_fogMap, 0, m_width * m_height );
+                    ::memset( m_fogUpdateMap, 0, m_fogUpdateMapWidth * m_fogUpdateMapHeight );
                     break;
 
                 case common::TerrainMessage::Update:
@@ -37,6 +41,11 @@ namespace isomap {
                         m_oreMap[cell.id] = cell.ore;
                         m_slopeMap[cell.id] = cell.slope;
                         m_fogMap[cell.id] = 255;
+                        uint32_t x = cell.id % m_width;
+                        uint32_t y = cell.id / m_height;
+                        uint32_t fogX = x / m_fogUpdateMapScale;
+                        uint32_t fogY = y / m_fogUpdateMapScale;
+                        m_fogUpdateMap[fogY * m_fogUpdateMapWidth + fogX] = 1;
                     }
                     break;
 
@@ -298,13 +307,31 @@ namespace isomap {
         }
 
         void Terrain::updateFog() {
-            for ( unsigned int i = 0; i < m_width * m_height; ++i ) {
-                if ( m_fogMap[i] > 1 ) {
-                    m_fogMap[i]--;
+            uint32_t checks = 0;
+            for ( uint32_t fogY = 0; fogY < m_fogUpdateMapHeight; ++fogY ) {
+                for ( uint32_t fogX = 0; fogX < m_fogUpdateMapWidth; ++fogX ) {
+                    if ( m_fogUpdateMap[fogY * m_fogUpdateMapWidth + fogX] == 0 ) {
+                        continue;
+                    }
+                    ++checks;
+                    uint32_t cnt = 0;
+                    // could probably make this a _lot_ faster by splitting the actual map into chunks
+                    for ( uint32_t y = fogY * m_fogUpdateMapScale;
+                          y < ((fogY + 1) * m_fogUpdateMapScale) && y < m_height; ++y ) {
+                        for ( uint32_t x = fogX * m_fogUpdateMapScale;
+                              x < ((fogX + 1) * m_fogUpdateMapScale) && x < m_width; ++x ) {
+                            if ( m_fogMap[y * m_width + x] > 1 ) {
+                                m_fogMap[y * m_width + x]--;
+                                ++cnt;
+                            }
+                        }
+                    }
+                    if ( cnt == 0 ) {
+                        m_fogUpdateMap[fogY * m_fogUpdateMapWidth + fogX] = 0;
+                    }
                 }
             }
         }
-
     }
 
 }

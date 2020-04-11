@@ -9,7 +9,7 @@ namespace isomap {
     namespace client {
 
         common::UnitCommandMessage* Unit::moveTo( int32_t x, int32_t y ) {
-            // convert into waypoints
+            // convert into way points
             std::vector<common::UnitCommandMessage::WayPoint> wayPoints;
             do {
                 wayPoints.push_back( {x, y} );
@@ -36,6 +36,7 @@ namespace isomap {
                 case common::UnitServerMessage::Status:
                     m_x = msg->x();
                     m_y = msg->y();
+                    m_z = msg->z();
                     break;
 
                 default:
