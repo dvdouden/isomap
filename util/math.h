@@ -48,6 +48,10 @@ namespace math {
         int32_t div( int32_t lhs, int32_t rhs );
 
         int64_t div( int64_t lhs, int32_t rhs );
+
+        const uint32_t precisionBits = 12u;
+        const int32_t precision = 1u << precisionBits;
+        const float fPrecision = precision;
     }
 }
 

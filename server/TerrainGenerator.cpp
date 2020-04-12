@@ -78,7 +78,7 @@ namespace isomap {
         }
 
 
-        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, math::rng& rnd ) {
+        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t variation, math::rng& rnd ) {
             auto* tmp = new uint8_t[width * height];
             for ( uint32_t i = 0; i < width * height; ++i ) {
                 tmp[i] = 0;
@@ -91,12 +91,12 @@ namespace isomap {
                 }
             }
 
-            uint32_t magnitude = 128;
-            while ( scale > 1 ) {
-                diamond( tmp, width, height, scale, magnitude, rnd );
-                square( tmp, width, height, scale, magnitude, rnd );
-                scale >>= 1u;
-                magnitude >>= 1u;
+            uint32_t tempScale = scale;
+            while ( tempScale > 1 ) {
+                uint32_t magnitude = (variation * tempScale) / scale;
+                diamond( tmp, width, height, tempScale, magnitude, rnd );
+                square( tmp, width, height, tempScale, magnitude, rnd );
+                tempScale >>= 1u;
             }
             return tmp;
         }
@@ -115,7 +115,7 @@ namespace isomap {
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
 
             // create ore map
-            uint8_t* ore_map = squareDiamond( sdWidth, sdHeight, scale, rnd );
+            uint8_t* ore_map = squareDiamond( sdWidth, sdHeight, scale, 128, rnd );
             uint8_t* scr_o = ore_map;
             for ( uint32_t i = 0; i < sdWidth * sdHeight; ++i ) {
                 if ( *scr_o >= oreAmount ) {
@@ -203,16 +203,16 @@ namespace isomap {
             uint32_t scale = 1u << m_depth;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, rnd );
+            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_variation, rnd );
 
             // apply cliffs
-            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, scale / 2, rnd );
+            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, scale / 2, m_cliffVariation, rnd );
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
                 if ( *scratchCliffMap >= m_cliffAmount ) {
                     // reduce height to 0-3
-                    *scratchHeightMap >>= 6u;
+                    *scratchHeightMap >>= 4u;
                 } else {
                     // clamp height to 0 or 3
                     if ( *scratchHeightMap >= 128 ) {

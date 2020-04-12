@@ -16,25 +16,27 @@ namespace math {
     }
 
     int rng::operator()( int max ) {
-        return engine() % max;
+        std::uniform_int_distribution<int> uni( 0, max );
+        return uni( engine );
     }
 
     int rng::operator()( int min, int max ) {
-        return min + (engine() % (max - min));
+        std::uniform_int_distribution<int> uni( min, max );
+        return uni( engine );
     }
 
     namespace fix {
         int64_t mul( int32_t lhs, int32_t rhs ) {
-            // shift 16 right, but use a divide to shut Clang-tidy up
-            return static_cast<int32_t>((int64_t( lhs ) * int64_t( rhs )) / 65536 );
+            // shift <precisionBits> bits right, but use a divide to shut Clang-tidy up
+            return static_cast<int32_t>((int64_t( lhs ) * int64_t( rhs )) / precision );
         }
 
         int32_t div( int32_t lhs, int32_t rhs ) {
-            return static_cast<int32_t>(int64_t( lhs * 65536 ) / rhs);
+            return static_cast<int32_t>(int64_t( lhs * precision ) / rhs);
         }
 
         int64_t div( int64_t lhs, int32_t rhs ) {
-            return static_cast<int32_t>((lhs * 65536) / rhs);
+            return static_cast<int32_t>((lhs * precision) / rhs);
         }
     }
 

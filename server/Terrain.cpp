@@ -30,5 +30,14 @@ namespace isomap {
             }
             return common::TerrainMessage::updateMsg( cells );
         }
+
+        common::TerrainMessage* Terrain::uncoverAll() const {
+            std::vector<common::TerrainMessage::Cell> cells;
+            cells.reserve( m_width * m_height );
+            for ( uint32_t id = 0; id < m_width * m_height; ++id ) {
+                cells.push_back( {id, m_heightMap[id], m_slopeMap[id], m_oreMap[id]} );
+            }
+            return common::TerrainMessage::updateMsg( cells );
+        }
     }
 }

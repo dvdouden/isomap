@@ -60,7 +60,7 @@ namespace isomap {
                 m_y = terrain->height() - 1;
             }
             m_z = terrain->heightMap()[m_y * terrain->width() + m_x];
-            player()->unfog( m_x, m_y, 20 );
+            player()->unFog( m_x, m_y, 20 );
             if ( m_x == wayPoint.x && m_y == wayPoint.y ) {
                 m_wayPoints.pop_back();
                 return true;

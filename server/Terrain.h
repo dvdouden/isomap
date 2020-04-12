@@ -40,6 +40,8 @@ namespace isomap {
 
             common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
 
+            common::TerrainMessage* uncoverAll() const;
+
         private:
             uint32_t m_width;
             uint32_t m_height;

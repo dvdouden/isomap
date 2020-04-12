@@ -19,6 +19,8 @@ namespace isomap {
 
             void generateWorld( uint32_t width, uint32_t height );
 
+            void generateWorld( uint32_t width, uint32_t height, TerrainGenerator* generator );
+
             void addPlayer( Player* player );
 
             void addObject( Object* object );

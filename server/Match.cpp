@@ -23,11 +23,20 @@ namespace isomap {
 
         void Match::generateWorld( uint32_t width, uint32_t height ) {
             TerrainGenerator generator;
-            m_terrain = generator.generate( width, height );
+            generateWorld( width, height, &generator );
+        }
+
+        void Match::generateWorld( uint32_t width, uint32_t height, TerrainGenerator* generator ) {
+            delete m_terrain;
+            m_terrain = generator->generate( width, height );
+            for ( auto* player : m_players ) {
+                player->setTerrain( m_terrain );
+            }
         }
 
         void Match::addPlayer( Player* player ) {
             m_players.push_back( player );
+            player->setTerrain( m_terrain );
         }
 
         void Match::addObject( Object* object ) {
@@ -36,13 +45,12 @@ namespace isomap {
 
         void Match::start() {
             for ( auto* player : m_players ) {
-                player->init( m_terrain );
+                player->init();
             }
             m_time = 0;
         }
 
         void Match::update() {
-            //m_world->update();
             for ( auto* player : m_players ) {
                 player->update();
             }

@@ -47,10 +47,10 @@ protected:
 
     void updateCamera();
 
-    //isomap::game_map* m_world;
-    //isomap::game_unit* m_unit;
-    //std::vector<isomap::game_unit*> m_units;
-    int m_zoom;
+    void regenerateMap();
+
+    vl::real m_zoom;
+    int m_zoomLevel;
     unsigned int m_orientation;
     int m_x;
     int m_y;
@@ -58,11 +58,14 @@ protected:
     vl::real m_y_off = 0.5;
 
     int m_angle = 0;
-    unsigned char m_smooth = 128;
+    uint32_t m_mapGenScale = 5;
+    unsigned char m_cliffAmount = 0;
+    unsigned char m_cliffVariation = 128;
     unsigned char m_oreAmount = 32;
     unsigned char m_oreDensity = 128;
-    int m_width = 512;
-    int m_height = 512;
+    unsigned char m_variation = 64;
+    int m_width = 256;
+    int m_height = 256;
     bool m_paused = true;
 
     isomap::server::Match* m_match;

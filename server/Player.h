@@ -15,11 +15,15 @@ namespace isomap {
 
             const Player& operator=( const Player& ) = delete;
 
-            void init( Terrain* terrain );
+            void init();
+
+            void setTerrain( Terrain* terrain ) {
+                m_terrain = terrain;
+            }
 
             void update();
 
-            void unfog( int32_t tile_x, int32_t tile_y, int32_t radius );
+            void unFog( int32_t tile_x, int32_t tile_y, int32_t radius );
 
             common::TerrainMessage* createTerrainMessage();
 

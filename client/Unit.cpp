@@ -4,27 +4,28 @@
 
 #include "Unit.h"
 #include "../common/UnitMessage.h"
+#include "../util/math.h"
 
 namespace isomap {
     namespace client {
 
-        common::UnitCommandMessage* Unit::moveTo( int32_t x, int32_t y ) {
+        common::UnitCommandMessage* Unit::moveTo( int32_t tileX, int32_t tileY ) {
             // convert into way points
             std::vector<common::UnitCommandMessage::WayPoint> wayPoints;
             do {
-                wayPoints.push_back( {x, y} );
-                if ( x < m_x ) {
-                    ++x;
-                } else if ( x > m_x ) {
-                    --x;
+                wayPoints.push_back( {tileX, tileY} );
+                if ( tileX < (m_x / math::fix::precision) ) {
+                    ++tileX;
+                } else if ( tileX > (m_x / math::fix::precision) ) {
+                    --tileX;
                 }
-                if ( y < m_y ) {
-                    ++y;
-                } else if ( y > m_y ) {
-                    --y;
+                if ( tileY < (m_y / math::fix::precision) ) {
+                    ++tileY;
+                } else if ( tileY > (m_y / math::fix::precision) ) {
+                    --tileY;
                 }
 
-            } while ( x != m_x || y != m_y );
+            } while ( tileX != (m_x / math::fix::precision) || tileY != (m_y / math::fix::precision) );
             return common::UnitCommandMessage::moveMsg( wayPoints );
         }
 
@@ -34,9 +35,9 @@ namespace isomap {
             }
             switch ( msg->type() ) {
                 case common::UnitServerMessage::Status:
-                    m_x = msg->x();
-                    m_y = msg->y();
-                    m_z = msg->z();
+                    m_x = msg->x() * math::fix::precision;
+                    m_y = msg->y() * math::fix::precision;
+                    m_z = msg->z() * math::fix::precision;
                     break;
 
                 default:
@@ -48,7 +49,7 @@ namespace isomap {
             m_transform = new vl::Transform;
             rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
-            m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), 1, 1, 1 );
+            m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), 0.5, 0.5, 0.5 );
             m_geom->computeNormals();
 
             m_effect = new vl::Effect;
@@ -76,7 +77,10 @@ namespace isomap {
 
 
         void Unit::render() {
-            vl::mat4 matrix = vl::mat4::getTranslation( m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
+            vl::mat4 matrix = vl::mat4::getTranslation(
+                    (m_x / math::fix::fPrecision) + 0.5,
+                    (m_y / math::fix::fPrecision) + 0.5,
+                    0.25 + (m_z / math::fix::fPrecision) * ::sqrt( 2.0 / 3.0 ) / 2.0 );
             matrix *= vl::mat4::getRotation( m_orientation - 135, 0, 0, 1 );
             m_transform->setLocalMatrix( matrix );
         }

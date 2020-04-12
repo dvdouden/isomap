@@ -13,27 +13,23 @@
 
 #include "common/TerrainMessage.h"
 #include "common/UnitMessage.h"
+#include "server/TerrainGenerator.h"
 
 
 const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
 
 void MainWindow::initEvent() {
-    //m_world = new isomap::game_map( m_width, m_height );
-    m_zoom = 6;
+
+    m_zoomLevel = 8;
+    m_zoom = ZOOM_LEVELS[m_zoomLevel];
     m_x = 0;
     m_y = 0;
     m_orientation = 0;
 
     sceneManager()->setCullingEnabled( false );
 
-    /*m_unit = new isomap::game_unit( rendering(), m_world );
-
-    for ( int i = 0 ; i < 100; ++i ) {
-        m_units.push_back( new isomap::game_unit( rendering(), m_world ) );
-    }*/
-
     m_match = new isomap::server::Match();
-    m_match->generateWorld( m_width, m_height );
+    regenerateMap();
     m_player = new isomap::server::Player();
     m_match->addPlayer( m_player );
     m_match->start();
@@ -43,7 +39,7 @@ void MainWindow::initEvent() {
     m_terrain->processMessage( msg );
     delete msg;
 
-    m_player->unfog( 10, 10, 20 );
+    m_player->unFog( 10, 10, 20 );
     msg = m_player->createTerrainMessage();
     m_terrain->processMessage( msg );
     delete msg;
@@ -65,51 +61,69 @@ void MainWindow::resizeEvent( int w, int h ) {
 void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
     switch ( key ) {
         case vl::Key_Left:
-            m_width /= 2;
-            if ( m_width < 8 ) {
-                m_width = 8;
+            if ( m_mapGenScale > 2 ) {
+                m_mapGenScale--;
+                regenerateMap();
             }
             break;
         case vl::Key_Right:
-            m_width *= 2;
-            if ( m_width > 4096 ) {
-                m_width = 4096;
+            if ( m_mapGenScale < 12 ) {
+                m_mapGenScale++;
+                regenerateMap();
             }
             break;
 
         case vl::Key_Up:
-            m_height *= 2;
-            if ( m_height > 4096 ) {
-                m_height = 4096;
+            if ( m_variation < 255 ) {
+                ++m_variation;
+                regenerateMap();
             }
             break;
 
         case vl::Key_Down:
-            m_height /= 2;
-            if ( m_height < 8 ) {
-                m_height = 8;
+            if ( m_variation > 0 ) {
+                --m_variation;
+                regenerateMap();
             }
             break;
 
         case vl::Key_PageUp:
-            m_smooth += 4;
+            if ( m_cliffAmount < 252 ) {
+                m_cliffAmount += 4;
+                regenerateMap();
+            }
             break;
 
         case vl::Key_PageDown:
-            m_smooth -= 4;
+            if ( m_cliffAmount > 0 ) {
+                m_cliffAmount -= 4;
+                regenerateMap();
+            }
             break;
 
         case vl::Key_Insert:
-            m_oreAmount += 4;
+            if ( m_oreAmount < 252 ) {
+                m_oreAmount += 4;
+                regenerateMap();
+            }
             break;
         case vl::Key_Delete:
-            m_oreAmount -= 4;
+            if ( m_oreAmount > 0 ) {
+                m_oreAmount -= 4;
+                regenerateMap();
+            }
             break;
         case vl::Key_Home:
-            m_oreDensity += 4;
+            if ( m_oreDensity < 252 ) {
+                m_oreDensity += 4;
+                regenerateMap();
+            }
             break;
         case vl::Key_End:
-            m_oreDensity -= 4;
+            if ( m_oreAmount > 0 ) {
+                m_oreDensity -= 4;
+                regenerateMap();
+            }
             break;
 
         case vl::Key_Space:
@@ -118,6 +132,17 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
 
         case vl::Key_Return:
             m_match->update();
+            break;
+
+        case vl::Key_BackSpace: {
+            auto* msg = m_match->terrain()->uncoverAll();
+            m_terrain->processMessage( msg );
+            delete msg;
+        }
+            break;
+
+        case vl::Key_Slash:
+            m_terrain->toggleRenderFog();
             break;
 
         default:
@@ -129,8 +154,8 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
 void MainWindow::updateProjection() {
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
     int h = rendering()->as<vl::Rendering>()->camera()->viewport()->height();
-    vl::real hx = (w / (ZOOM_LEVELS[m_zoom] / ::sqrt( 2.0 ))) / 2.0;
-    vl::real hy = (h / (ZOOM_LEVELS[m_zoom] / ::sqrt( 2.0 ))) / 2.0;
+    vl::real hx = (w / (m_zoom / ::sqrt( 2.0 ))) / 2.0;
+    vl::real hy = (h / (m_zoom / ::sqrt( 2.0 ))) / 2.0;
     rendering()->as<vl::Rendering>()->camera()->setProjectionOrtho(
             -hx,
             hx,
@@ -166,6 +191,7 @@ void MainWindow::updateCamera() {
 // called every frame
 void MainWindow::updateScene() {
 
+    // smooth rotation
     switch ( m_orientation ) {
         default:
         case 0:
@@ -229,40 +255,18 @@ void MainWindow::updateScene() {
             }
             break;
     }
-
-    /*
-    static int seed = 0;
-    if ( m_width != m_world->width() || m_height != m_world->height() ) {
-        m_world->setSize(m_width, m_height);
-        m_unit->updateWorldSize();
-        for (isomap::game_unit *unit : m_units) {
-            unit->updateWorldSize();
+    // smooth zooming
+    if ( m_zoom != ZOOM_LEVELS[m_zoomLevel] ) {
+        m_zoom += (ZOOM_LEVELS[m_zoomLevel] - m_zoom) / 4.0;
+        static int updateCount = 0;
+        ++updateCount;
+        if ( updateCount > 30 ) {
+            updateCount = 0;
+            m_zoom = ZOOM_LEVELS[m_zoomLevel];
         }
-    }
-    m_world->generate( 5, (seed) / 256, m_smooth, m_oreAmount, m_oreDensity );
-
-    sceneManager()->tree()->actors()->clear();
-
-    vl::ref<vl::ResourceDatabase> resource_db = m_world->getDb();
-    for(size_t ires=0; ires<resource_db->resources().size(); ++ires) {
-        vl::Actor *act = resource_db->resources()[ires]->as<vl::Actor>();
-        if (!act)
-            continue;
-        sceneManager()->tree()->addActor(act);
+        updateProjection();
     }
 
-    if ( !m_paused ) {
-        m_world->update();
-        m_unit->update(true);
-        for (isomap::game_unit *unit : m_units) {
-            if (unit->hasReachedTarget()) {
-                static math::rng rnd(0);
-                unit->moveTo(rnd(0, m_width - 1), rnd(0, m_height));
-            }
-            unit->update(true);
-        }
-    }
-*/
     m_match->update();
 
     isomap::common::UnitServerMessage* unitMsg = m_serverUnit->statusMessage();
@@ -279,17 +283,17 @@ void MainWindow::updateScene() {
 }
 
 void MainWindow::zoomIn() {
-    ++m_zoom;
-    if ( m_zoom >= (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) ) {
-        m_zoom = (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) - 1;
+    ++m_zoomLevel;
+    if ( m_zoomLevel >= (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) ) {
+        m_zoomLevel = (sizeof( ZOOM_LEVELS ) / sizeof( ZOOM_LEVELS[0] )) - 1;
     }
     updateProjection();
 }
 
 void MainWindow::zoomOut() {
-    --m_zoom;
-    if ( m_zoom < 0 ) {
-        m_zoom = 0;
+    --m_zoomLevel;
+    if ( m_zoomLevel < 0 ) {
+        m_zoomLevel = 0;
     }
     updateProjection();
 }
@@ -401,7 +405,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     int dx = screen_x - hw;
     int dy = screen_y - hh;
 
-    vl::real tile_width = ZOOM_LEVELS[m_zoom];
+    vl::real tile_width = ZOOM_LEVELS[m_zoomLevel];
     vl::real tile_height = tile_width / 2.0;
 
     // translate screen coordinates to tile coordinates
@@ -436,11 +440,6 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
 }
 
 void MainWindow::highlight( int x, int y ) {
-    /*m_world->highlight( x, y );
-    if ( m_world->isInside( x, y ) ) {
-        m_unit->moveTo( x, y );
-    }*/
-
     isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
     m_serverUnit->processMessage( comMsg );
     delete comMsg;
@@ -459,3 +458,20 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
     if ( m_y >= m_height ) m_y = m_height - 1;
     updateCamera();
 }
+
+void MainWindow::regenerateMap() {
+    isomap::server::TerrainGenerator generator;
+    generator.setOreAmount( m_oreAmount );
+    generator.setOreDensity( m_oreDensity );
+    generator.setCliffAmount( m_cliffAmount );
+    generator.setVariation( m_variation );
+    generator.setDepth( m_mapGenScale );
+    m_match->generateWorld( m_width, m_height, &generator );
+
+    if ( m_terrain ) {
+        auto* msg = m_match->terrain()->uncoverAll();
+        m_terrain->processMessage( msg );
+        delete msg;
+    }
+}
+

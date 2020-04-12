@@ -143,8 +143,8 @@ namespace isomap {
                     n[2] = vl::fvec3( 0, 0, 1 );
                     n[3] = vl::fvec3( 0, 0, 1 );
                     n += 4;
-                    auto col = h << 6u;
-                    col += 16;
+                    auto col = h << 4u;
+                    col += 8;
                     auto r = col;
                     auto g = 255;
                     auto b = col;
@@ -171,9 +171,11 @@ namespace isomap {
                         b = 255;
                     }
 
-                    r = ((r * fog) + (r / 4u * (255 - fog))) >> 8u;
-                    g = ((g * fog) + (g / 4u * (255 - fog))) >> 8u;
-                    b = ((b * fog) + (b / 4u * (255 - fog))) >> 8u;
+                    if ( m_renderFog ) {
+                        r = ((r * fog) + (r / 4u * (255 - fog))) >> 8u;
+                        g = ((g * fog) + (g / 4u * (255 - fog))) >> 8u;
+                        b = ((b * fog) + (b / 4u * (255 - fog))) >> 8u;
+                    }
 
                     c[0] = vl::ubvec4( r, g, b, 255 );
                     c[1] = vl::ubvec4( r, g, b, 255 );

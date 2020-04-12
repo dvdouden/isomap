@@ -14,15 +14,14 @@ namespace isomap {
             delete[] m_fogMap;
         }
 
-        void Player::init( Terrain* terrain ) {
-            m_terrain = terrain;
-            auto size = terrain->width() * terrain->height();
+        void Player::init() {
+            auto size = m_terrain->width() * m_terrain->height();
             m_fogMap = new uint8_t[size];
             ::memset( m_fogMap, 0, size );
             m_uncoveredTiles.clear();
         }
 
-        void Player::unfog( int32_t tile_x, int32_t tile_y, int32_t radius ) {
+        void Player::unFog( int32_t tile_x, int32_t tile_y, int32_t radius ) {
             int32_t cnt = 0;
             int32_t radiusSquared = radius * radius;
             for ( int32_t y = tile_y - radius; y <= tile_y + radius; ++y ) {

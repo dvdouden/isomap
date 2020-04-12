@@ -18,7 +18,7 @@ namespace isomap {
 
             void processMessage( common::UnitServerMessage* msg );
 
-            common::UnitCommandMessage* moveTo( int32_t x, int32_t y );
+            common::UnitCommandMessage* moveTo( int32_t tileX, int32_t tileY );
 
             void initRender( vl::RenderingAbstract* rendering );
 

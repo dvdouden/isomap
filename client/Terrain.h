@@ -43,6 +43,10 @@ namespace isomap {
 
             void updateFog();
 
+            void toggleRenderFog() {
+                m_renderFog = !m_renderFog;
+            }
+
         private:
             uint8_t getCorner( int x, int y, int c ) const;
 
@@ -57,6 +61,8 @@ namespace isomap {
             uint8_t* m_oreMap = nullptr;
             uint8_t* m_fogMap = nullptr;
             uint8_t* m_fogUpdateMap = nullptr;
+
+            bool m_renderFog = true;
 
 
             vl::ref<vl::SceneManagerActorTree> m_sceneManager;

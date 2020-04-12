@@ -10,6 +10,8 @@ namespace isomap {
     namespace server {
         class Terrain;
 
+        class TerrainGenerator;
+
         class Object;
 
         class Unit;
