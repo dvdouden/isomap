@@ -2,6 +2,7 @@
 #define TESTPROJECT_MAINWINDOW_H
 
 #include <vlGraphics/Applet.hpp>
+#include <vlGraphics/Text.hpp>
 #include "types.h"
 #include "common/types.h"
 
@@ -74,6 +75,10 @@ protected:
     isomap::client::Terrain* m_terrain;
     isomap::server::Unit* m_serverUnit;
     isomap::client::Unit* m_clientUnit;
+
+    vl::ref<vl::Text> m_text;
+
+    void updateText();
 };
 
 

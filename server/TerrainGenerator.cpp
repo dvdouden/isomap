@@ -210,15 +210,12 @@ namespace isomap {
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
-                if ( *scratchCliffMap >= m_cliffAmount ) {
-                    // reduce height to 0-3
-                    *scratchHeightMap >>= 4u;
-                } else {
-                    // clamp height to 0 or 3
-                    if ( *scratchHeightMap >= 128 ) {
-                        *scratchHeightMap = 3;
-                    } else {
-                        *scratchHeightMap = 0;
+                *scratchHeightMap >>= 4u;
+                if ( *scratchCliffMap < m_cliffAmount ) {
+                    // clamp to nearest plateau
+                    *scratchHeightMap = (*scratchHeightMap + 2u) & 0b1111'1100u;
+                    if ( *scratchHeightMap > 0b0000'1111u ) {
+                        *scratchHeightMap = 0b0000'1111u;
                     }
                 }
                 ++scratchHeightMap;
@@ -243,11 +240,8 @@ namespace isomap {
                         auto h6 = safe_height( heightMap, width, height, x, y + 1 );
                         auto h8 = safe_height( heightMap, width, height, x - 1, y );
 
-                        if ( h == 0 && h2 >= 2 && h4 >= 2 && h6 >= 2 && h8 >= 2 ) {
-                            heightMap[y * width + x] = 3;
-                        }
-                        if ( h == 3 && h2 <= 1 && h4 <= 1 && h6 <= 1 && h8 <= 1 ) {
-                            heightMap[y * width + x] = 0;
+                        if ( h2 == h4 && h4 == h6 && h6 == h8 && h != h2 ) {
+                            heightMap[y * width + x] = h2;
                         }
                     }
                 }

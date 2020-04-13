@@ -1,3 +1,5 @@
+#include <vlGraphics/FontManager.hpp>
+
 #include "MainWindow.h"
 
 #include "game_map.h"
@@ -19,6 +21,16 @@
 const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
 
 void MainWindow::initEvent() {
+
+    vl::ref<vl::Effect> text_fx = new vl::Effect;
+    text_fx->shader()->enable( vl::EN_BLEND );
+    m_text = new vl::Text;
+    m_text->setFont( vl::defFontManager()->acquireFont( "/fonts/typed.ttf", 10 ) );
+    m_text->setAlignment( vl::AlignLeft | vl::AlignTop );
+    m_text->setViewportAlignment( vl::AlignLeft | vl::AlignTop );
+    m_text->translate( 0, -10, 0 );
+    sceneManager()->tree()->addActor( m_text.get(), text_fx.get() );
+    updateText();
 
     m_zoomLevel = 8;
     m_zoom = ZOOM_LEVELS[m_zoomLevel];
@@ -266,6 +278,7 @@ void MainWindow::updateScene() {
         }
         updateProjection();
     }
+    updateText();
 
     m_match->update();
 
@@ -473,5 +486,15 @@ void MainWindow::regenerateMap() {
         m_terrain->processMessage( msg );
         delete msg;
     }
+}
+
+void MainWindow::updateText() {
+    m_text->setText( vl::Say( "FPS #%n\n"
+                              "Depth #%n\n"
+                              "Variation #%n\n"
+                              "CliffAmount #%n\n"
+                              "OreAmount #%n\n"
+                              "OreDensity #%n" ) << fps() << m_mapGenScale << m_variation << m_cliffAmount
+                                                 << m_oreAmount << m_oreDensity );
 }
 

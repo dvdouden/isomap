@@ -143,11 +143,18 @@ namespace isomap {
                     n[2] = vl::fvec3( 0, 0, 1 );
                     n[3] = vl::fvec3( 0, 0, 1 );
                     n += 4;
-                    auto col = h << 4u;
+                    uint8_t col = h << 4u;
                     col += 8;
-                    auto r = col;
-                    auto g = 255;
-                    auto b = col;
+                    uint8_t r = col;
+                    uint8_t g = col;
+                    uint8_t b = col;
+                    if ( h >= 4 ) {
+                        // ground
+                        g = 255;
+                    } else {
+                        // water
+                        b = 255;
+                    }
                     if ( x == 0 ) {
                         r = 255;
                         g = 0;
@@ -166,9 +173,9 @@ namespace isomap {
                         b = 0;
                     }
                     if ( ore > 0 ) {
-                        r = ore;
+                        r = 255;
                         g = ore;
-                        b = 255;
+                        b = ore;
                     }
 
                     if ( m_renderFog ) {
