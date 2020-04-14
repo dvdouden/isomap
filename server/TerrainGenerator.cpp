@@ -14,7 +14,7 @@ namespace isomap {
                 uint32_t width,
                 uint32_t height,
                 uint32_t scale,
-                uint32_t depth,
+                uint32_t noise,
                 math::rng& rnd ) {
             // diamond
             uint32_t hs = scale / 2;
@@ -25,7 +25,7 @@ namespace isomap {
                     uint32_t i2 = data[(y + hs) * width + (x - hs)];
                     uint32_t i3 = data[(y + hs) * width + (x + hs)];
                     int32_t avg = (i0 + i1 + i2 + i3) / 4;
-                    data[y * width + x] = clamp( avg + rnd( -int32_t( depth ), int32_t( depth ) ) );
+                    data[y * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
                 }
             }
         }
@@ -36,7 +36,7 @@ namespace isomap {
                 uint32_t width,
                 uint32_t height,
                 uint32_t scale,
-                uint32_t depth,
+                uint32_t noise,
                 math::rng& rnd ) {
             // diamond
             for ( uint32_t y = 0; y < height; y += scale ) {
@@ -55,7 +55,7 @@ namespace isomap {
                             cnt++;
                         }
                         avg /= cnt;
-                        data[y * width + x1] = clamp( avg + rnd( -int32_t( depth ), int32_t( depth ) ) );
+                        data[y * width + x1] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
                     }
                     if ( y < height - 1 ) {
                         uint32_t y1 = y + scale / 2;
@@ -71,14 +71,14 @@ namespace isomap {
                             cnt++;
                         }
                         avg /= cnt;
-                        data[y1 * width + x] = clamp( avg + rnd( -int32_t( depth ), int32_t( depth ) ) );
+                        data[y1 * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
                     }
                 }
             }
         }
 
 
-        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t variation, math::rng& rnd ) {
+        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd ) {
             auto* tmp = new uint8_t[width * height];
             for ( uint32_t i = 0; i < width * height; ++i ) {
                 tmp[i] = 0;
@@ -93,7 +93,7 @@ namespace isomap {
 
             uint32_t tempScale = scale;
             while ( tempScale > 1 ) {
-                uint32_t magnitude = (variation * tempScale) / scale;
+                uint32_t magnitude = (noise * tempScale) / scale;
                 diamond( tmp, width, height, tempScale, magnitude, rnd );
                 square( tmp, width, height, tempScale, magnitude, rnd );
                 tempScale >>= 1u;
@@ -102,30 +102,27 @@ namespace isomap {
         }
 
 
-        void generateOreMap(
+        void TerrainGenerator::generateOreMap(
                 uint8_t* map,
                 uint32_t width,
                 uint32_t height,
-                uint32_t scale,
-                math::rng& rnd,
-                uint8_t oreAmount,
-                uint8_t oreDensity ) {
-
+                math::rng& rnd ) {
+            uint32_t scale = 1u << m_oreScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
 
             // create ore map
-            uint8_t* ore_map = squareDiamond( sdWidth, sdHeight, scale, 128, rnd );
+            uint8_t* ore_map = squareDiamond( sdWidth, sdHeight, scale, m_oreNoise, rnd );
             uint8_t* scr_o = ore_map;
             for ( uint32_t i = 0; i < sdWidth * sdHeight; ++i ) {
-                if ( *scr_o >= oreAmount ) {
+                if ( *scr_o >= m_oreThreshold ) {
                     *scr_o = 0;
                 } else {
                     // tiles with 0 have highest concentration
                     // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
-                    uint32_t amount = (oreAmount - *scr_o);
+                    uint32_t amount = (m_oreThreshold - *scr_o);
                     // linear interpolation from (oreDensity * 2) to 1
-                    amount = ((oreDensity * 2) * amount) / oreAmount;
+                    amount = ((m_oreDensity * 2) * amount) / m_oreThreshold;
                     if ( amount > 255 ) {
                         // clamp at 255
                         amount = 255;
@@ -200,18 +197,18 @@ namespace isomap {
 
             // use diamond-square algorithm
             // scale up to a multiple of 2^depth + 1
-            uint32_t scale = 1u << m_depth;
+            uint32_t scale = 1u << m_heightScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_variation, rnd );
+            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd );
 
             // apply cliffs
-            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, scale / 2, m_cliffVariation, rnd );
+            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1 << m_cliffScale, m_cliffNoise, rnd );
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
                 *scratchHeightMap >>= 4u;
-                if ( *scratchCliffMap < m_cliffAmount ) {
+                if ( *scratchCliffMap < m_cliffThreshold ) {
                     // clamp to nearest plateau
                     *scratchHeightMap = (*scratchHeightMap + 2u) & 0b1111'1100u;
                     if ( *scratchHeightMap > 0b0000'1111u ) {
@@ -360,7 +357,7 @@ namespace isomap {
             }
 
 
-            generateOreMap( terrain->oreMap(), width, height, scale, rnd, m_oreAmount, m_oreDensity );
+            generateOreMap( terrain->oreMap(), width, height, rnd );
 
             return terrain;
         }

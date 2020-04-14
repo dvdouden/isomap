@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../common/types.h"
+#include "../util/math.h"
 
 
 namespace isomap {
@@ -14,37 +15,57 @@ namespace isomap {
 
             Terrain* generate( uint32_t width, uint32_t height );
 
-            void setVariation( uint32_t variation ) {
-                m_variation = variation;
+            void setHeightScale( uint32_t scale ) {
+                m_heightScale = scale;
             }
 
-            void setCliffAmount( uint8_t cliffAmount ) {
-                m_cliffAmount = cliffAmount;
+            void setHeightNoise( uint32_t noise ) {
+                m_heightNoise = noise;
             }
 
-            void setOreAmount( uint8_t oreAmount ) {
-                m_oreAmount = oreAmount;
+            void setCliffScale( uint32_t scale ) {
+                m_cliffScale = scale;
+            }
+
+            void setCliffNoise( uint32_t noise ) {
+                m_cliffNoise = noise;
+            }
+
+            void setCliffThreshold( uint8_t threshold ) {
+                m_cliffThreshold = threshold;
+            }
+
+            void setOreScale( uint8_t scale ) {
+                m_oreScale = scale;
+            }
+
+            void setOreNoise( uint8_t noise ) {
+                m_oreNoise = noise;
+            }
+
+            void setOreThreshold( uint8_t threshold ) {
+                m_oreThreshold = threshold;
             }
 
             void setOreDensity( uint8_t oreDensity ) {
                 m_oreDensity = oreDensity;
             }
 
-            void setDepth( uint32_t depth ) {
-                m_depth = depth;
-            }
-
-            void setCliffVariation( uint32_t cliffVariation ) {
-                m_cliffVariation = cliffVariation;
-            }
-
         private:
+            void generateOreMap( uint8_t* map, uint32_t width, uint32_t height, math::rng& rnd );
+
             uint32_t m_seed = 0;
-            uint32_t m_depth = 5;
-            uint32_t m_variation = 64;
-            uint8_t m_cliffAmount = 0;
-            uint32_t m_cliffVariation = 128;
-            uint8_t m_oreAmount = 16;
+
+            uint32_t m_heightScale = 5;
+            uint32_t m_heightNoise = 64;
+
+            uint32_t m_cliffScale = 5;
+            uint8_t m_cliffNoise = 128;
+            uint8_t m_cliffThreshold = 0;
+
+            uint32_t m_oreScale = 5;
+            uint8_t m_oreNoise = 32;
+            uint8_t m_oreThreshold = 16;
             uint8_t m_oreDensity = 128;
         };
 

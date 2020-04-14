@@ -73,67 +73,123 @@ void MainWindow::resizeEvent( int w, int h ) {
 void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
     switch ( key ) {
         case vl::Key_Left:
-            if ( m_mapGenScale > 2 ) {
-                m_mapGenScale--;
+            if ( m_heightScale > 2 ) {
+                m_heightScale--;
                 regenerateMap();
             }
             break;
         case vl::Key_Right:
-            if ( m_mapGenScale < 12 ) {
-                m_mapGenScale++;
+            if ( m_heightScale < 12 ) {
+                m_heightScale++;
                 regenerateMap();
             }
             break;
 
         case vl::Key_Up:
-            if ( m_variation < 255 ) {
-                ++m_variation;
+            if ( m_heightNoise < 255 ) {
+                ++m_heightNoise;
                 regenerateMap();
             }
             break;
 
         case vl::Key_Down:
-            if ( m_variation > 0 ) {
-                --m_variation;
+            if ( m_heightNoise > 0 ) {
+                --m_heightNoise;
                 regenerateMap();
             }
             break;
 
         case vl::Key_PageUp:
-            if ( m_cliffAmount < 252 ) {
-                m_cliffAmount += 4;
+            if ( m_cliffThreshold < 252 ) {
+                m_cliffThreshold += 4;
                 regenerateMap();
             }
             break;
 
         case vl::Key_PageDown:
-            if ( m_cliffAmount > 0 ) {
-                m_cliffAmount -= 4;
+            if ( m_cliffThreshold > 0 ) {
+                m_cliffThreshold -= 4;
                 regenerateMap();
             }
             break;
 
         case vl::Key_Insert:
-            if ( m_oreAmount < 252 ) {
-                m_oreAmount += 4;
+            if ( m_cliffNoise < 252 ) {
+                m_cliffNoise += 4;
                 regenerateMap();
             }
             break;
         case vl::Key_Delete:
-            if ( m_oreAmount > 0 ) {
-                m_oreAmount -= 4;
+            if ( m_cliffNoise > 0 ) {
+                m_cliffNoise -= 4;
                 regenerateMap();
             }
             break;
         case vl::Key_Home:
-            if ( m_oreDensity < 252 ) {
-                m_oreDensity += 4;
+            if ( m_cliffScale < 10 ) {
+                ++m_cliffScale;
                 regenerateMap();
             }
             break;
         case vl::Key_End:
-            if ( m_oreAmount > 0 ) {
+            if ( m_cliffScale > 2 ) {
+                --m_cliffScale;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Minus:
+            if ( m_oreScale > 2 ) {
+                --m_oreScale;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Equal:
+            if ( m_oreScale < 10 ) {
+                ++m_oreScale;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_LeftBracket:
+            if ( m_oreNoise > 0 ) {
+                m_oreNoise -= 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_RightBracket:
+            if ( m_oreNoise < 252 ) {
+                m_oreNoise += 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Semicolon:
+            if ( m_oreThreshold > 0 ) {
+                m_oreThreshold -= 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Quote:
+            if ( m_oreThreshold < 252 ) {
+                m_oreThreshold += 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Comma:
+            if ( m_oreDensity > 0 ) {
                 m_oreDensity -= 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_Period:
+            if ( m_oreDensity < 252 ) {
+                m_oreDensity += 4;
                 regenerateMap();
             }
             break;
@@ -156,6 +212,7 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
         case vl::Key_Slash:
             m_terrain->toggleRenderFog();
             break;
+
 
         default:
             Applet::keyPressEvent( ch, key );
@@ -474,11 +531,17 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 
 void MainWindow::regenerateMap() {
     isomap::server::TerrainGenerator generator;
-    generator.setOreAmount( m_oreAmount );
+    generator.setHeightScale( m_heightScale );
+    generator.setHeightNoise( m_heightNoise );
+
+    generator.setCliffScale( m_cliffScale );
+    generator.setCliffNoise( m_cliffNoise );
+    generator.setCliffThreshold( m_cliffThreshold );
+
+    generator.setOreScale( m_oreScale );
+    generator.setOreNoise( m_oreNoise );
+    generator.setOreThreshold( m_oreThreshold );
     generator.setOreDensity( m_oreDensity );
-    generator.setCliffAmount( m_cliffAmount );
-    generator.setVariation( m_variation );
-    generator.setDepth( m_mapGenScale );
     m_match->generateWorld( m_width, m_height, &generator );
 
     if ( m_terrain ) {
@@ -489,12 +552,17 @@ void MainWindow::regenerateMap() {
 }
 
 void MainWindow::updateText() {
-    m_text->setText( vl::Say( "FPS #%n\n"
-                              "Depth #%n\n"
-                              "Variation #%n\n"
-                              "CliffAmount #%n\n"
-                              "OreAmount #%n\n"
-                              "OreDensity #%n" ) << fps() << m_mapGenScale << m_variation << m_cliffAmount
-                                                 << m_oreAmount << m_oreDensity );
+    m_text->setText( vl::Say( "FPS %n\n"
+                              "Height map scale %n\n"
+                              "Height map noise %n\n"
+                              "Cliff scale %n\n"
+                              "Cliff noise %n\n"
+                              "Cliff threshold %n\n"
+                              "Ore scale %n\n"
+                              "Ore noise %n\n"
+                              "Ore threshold %n\n"
+                              "Ore density %n" ) << fps() << (1 << m_heightScale) << m_heightNoise
+                                                 << (1 << m_cliffScale) << m_cliffNoise << m_cliffThreshold
+                                                 << (1 << m_oreScale) << m_oreNoise << m_oreThreshold << m_oreDensity );
 }
 

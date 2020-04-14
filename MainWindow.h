@@ -59,12 +59,19 @@ protected:
     vl::real m_y_off = 0.5;
 
     int m_angle = 0;
-    uint32_t m_mapGenScale = 5;
-    unsigned char m_cliffAmount = 0;
-    unsigned char m_cliffVariation = 128;
-    unsigned char m_oreAmount = 32;
+
+    uint32_t m_heightScale = 5;
+    unsigned char m_heightNoise = 64;
+
+    uint32_t m_cliffScale = 5;
+    unsigned char m_cliffNoise = 128;
+    unsigned char m_cliffThreshold = 0;
+
+    uint32_t m_oreScale = 5;
+    unsigned char m_oreNoise = 128;
+    unsigned char m_oreThreshold = 32;
     unsigned char m_oreDensity = 128;
-    unsigned char m_variation = 64;
+
     int m_width = 256;
     int m_height = 256;
     bool m_paused = true;
