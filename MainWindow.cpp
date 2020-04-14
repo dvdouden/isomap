@@ -86,15 +86,15 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_Up:
-            if ( m_heightNoise < 255 ) {
-                ++m_heightNoise;
+            if ( m_heightNoise < 252 ) {
+                m_heightNoise += 4;
                 regenerateMap();
             }
             break;
 
         case vl::Key_Down:
             if ( m_heightNoise > 0 ) {
-                --m_heightNoise;
+                m_heightNoise -= 4;
                 regenerateMap();
             }
             break;
@@ -190,6 +190,20 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
         case vl::Key_Period:
             if ( m_oreDensity < 252 ) {
                 m_oreDensity += 4;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_1:
+            if ( m_shoreCount > 0 ) {
+                m_shoreCount--;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_2:
+            if ( m_shoreCount < 4 ) {
+                m_shoreCount++;
                 regenerateMap();
             }
             break;
@@ -380,88 +394,6 @@ void MainWindow::rotateRight() {
     updateCamera();
 }
 
-void MainWindow::left() {
-    switch ( m_orientation ) {
-        case 0:
-            m_x++;
-            break;
-        case 1:
-            m_y++;
-            break;
-        case 2:
-            m_x--;
-            break;
-        case 3:
-            m_y--;
-            break;
-        default:
-            break;
-    }
-    updateCamera();
-}
-
-void MainWindow::up() {
-    switch ( m_orientation ) {
-        case 1:
-            m_x++;
-            break;
-        case 2:
-            m_y++;
-            break;
-        case 3:
-            m_x--;
-            break;
-        case 0:
-            m_y--;
-            break;
-        default:
-            break;
-    }
-    updateCamera();
-}
-
-
-void MainWindow::right() {
-    switch ( m_orientation ) {
-        case 2:
-            m_x++;
-            break;
-        case 3:
-            m_y++;
-            break;
-        case 0:
-            m_x--;
-            break;
-        case 1:
-            m_y--;
-            break;
-        default:
-            break;
-    }
-    updateCamera();
-}
-
-
-void MainWindow::down() {
-    switch ( m_orientation ) {
-        case 3:
-            m_x++;
-            break;
-        case 0:
-            m_y++;
-            break;
-        case 1:
-            m_x--;
-            break;
-        case 2:
-            m_y--;
-            break;
-        default:
-            break;
-    }
-    updateCamera();
-}
-
 void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
@@ -531,6 +463,8 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 
 void MainWindow::regenerateMap() {
     isomap::server::TerrainGenerator generator;
+    generator.setShoreCount( m_shoreCount );
+
     generator.setHeightScale( m_heightScale );
     generator.setHeightNoise( m_heightNoise );
 
@@ -553,6 +487,7 @@ void MainWindow::regenerateMap() {
 
 void MainWindow::updateText() {
     m_text->setText( vl::Say( "FPS %n\n"
+                              "Shore count %n\n"
                               "Height map scale %n\n"
                               "Height map noise %n\n"
                               "Cliff scale %n\n"
@@ -561,7 +496,7 @@ void MainWindow::updateText() {
                               "Ore scale %n\n"
                               "Ore noise %n\n"
                               "Ore threshold %n\n"
-                              "Ore density %n" ) << fps() << (1 << m_heightScale) << m_heightNoise
+                              "Ore density %n" ) << fps() << m_shoreCount << (1 << m_heightScale) << m_heightNoise
                                                  << (1 << m_cliffScale) << m_cliffNoise << m_cliffThreshold
                                                  << (1 << m_oreScale) << m_oreNoise << m_oreThreshold << m_oreDensity );
 }

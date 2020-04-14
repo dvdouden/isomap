@@ -77,8 +77,8 @@ namespace isomap {
             }
         }
 
-
-        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd ) {
+        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd,
+                                uint8_t shores ) {
             auto* tmp = new uint8_t[width * height];
             for ( uint32_t i = 0; i < width * height; ++i ) {
                 tmp[i] = 0;
@@ -88,6 +88,27 @@ namespace isomap {
             for ( uint32_t y = 0; y < height; y += scale ) {
                 for ( uint32_t x = 0; x < width; x += scale ) {
                     tmp[y * width + x] = rnd( 256 );
+                }
+            }
+
+            if ( shores & 0b0000'0001u ) {
+                for ( uint32_t x = 0; x < width; x += scale ) {
+                    tmp[x] = 0;
+                }
+            }
+            if ( shores & 0b0000'0010u ) {
+                for ( uint32_t y = 0; y < height; y += scale ) {
+                    tmp[y * width] = 0;
+                }
+            }
+            if ( shores & 0b0000'0100u ) {
+                for ( uint32_t x = 0; x < width; x += scale ) {
+                    tmp[(height - 1) * width + x] = 0;
+                }
+            }
+            if ( shores & 0b0000'1000u ) {
+                for ( uint32_t y = 0; y < height; y += scale ) {
+                    tmp[y * width + (width - 1)] = 0;
                 }
             }
 
@@ -101,6 +122,9 @@ namespace isomap {
             return tmp;
         }
 
+        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd ) {
+            return squareDiamond( width, height, scale, noise, rnd, 0 );
+        }
 
         void TerrainGenerator::generateOreMap(
                 uint8_t* map,
@@ -195,12 +219,15 @@ namespace isomap {
 
             math::rng rnd( m_seed );
 
+            // decide which edges become water
+            uint8_t shoreBits = generateShoreBits( rnd, m_shoreCount );
+
             // use diamond-square algorithm
             // scale up to a multiple of 2^depth + 1
             uint32_t scale = 1u << m_heightScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd );
+            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd, shoreBits );
 
             // apply cliffs
             uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1 << m_cliffScale, m_cliffNoise, rnd );
@@ -360,6 +387,18 @@ namespace isomap {
             generateOreMap( terrain->oreMap(), width, height, rnd );
 
             return terrain;
+        }
+
+        uint8_t TerrainGenerator::generateShoreBits( math::rng& rng, uint32_t shoreCount ) {
+            uint8_t bits = 0;
+            for ( uint32_t i = 0; i < shoreCount; ) {
+                uint8_t bit = rng( 3 );
+                if ( (bits & (1u << bit)) == 0 ) {
+                    ++i;
+                    bits |= 1u << bit;
+                }
+            }
+            return bits;
         }
 
     }

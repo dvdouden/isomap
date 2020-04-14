@@ -29,14 +29,6 @@ public:
 
     void rotateRight();
 
-    void left();
-
-    void right();
-
-    void up();
-
-    void down();
-
     void screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y );
 
     void highlight( int x, int y );
@@ -60,17 +52,19 @@ protected:
 
     int m_angle = 0;
 
+    uint8_t m_shoreCount = 1;
+
     uint32_t m_heightScale = 5;
-    unsigned char m_heightNoise = 64;
+    uint8_t m_heightNoise = 64;
 
     uint32_t m_cliffScale = 5;
-    unsigned char m_cliffNoise = 128;
-    unsigned char m_cliffThreshold = 0;
+    uint8_t m_cliffNoise = 128;
+    uint8_t m_cliffThreshold = 0;
 
     uint32_t m_oreScale = 5;
-    unsigned char m_oreNoise = 128;
-    unsigned char m_oreThreshold = 32;
-    unsigned char m_oreDensity = 128;
+    uint8_t m_oreNoise = 128;
+    uint8_t m_oreThreshold = 32;
+    uint8_t m_oreDensity = 128;
 
     int m_width = 256;
     int m_height = 256;
