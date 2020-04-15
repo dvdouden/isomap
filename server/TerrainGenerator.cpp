@@ -1,3 +1,4 @@
+#include <cstring>
 #include "TerrainGenerator.h"
 #include "Terrain.h"
 #include "../util/math.h"

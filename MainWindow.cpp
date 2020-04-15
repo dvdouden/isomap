@@ -42,14 +42,17 @@ void MainWindow::initEvent() {
 
     m_match = new isomap::server::Match();
     regenerateMap();
-    m_player = new isomap::server::Player();
-    m_match->addPlayer( m_player );
-    m_match->start();
 
     m_terrain = new isomap::client::Terrain();
     isomap::common::TerrainMessage* msg = m_match->terrain()->createMessage();
     m_terrain->processMessage( msg );
     delete msg;
+
+    m_player = new isomap::server::Player();
+    m_match->addPlayer( m_player );
+    m_match->start();
+
+
 
     m_player->unFog( 10, 10, 20 );
     msg = m_player->createTerrainMessage();

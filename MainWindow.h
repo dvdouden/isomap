@@ -70,12 +70,12 @@ protected:
     int m_height = 256;
     bool m_paused = true;
 
-    isomap::server::Match* m_match;
-    isomap::server::Player* m_player;
+    isomap::server::Match* m_match = nullptr;
+    isomap::server::Player* m_player = nullptr;
 
-    isomap::client::Terrain* m_terrain;
-    isomap::server::Unit* m_serverUnit;
-    isomap::client::Unit* m_clientUnit;
+    isomap::client::Terrain* m_terrain = nullptr;
+    isomap::server::Unit* m_serverUnit = nullptr;
+    isomap::client::Unit* m_clientUnit = nullptr;
 
     vl::ref<vl::Text> m_text;
 
