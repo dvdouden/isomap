@@ -52,10 +52,12 @@ protected:
 
     int m_angle = 0;
 
-    uint8_t m_shoreCount = 1;
+    uint8_t m_shoreBits = 1;
 
     uint32_t m_heightScale = 5;
     uint8_t m_heightNoise = 64;
+    uint8_t m_minHeight = 0;
+    uint8_t m_maxHeight = 255;
 
     uint32_t m_cliffScale = 5;
     uint8_t m_cliffNoise = 128;

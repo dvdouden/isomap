@@ -6,8 +6,8 @@
 namespace isomap {
     namespace server {
 
-        uint8_t clamp( int a ) {
-            return a > 255 ? 255 : (a < 0 ? 0 : a);
+        uint8_t clamp( int a, uint8_t max = 255 ) {
+            return a > max ? max : (a < 0 ? 0 : a);
         }
 
         void diamond(
@@ -16,8 +16,8 @@ namespace isomap {
                 uint32_t height,
                 uint32_t scale,
                 uint32_t noise,
-                math::rng& rnd ) {
-            // diamond
+                math::rng& rnd,
+                uint8_t maxHeight ) {
             uint32_t hs = scale / 2;
             for ( uint32_t y = hs; y < height; y += scale ) {
                 for ( uint32_t x = hs; x < width; x += scale ) {
@@ -26,7 +26,7 @@ namespace isomap {
                     uint32_t i2 = data[(y + hs) * width + (x - hs)];
                     uint32_t i3 = data[(y + hs) * width + (x + hs)];
                     int32_t avg = (i0 + i1 + i2 + i3) / 4;
-                    data[y * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
+                    data[y * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ), maxHeight );
                 }
             }
         }
@@ -38,8 +38,9 @@ namespace isomap {
                 uint32_t height,
                 uint32_t scale,
                 uint32_t noise,
-                math::rng& rnd ) {
-            // diamond
+                math::rng& rnd,
+                uint8_t maxHeight,
+                uint8_t shores ) {
             for ( uint32_t y = 0; y < height; y += scale ) {
                 for ( uint32_t x = 0; x < width; x += scale ) {
                     if ( x < width - 1 ) {
@@ -56,7 +57,14 @@ namespace isomap {
                             cnt++;
                         }
                         avg /= cnt;
-                        data[y * width + x1] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
+                        data[y * width + x1] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ), maxHeight );
+
+                        if ( y == 0 && (shores & 0b0000'0001u) != 0 ) {
+                            data[y * width + x1] = 0;
+                        }
+                        if ( (y + scale) >= height && (shores & 0b0000'0100u) != 0 ) {
+                            data[y * width + x1] = 0;
+                        }
                     }
                     if ( y < height - 1 ) {
                         uint32_t y1 = y + scale / 2;
@@ -72,14 +80,22 @@ namespace isomap {
                             cnt++;
                         }
                         avg /= cnt;
-                        data[y1 * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ) );
+                        data[y1 * width + x] = clamp( avg + rnd( -int32_t( noise ), int32_t( noise ) ), maxHeight );
+                        if ( x == 0 && (shores & 0b0000'0010u) != 0 ) {
+                            data[y1 * width + x] = 0;
+                        }
+                        if ( (x + scale) >= width && (shores & 0b0000'1000u) != 0 ) {
+                            data[y1 * width + x] = 0;
+                        }
                     }
                 }
             }
+
+
         }
 
         uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd,
-                                uint8_t shores ) {
+                                uint8_t minHeight = 0, uint8_t maxHeight = 255, uint8_t shores = 0 ) {
             auto* tmp = new uint8_t[width * height];
             for ( uint32_t i = 0; i < width * height; ++i ) {
                 tmp[i] = 0;
@@ -88,7 +104,7 @@ namespace isomap {
             // initial corner values
             for ( uint32_t y = 0; y < height; y += scale ) {
                 for ( uint32_t x = 0; x < width; x += scale ) {
-                    tmp[y * width + x] = rnd( 256 );
+                    tmp[y * width + x] = rnd( minHeight, maxHeight );
                 }
             }
 
@@ -116,15 +132,11 @@ namespace isomap {
             uint32_t tempScale = scale;
             while ( tempScale > 1 ) {
                 uint32_t magnitude = (noise * tempScale) / scale;
-                diamond( tmp, width, height, tempScale, magnitude, rnd );
-                square( tmp, width, height, tempScale, magnitude, rnd );
+                diamond( tmp, width, height, tempScale, magnitude, rnd, maxHeight );
+                square( tmp, width, height, tempScale, magnitude, rnd, maxHeight, shores );
                 tempScale >>= 1u;
             }
             return tmp;
-        }
-
-        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd ) {
-            return squareDiamond( width, height, scale, noise, rnd, 0 );
         }
 
         void TerrainGenerator::generateOreMap(
@@ -220,18 +232,16 @@ namespace isomap {
 
             math::rng rnd( m_seed );
 
-            // decide which edges become water
-            uint8_t shoreBits = generateShoreBits( rnd, m_shoreCount );
-
             // use diamond-square algorithm
             // scale up to a multiple of 2^depth + 1
             uint32_t scale = 1u << m_heightScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd, shoreBits );
+            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd, m_minHeight,
+                                                   m_maxHeight, m_shoreBits );
 
             // apply cliffs
-            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1 << m_cliffScale, m_cliffNoise, rnd );
+            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1u << m_cliffScale, m_cliffNoise, rnd );
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
@@ -389,18 +399,5 @@ namespace isomap {
 
             return terrain;
         }
-
-        uint8_t TerrainGenerator::generateShoreBits( math::rng& rng, uint32_t shoreCount ) {
-            uint8_t bits = 0;
-            for ( uint32_t i = 0; i < shoreCount; ) {
-                uint8_t bit = rng( 3 );
-                if ( (bits & (1u << bit)) == 0 ) {
-                    ++i;
-                    bits |= 1u << bit;
-                }
-            }
-            return bits;
-        }
-
     }
 }

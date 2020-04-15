@@ -53,7 +53,6 @@ void MainWindow::initEvent() {
     m_match->start();
 
 
-
     m_player->unFog( 10, 10, 20 );
     msg = m_player->createTerrainMessage();
     m_terrain->processMessage( msg );
@@ -198,15 +197,49 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_1:
-            if ( m_shoreCount > 0 ) {
-                m_shoreCount--;
+            if ( m_shoreBits > 0 ) {
+                m_shoreBits--;
                 regenerateMap();
             }
             break;
 
         case vl::Key_2:
-            if ( m_shoreCount < 4 ) {
-                m_shoreCount++;
+            if ( m_shoreBits < 15 ) {
+                m_shoreBits++;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_3:
+            if ( m_maxHeight > 0 ) {
+                m_maxHeight--;
+                if ( m_minHeight > m_maxHeight ) {
+                    m_minHeight = m_maxHeight;
+                }
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_4:
+            if ( m_maxHeight < 255 ) {
+                m_maxHeight++;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_5:
+            if ( m_minHeight > 0 ) {
+                m_minHeight--;
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_6:
+            if ( m_minHeight < 255 ) {
+                m_minHeight++;
+                if ( m_maxHeight < m_minHeight ) {
+                    m_maxHeight = m_minHeight;
+                }
                 regenerateMap();
             }
             break;
@@ -466,10 +499,12 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 
 void MainWindow::regenerateMap() {
     isomap::server::TerrainGenerator generator;
-    generator.setShoreCount( m_shoreCount );
+    generator.setShoreBits( m_shoreBits );
 
     generator.setHeightScale( m_heightScale );
     generator.setHeightNoise( m_heightNoise );
+    generator.setMinHeight( m_minHeight );
+    generator.setMaxHeight( m_maxHeight );
 
     generator.setCliffScale( m_cliffScale );
     generator.setCliffNoise( m_cliffNoise );
@@ -490,16 +525,19 @@ void MainWindow::regenerateMap() {
 
 void MainWindow::updateText() {
     m_text->setText( vl::Say( "FPS %n\n"
-                              "Shore count %n\n"
+                              "Shore bits %n\n"
                               "Height map scale %n\n"
                               "Height map noise %n\n"
+                              "Min height %n\n"
+                              "Max height %n\n"
                               "Cliff scale %n\n"
                               "Cliff noise %n\n"
                               "Cliff threshold %n\n"
                               "Ore scale %n\n"
                               "Ore noise %n\n"
                               "Ore threshold %n\n"
-                              "Ore density %n" ) << fps() << m_shoreCount << (1 << m_heightScale) << m_heightNoise
+                              "Ore density %n" ) << fps() << m_shoreBits << (1 << m_heightScale) << m_heightNoise
+                                                 << m_minHeight << m_maxHeight
                                                  << (1 << m_cliffScale) << m_cliffNoise << m_cliffThreshold
                                                  << (1 << m_oreScale) << m_oreNoise << m_oreThreshold << m_oreDensity );
 }
