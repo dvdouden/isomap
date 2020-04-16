@@ -5,6 +5,7 @@
 #include <vlGraphics/Text.hpp>
 #include "types.h"
 #include "common/types.h"
+#include "server/TerrainGenerator.h"
 
 
 class MainWindow : public vl::Applet {
@@ -52,22 +53,6 @@ protected:
 
     int m_angle = 0;
 
-    uint8_t m_shoreBits = 1;
-
-    uint32_t m_heightScale = 5;
-    uint8_t m_heightNoise = 64;
-    uint8_t m_minHeight = 0;
-    uint8_t m_maxHeight = 255;
-
-    uint32_t m_cliffScale = 5;
-    uint8_t m_cliffNoise = 128;
-    uint8_t m_cliffThreshold = 0;
-
-    uint32_t m_oreScale = 5;
-    uint8_t m_oreNoise = 128;
-    uint8_t m_oreThreshold = 32;
-    uint8_t m_oreDensity = 128;
-
     int m_width = 256;
     int m_height = 256;
     bool m_paused = true;
@@ -78,6 +63,8 @@ protected:
     isomap::client::Terrain* m_terrain = nullptr;
     isomap::server::Unit* m_serverUnit = nullptr;
     isomap::client::Unit* m_clientUnit = nullptr;
+
+    isomap::server::TerrainGenerator m_generator;
 
     vl::ref<vl::Text> m_text;
 

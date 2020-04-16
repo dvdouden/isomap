@@ -232,25 +232,54 @@ namespace isomap {
 
             math::rng rnd( m_seed );
 
+            static const uint8_t grayCode[] = {
+                    0b0000u,
+                    0b0001u,
+                    0b0011u,
+                    0b0010u,
+                    0b0110u,
+                    0b0111u,
+                    0b0101u,
+                    0b0100u,
+                    0b1100u,
+                    0b1101u,
+                    0b1111u,
+                    0b1110u,
+                    0b1010u,
+                    0b1011u,
+                    0b1001u,
+                    0b1000u};
+
             // use diamond-square algorithm
             // scale up to a multiple of 2^depth + 1
             uint32_t scale = 1u << m_heightScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
             uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd, m_minHeight,
-                                                   m_maxHeight, m_shoreBits );
+                                                   m_maxHeight, grayCode[m_shoreBits] );
 
             // apply cliffs
             uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1u << m_cliffScale, m_cliffNoise, rnd );
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
-                *scratchHeightMap >>= 4u;
+                auto& h = *scratchHeightMap;
+                if ( h <= 64 ) {
+                    uint32_t tmp = 64 - h;
+                    tmp *= m_waterDepth;
+                    tmp /= 0x1000;
+                    h = 4 - tmp;
+                } else {
+                    uint32_t tmp = h - 64;
+                    tmp *= m_terrainHeight;
+                    tmp /= 0x0FFF;
+                    h = tmp + 4;
+                }
                 if ( *scratchCliffMap < m_cliffThreshold ) {
                     // clamp to nearest plateau
-                    *scratchHeightMap = (*scratchHeightMap + 2u) & 0b1111'1100u;
-                    if ( *scratchHeightMap > 0b0000'1111u ) {
-                        *scratchHeightMap = 0b0000'1111u;
+                    h = (h + 2u) & 0b1111'1100u;
+                    if ( h > 0b0000'1111u ) {
+                        h = 0b0000'1111u;
                     }
                 }
                 ++scratchHeightMap;

@@ -75,171 +75,205 @@ void MainWindow::resizeEvent( int w, int h ) {
 void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
     switch ( key ) {
         case vl::Key_Left:
-            if ( m_heightScale > 2 ) {
-                m_heightScale--;
+            if ( m_generator.heightScale() > 2 ) {
+                m_generator.setHeightScale( m_generator.heightScale() - 1 );
                 regenerateMap();
             }
             break;
         case vl::Key_Right:
-            if ( m_heightScale < 12 ) {
-                m_heightScale++;
+            if ( m_generator.heightScale() < 12 ) {
+                m_generator.setHeightScale( m_generator.heightScale() + 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Up:
-            if ( m_heightNoise < 252 ) {
-                m_heightNoise += 4;
+            if ( m_generator.heightNoise() < 252 ) {
+                m_generator.setHeightNoise( m_generator.heightNoise() + 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Down:
-            if ( m_heightNoise > 0 ) {
-                m_heightNoise -= 4;
+            if ( m_generator.heightNoise() > 0 ) {
+                m_generator.setHeightNoise( m_generator.heightNoise() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_PageUp:
-            if ( m_cliffThreshold < 252 ) {
-                m_cliffThreshold += 4;
+            if ( m_generator.cliffThreshold() < 252 ) {
+                m_generator.setCliffThreshold( m_generator.cliffThreshold() + 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_PageDown:
-            if ( m_cliffThreshold > 0 ) {
-                m_cliffThreshold -= 4;
+            if ( m_generator.cliffThreshold() > 0 ) {
+                m_generator.setCliffThreshold( m_generator.cliffThreshold() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Insert:
-            if ( m_cliffNoise < 252 ) {
-                m_cliffNoise += 4;
+            if ( m_generator.cliffNoise() < 252 ) {
+                m_generator.setCliffNoise( m_generator.cliffNoise() + 4 );
                 regenerateMap();
             }
             break;
         case vl::Key_Delete:
-            if ( m_cliffNoise > 0 ) {
-                m_cliffNoise -= 4;
+            if ( m_generator.cliffNoise() > 0 ) {
+                m_generator.setCliffNoise( m_generator.cliffNoise() - 4 );
                 regenerateMap();
             }
             break;
         case vl::Key_Home:
-            if ( m_cliffScale < 10 ) {
-                ++m_cliffScale;
+            if ( m_generator.cliffScale() < 10 ) {
+                m_generator.setCliffScale( m_generator.cliffScale() + 1 );
                 regenerateMap();
             }
             break;
         case vl::Key_End:
-            if ( m_cliffScale > 2 ) {
-                --m_cliffScale;
+            if ( m_generator.cliffScale() > 2 ) {
+                m_generator.setCliffScale( m_generator.cliffScale() - 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Minus:
-            if ( m_oreScale > 2 ) {
-                --m_oreScale;
+            if ( m_generator.oreScale() > 2 ) {
+                m_generator.setOreScale( m_generator.oreScale() - 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Equal:
-            if ( m_oreScale < 10 ) {
-                ++m_oreScale;
+            if ( m_generator.oreScale() < 10 ) {
+                m_generator.setOreScale( m_generator.oreScale() + 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_LeftBracket:
-            if ( m_oreNoise > 0 ) {
-                m_oreNoise -= 4;
+            if ( m_generator.oreNoise() > 0 ) {
+                m_generator.setOreNoise( m_generator.oreNoise() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_RightBracket:
-            if ( m_oreNoise < 252 ) {
-                m_oreNoise += 4;
+            if ( m_generator.oreNoise() < 252 ) {
+                m_generator.setOreNoise( m_generator.oreNoise() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Semicolon:
-            if ( m_oreThreshold > 0 ) {
-                m_oreThreshold -= 4;
+            if ( m_generator.oreThreshold() > 0 ) {
+                m_generator.setOreThreshold( m_generator.oreThreshold() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Quote:
-            if ( m_oreThreshold < 252 ) {
-                m_oreThreshold += 4;
+            if ( m_generator.oreThreshold() < 252 ) {
+                m_generator.setOreThreshold( m_generator.oreThreshold() + 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Comma:
-            if ( m_oreDensity > 0 ) {
-                m_oreDensity -= 4;
+            if ( m_generator.oreDensity() > 0 ) {
+                m_generator.setOreDensity( m_generator.oreDensity() - 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_Period:
-            if ( m_oreDensity < 252 ) {
-                m_oreDensity += 4;
+            if ( m_generator.oreDensity() < 252 ) {
+                m_generator.setOreDensity( m_generator.oreDensity() + 4 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_1:
-            if ( m_shoreBits > 0 ) {
-                m_shoreBits--;
-                regenerateMap();
-            }
+            m_generator.setShoreBits( (m_generator.shoreBits() - 1u) & 0x0Fu );
+            regenerateMap();
             break;
 
         case vl::Key_2:
-            if ( m_shoreBits < 15 ) {
-                m_shoreBits++;
-                regenerateMap();
-            }
+            m_generator.setShoreBits( (m_generator.shoreBits() + 1u) & 0x0Fu );
+            regenerateMap();
             break;
 
         case vl::Key_3:
-            if ( m_maxHeight > 0 ) {
-                m_maxHeight--;
-                if ( m_minHeight > m_maxHeight ) {
-                    m_minHeight = m_maxHeight;
+            if ( m_generator.maxHeight() > 0 ) {
+                m_generator.setMaxHeight( m_generator.maxHeight() - 1 );
+                if ( m_generator.minHeight() > m_generator.maxHeight() ) {
+                    m_generator.setMinHeight( m_generator.maxHeight() );
                 }
                 regenerateMap();
             }
             break;
 
         case vl::Key_4:
-            if ( m_maxHeight < 255 ) {
-                m_maxHeight++;
+            if ( m_generator.maxHeight() < 255 ) {
+                m_generator.setMaxHeight( m_generator.maxHeight() + 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_5:
-            if ( m_minHeight > 0 ) {
-                m_minHeight--;
+            if ( m_generator.minHeight() > 0 ) {
+                m_generator.setMinHeight( m_generator.minHeight() - 1 );
                 regenerateMap();
             }
             break;
 
         case vl::Key_6:
-            if ( m_minHeight < 255 ) {
-                m_minHeight++;
-                if ( m_maxHeight < m_minHeight ) {
-                    m_maxHeight = m_minHeight;
+            if ( m_generator.minHeight() < 255 ) {
+                m_generator.setMinHeight( m_generator.minHeight() + 1 );
+                if ( m_generator.maxHeight() < m_generator.minHeight() ) {
+                    m_generator.setMaxHeight( m_generator.minHeight() );
                 }
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_7:
+            if ( m_generator.terrainHeight() > 0 ) {
+                m_generator.setTerrainHeight( m_generator.terrainHeight() - 1 );
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_8:
+            if ( m_generator.terrainHeight() < 255 ) {
+                m_generator.setTerrainHeight( m_generator.terrainHeight() + 1 );
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_9:
+            m_generator.setSeed( (m_generator.seed() - 1u) & 0xFFu );
+            regenerateMap();
+            break;
+
+        case vl::Key_0:
+            m_generator.setSeed( (m_generator.seed() + 1u) & 0xFFu );
+            regenerateMap();
+            break;
+
+        case vl::Key_Y:
+            if ( m_generator.waterDepth() > 0 ) {
+                m_generator.setWaterDepth( m_generator.waterDepth() - 1 );
+                regenerateMap();
+            }
+            break;
+
+        case vl::Key_U:
+            if ( m_generator.waterDepth() < 255 ) {
+                m_generator.setWaterDepth( m_generator.waterDepth() + 1 );
                 regenerateMap();
             }
             break;
@@ -259,10 +293,9 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
         }
             break;
 
-        case vl::Key_Slash:
+        case vl::Key_BackSlash:
             m_terrain->toggleRenderFog();
             break;
-
 
         default:
             Applet::keyPressEvent( ch, key );
@@ -498,23 +531,7 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 }
 
 void MainWindow::regenerateMap() {
-    isomap::server::TerrainGenerator generator;
-    generator.setShoreBits( m_shoreBits );
-
-    generator.setHeightScale( m_heightScale );
-    generator.setHeightNoise( m_heightNoise );
-    generator.setMinHeight( m_minHeight );
-    generator.setMaxHeight( m_maxHeight );
-
-    generator.setCliffScale( m_cliffScale );
-    generator.setCliffNoise( m_cliffNoise );
-    generator.setCliffThreshold( m_cliffThreshold );
-
-    generator.setOreScale( m_oreScale );
-    generator.setOreNoise( m_oreNoise );
-    generator.setOreThreshold( m_oreThreshold );
-    generator.setOreDensity( m_oreDensity );
-    m_match->generateWorld( m_width, m_height, &generator );
+    m_match->generateWorld( m_width, m_height, &m_generator );
 
     if ( m_terrain ) {
         auto* msg = m_match->terrain()->uncoverAll();
@@ -525,7 +542,10 @@ void MainWindow::regenerateMap() {
 
 void MainWindow::updateText() {
     m_text->setText( vl::Say( "FPS %n\n"
+                              "Seed %n\n"
                               "Shore bits %n\n"
+                              "Terrain height %n\n"
+                              "Water depth %n\n"
                               "Height map scale %n\n"
                               "Height map noise %n\n"
                               "Min height %n\n"
@@ -536,9 +556,14 @@ void MainWindow::updateText() {
                               "Ore scale %n\n"
                               "Ore noise %n\n"
                               "Ore threshold %n\n"
-                              "Ore density %n" ) << fps() << m_shoreBits << (1 << m_heightScale) << m_heightNoise
-                                                 << m_minHeight << m_maxHeight
-                                                 << (1 << m_cliffScale) << m_cliffNoise << m_cliffThreshold
-                                                 << (1 << m_oreScale) << m_oreNoise << m_oreThreshold << m_oreDensity );
+                              "Ore density %n" ) << fps() << m_generator.seed() << m_generator.shoreBits()
+                                                 << m_generator.terrainHeight() << m_generator.waterDepth()
+                                                 << (1u << m_generator.heightScale())
+                                                 << m_generator.heightNoise()
+                                                 << m_generator.minHeight() << m_generator.maxHeight()
+                                                 << (1u << m_generator.cliffScale()) << m_generator.cliffNoise()
+                                                 << m_generator.cliffThreshold()
+                                                 << (1u << m_generator.oreScale()) << m_generator.oreNoise()
+                                                 << m_generator.oreThreshold() << m_generator.oreDensity() );
 }
 
