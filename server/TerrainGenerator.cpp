@@ -90,8 +90,6 @@ namespace isomap {
                     }
                 }
             }
-
-
         }
 
         uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd,
@@ -264,10 +262,11 @@ namespace isomap {
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
                 auto& h = *scratchHeightMap;
-                if ( h <= 64 ) {
+                if ( h < 64 ) {
                     uint32_t tmp = 64 - h;
                     tmp *= m_waterDepth;
-                    tmp /= 0x1000;
+                    tmp += 511;
+                    tmp /= 0x0400;
                     h = 4 - tmp;
                 } else {
                     uint32_t tmp = h - 64;

@@ -1,12 +1,19 @@
 #include <cstring>
+#include "Match.h"
 #include "Player.h"
+#include "Structure.h"
 #include "Terrain.h"
+#include "Unit.h"
 #include "../common/TerrainMessage.h"
+#include "../common/PlayerMessage.h"
 
 namespace isomap {
     namespace server {
 
-        Player::Player() {
+        Player::Player(Match* match)
+        :
+        m_match( match )
+        {
 
         }
 
@@ -67,6 +74,23 @@ namespace isomap {
             auto* msg = m_terrain->updateMessage( m_uncoveredTiles );
             m_uncoveredTiles.clear();
             return msg;
+        }
+
+
+
+        void Player::processMessage( common::PlayerCommandMessage* msg ) {
+            switch ( msg->type() ) {
+                case common::PlayerCommandMessage::BuildStructure:
+                    m_match->addObject( new Structure( this, msg->x(), msg->y(), msg->z() ) );
+                    break;
+
+                case common::PlayerCommandMessage::BuildUnit:
+                    m_match->addObject( new Unit( this, msg->x(), msg->y(), msg->z() ) );
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 }

@@ -146,7 +146,7 @@ namespace isomap {
             uint8_t m_maxHeight = 255;
 
             uint8_t m_terrainHeight = 255;
-            uint8_t m_waterDepth = 255;
+            uint8_t m_waterDepth = 64;
 
             uint32_t m_cliffScale = 5;
             uint8_t m_cliffNoise = 128;

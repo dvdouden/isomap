@@ -26,16 +26,27 @@ namespace isomap {
     }
 
     namespace client {
+        class Player;
+        class Structure;
         class Terrain;
 
         class Unit;
+
     }
 
     namespace common {
         class TerrainMessage;
 
+        class PlayerCommandMessage;
+
+        class PlayerServerMessage;
+
         class UnitCommandMessage;
 
         class UnitServerMessage;
+
+        class StructureCommandMessage;
+
+        class StructureServerMessage;
     }
 }

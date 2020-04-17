@@ -40,28 +40,29 @@ void MainWindow::initEvent() {
 
     sceneManager()->setCullingEnabled( false );
 
-    m_match = new isomap::server::Match();
+    m_serverMatch = new isomap::server::Match();
     regenerateMap();
 
-    m_terrain = new isomap::client::Terrain();
-    isomap::common::TerrainMessage* msg = m_match->terrain()->createMessage();
-    m_terrain->processMessage( msg );
+    m_clientTerrain = new isomap::client::Terrain();
+    isomap::common::TerrainMessage* msg = m_serverMatch->terrain()->createMessage();
+    m_clientTerrain->processMessage( msg );
     delete msg;
 
-    m_player = new isomap::server::Player();
-    m_match->addPlayer( m_player );
-    m_match->start();
+    // FIXME: this sucks, should be changed
+    m_serverPlayer = new isomap::server::Player( m_serverMatch );
+    m_serverMatch->addPlayer( m_serverPlayer );
+    m_serverMatch->start();
 
 
-    m_player->unFog( 10, 10, 20 );
-    msg = m_player->createTerrainMessage();
-    m_terrain->processMessage( msg );
+    m_serverPlayer->unFog( 10, 10, 20 );
+    msg = m_serverPlayer->createTerrainMessage();
+    m_clientTerrain->processMessage( msg );
     delete msg;
 
-    m_terrain->initRender( rendering() );
+    m_clientTerrain->initRender( rendering() );
 
-    m_serverUnit = new isomap::server::Unit( m_player, nullptr );
-    m_match->addObject( m_serverUnit );
+    m_serverUnit = new isomap::server::Unit( m_serverPlayer, 0, 0, 0 );
+    m_serverMatch->addObject( m_serverUnit );
     m_clientUnit = new isomap::client::Unit;
     m_clientUnit->initRender( rendering() );
 }
@@ -163,7 +164,7 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
 
         case vl::Key_RightBracket:
             if ( m_generator.oreNoise() < 252 ) {
-                m_generator.setOreNoise( m_generator.oreNoise() - 4 );
+                m_generator.setOreNoise( m_generator.oreNoise() + 4 );
                 regenerateMap();
             }
             break;
@@ -272,7 +273,7 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_U:
-            if ( m_generator.waterDepth() < 255 ) {
+            if ( m_generator.waterDepth() < 64 ) {
                 m_generator.setWaterDepth( m_generator.waterDepth() + 1 );
                 regenerateMap();
             }
@@ -283,18 +284,18 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_Return:
-            m_match->update();
+            m_serverMatch->update();
             break;
 
         case vl::Key_BackSpace: {
-            auto* msg = m_match->terrain()->uncoverAll();
-            m_terrain->processMessage( msg );
+            auto* msg = m_serverMatch->terrain()->uncoverAll();
+            m_clientTerrain->processMessage( msg );
             delete msg;
         }
             break;
 
         case vl::Key_BackSlash:
-            m_terrain->toggleRenderFog();
+            m_clientTerrain->toggleRenderFog();
             break;
 
         default:
@@ -420,18 +421,18 @@ void MainWindow::updateScene() {
     }
     updateText();
 
-    m_match->update();
+    m_serverMatch->update();
 
     isomap::common::UnitServerMessage* unitMsg = m_serverUnit->statusMessage();
     m_clientUnit->processMessage( unitMsg );
     delete unitMsg;
 
-    isomap::common::TerrainMessage* terrainMessage = m_player->createTerrainMessage();
-    m_terrain->processMessage( terrainMessage );
+    isomap::common::TerrainMessage* terrainMessage = m_serverPlayer->createTerrainMessage();
+    m_clientTerrain->processMessage( terrainMessage );
     delete terrainMessage;
 
-    m_terrain->updateFog();
-    m_terrain->render();
+    m_clientTerrain->updateFog();
+    m_clientTerrain->render();
     m_clientUnit->render();
 }
 
@@ -531,11 +532,11 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 }
 
 void MainWindow::regenerateMap() {
-    m_match->generateWorld( m_width, m_height, &m_generator );
+    m_serverMatch->generateWorld( m_width, m_height, &m_generator );
 
-    if ( m_terrain ) {
-        auto* msg = m_match->terrain()->uncoverAll();
-        m_terrain->processMessage( msg );
+    if ( m_clientTerrain ) {
+        auto* msg = m_serverMatch->terrain()->uncoverAll();
+        m_clientTerrain->processMessage( msg );
         delete msg;
     }
 }

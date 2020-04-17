@@ -8,11 +8,11 @@ namespace isomap {
     namespace server {
         class Unit : public Object {
         public:
-            Unit( Player* player, UnitType* type ) :
-                    Object( player ),
-                    m_type( type ) {
-
-            }
+            Unit( Player* player, uint32_t x, uint32_t y, uint32_t z ) :
+            Object( player ),
+            m_x( x ),
+            m_y( y ),
+            m_z( z ) {}
 
             ~Unit() override = default;
 

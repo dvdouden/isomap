@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vlGraphics/RenderingAbstract.hpp>
+#include <vlGraphics/SceneManagerActorTree.hpp>
 #include "../common/types.h"
 
 namespace isomap {

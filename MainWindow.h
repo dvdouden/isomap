@@ -57,10 +57,10 @@ protected:
     int m_height = 256;
     bool m_paused = true;
 
-    isomap::server::Match* m_match = nullptr;
-    isomap::server::Player* m_player = nullptr;
+    isomap::server::Match* m_serverMatch = nullptr;
+    isomap::server::Player* m_serverPlayer = nullptr;
 
-    isomap::client::Terrain* m_terrain = nullptr;
+    isomap::client::Terrain* m_clientTerrain = nullptr;
     isomap::server::Unit* m_serverUnit = nullptr;
     isomap::client::Unit* m_clientUnit = nullptr;
 

@@ -4,7 +4,6 @@
 #include <vlGraphics/DrawArrays.hpp>
 #include <vlGraphics/Effect.hpp>
 #include <vlGraphics/Geometry.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
 #include <vlGraphics/Rendering.hpp>
 
 #include "Terrain.h"

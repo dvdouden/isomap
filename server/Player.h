@@ -7,7 +7,7 @@ namespace isomap {
     namespace server {
         class Player {
         public:
-            Player();
+            Player(Match* match);
 
             ~Player();
 
@@ -27,9 +27,12 @@ namespace isomap {
 
             common::TerrainMessage* createTerrainMessage();
 
+            void processMessage( common::PlayerCommandMessage* msg );
+
         private:
             uint8_t* m_fogMap = nullptr;
             Terrain* m_terrain = nullptr;
+            Match* m_match = nullptr;
 
             std::vector<uint32_t> m_uncoveredTiles;
         };

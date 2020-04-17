@@ -9,7 +9,7 @@ namespace isomap {
         public:
             enum Type {
                 Create = 0,
-                Update = 1
+                Update = 1,
             };
 
             explicit TerrainMessage( Type type ) :
