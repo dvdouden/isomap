@@ -48,6 +48,10 @@ namespace isomap {
                 m_renderFog = !m_renderFog;
             }
 
+            bool isVisible( uint32_t x, uint32_t y ) const {
+                return m_fogMap[y * m_width + x] > 1;
+            }
+
         private:
             uint8_t getCorner( int x, int y, int c ) const;
 

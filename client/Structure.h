@@ -29,12 +29,17 @@ namespace isomap {
 
             void render();
 
+            bool occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const;
+
         private:
             id_t m_id = 0;
             int32_t m_x = 0;
             int32_t m_y = 0;
             int32_t m_z = 0;
             int32_t m_orientation = 0;
+
+            uint32_t m_width = 2;
+            uint32_t m_height = 3;
 
             // TODO: Separate render code from game logic
             // We don't need the AI data structures to be renderable

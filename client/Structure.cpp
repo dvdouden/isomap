@@ -49,7 +49,7 @@ namespace isomap {
             m_transform = new vl::Transform;
             rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
-            m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), 2.0, 2.0, 1.5 );
+            m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), m_width, m_height, 1.5 );
             m_geom->computeNormals();
 
             m_effect = new vl::Effect;
@@ -68,7 +68,6 @@ namespace isomap {
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
 
-
             vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
             scene_manager->setCullingEnabled( false );
             rendering->as<vl::Rendering>()->sceneManagers()->push_back( scene_manager.get() );
@@ -78,11 +77,28 @@ namespace isomap {
 
         void Structure::render() {
             vl::mat4 matrix = vl::mat4::getTranslation(
-                    m_x + 1,
-                    m_y + 1,
+                    m_x + (m_width / 2.0),
+                    m_y + (m_height / 2.0),
                     0.75 + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
             matrix *= vl::mat4::getRotation( m_orientation, 0, 0, 1 );
             m_transform->setLocalMatrix( matrix );
+        }
+
+
+        bool Structure::occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const {
+            if ( x >= m_x + m_width ) {
+                return false; // structure right of area
+            }
+            if ( m_x >= x + width ) {
+                return false; // structure left of area
+            }
+            if ( y >= m_y + m_height ) {
+                return false; // structure below area
+            }
+            if ( m_y >= y + height ) {
+                return false; // structure above area
+            }
+            return true; // structure and area overlap
         }
 
     }

@@ -28,6 +28,8 @@ namespace isomap {
                 m_rendering = rendering;
             }
 
+            bool canPlace( int32_t tileX, int32_t tileY, uint32_t width, uint32_t height ) const;
+
             void render();
 
         private:

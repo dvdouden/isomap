@@ -546,10 +546,11 @@ void MainWindow::highlight( int x, int y ) {
     /*isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
     m_serverUnit->processMessage( comMsg );
     delete comMsg;*/
-
-    auto* playerCmd = m_clientPlayer->buildStructure( x, y );
-    m_serverPlayer->processMessage( playerCmd );
-    delete playerCmd;
+    if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
+        auto* playerCmd = m_clientPlayer->buildStructure( x, y );
+        m_serverPlayer->processMessage( playerCmd );
+        delete playerCmd;
+    }
 }
 
 void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y ) {

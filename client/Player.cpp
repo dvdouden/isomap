@@ -57,6 +57,26 @@ namespace isomap {
             }
         }
 
+        bool Player::canPlace( int32_t tileX, int32_t tileY, uint32_t width, uint32_t height ) const {
+            if ( tileX < 0 || tileY < 0 || tileX + width >= m_terrain->width() ||
+                 tileY + height >= m_terrain->height() ) {
+                return false;
+            }
+            for ( uint32_t y = tileY; y < tileY + height; ++y ) {
+                for ( uint32_t x = tileX; x < tileX + width; ++x ) {
+                    if ( !m_terrain->isVisible( x, y ) ) {
+                        return false;
+                    }
+                }
+            }
+            for ( const auto& structure : m_structures ) {
+                if ( structure.second->occupies( tileX, tileY, width, height ) ) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
     }
 
 }
