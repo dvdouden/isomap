@@ -9,10 +9,10 @@ namespace isomap {
         class Unit : public Object {
         public:
             Unit( Player* player, uint32_t x, uint32_t y, uint32_t z ) :
-            Object( player ),
-            m_x( x ),
-            m_y( y ),
-            m_z( z ) {}
+                    Object( player ),
+                    m_x( x ),
+                    m_y( y ),
+                    m_z( z ) { }
 
             ~Unit() override = default;
 
@@ -32,43 +32,43 @@ namespace isomap {
 
             // state
 
-            int32_t getX() const {
+            int32_t x() const {
                 return m_x;
             }
 
-            int32_t getY() const {
-                return m_x;
+            int32_t y() const {
+                return m_y;
             }
 
-            int32_t getZ() const {
-                return m_x;
+            int32_t z() const {
+                return m_z;
             }
 
-            int32_t getTileX() const {
+            int32_t tileX() const {
                 return m_x >> 16;
             }
 
-            int32_t getTileY() const {
+            int32_t tileY() const {
                 return m_y >> 16;
             }
 
-            int32_t getTileZ() const {
+            int32_t tileZ() const {
                 return m_z >> 16;
             }
 
-            int32_t getSubTileX() const {
+            int32_t subTileX() const {
                 return m_x & 0x0000FFFF;
             }
 
-            int32_t getSubTileY() const {
+            int32_t subTileY() const {
                 return m_y & 0x0000FFFF;
             }
 
-            int32_t getSubTileZ() const {
+            int32_t subTileZ() const {
                 return m_z & 0x0000FFFF;
             }
 
-            int32_t getOrientation() const {
+            int32_t orientation() const {
                 return m_orientation;
             }
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "types.h"
 
 namespace isomap {
@@ -48,7 +49,9 @@ namespace isomap {
 
         public:
             enum Type {
-                Status
+                Status,
+                StructureCreated,
+                UnitCreated,
             };
 
             explicit PlayerServerMessage( Type type ) :
@@ -60,8 +63,34 @@ namespace isomap {
 
             static PlayerServerMessage* statusMsg();
 
+            static PlayerServerMessage* structureCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+
+            static PlayerServerMessage* unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+
+            uint32_t x() const {
+                return m_x;
+            }
+
+            uint32_t y() const {
+                return m_y;
+            }
+
+            uint32_t z() const {
+                return m_z;
+            }
+
+            id_t id() const {
+                return m_id;
+            }
+
         private:
             Type m_type;
+
+            uint32_t m_x;
+            uint32_t m_y;
+            uint32_t m_z;
+
+            id_t m_id;
         };
 
     }

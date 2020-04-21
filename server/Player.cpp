@@ -10,10 +10,9 @@
 namespace isomap {
     namespace server {
 
-        Player::Player(Match* match)
-        :
-        m_match( match )
-        {
+        Player::Player( Match* match )
+                :
+                m_match( match ) {
 
         }
 
@@ -76,16 +75,26 @@ namespace isomap {
             return msg;
         }
 
-
-
         void Player::processMessage( common::PlayerCommandMessage* msg ) {
             switch ( msg->type() ) {
-                case common::PlayerCommandMessage::BuildStructure:
-                    m_match->addObject( new Structure( this, msg->x(), msg->y(), msg->z() ) );
+                case common::PlayerCommandMessage::BuildStructure: {
+                    auto* str = new Structure( this, msg->x(), msg->y(), msg->z() );
+                    m_messages.push_back(
+                            common::PlayerServerMessage::structureCreatedMsg( str->x(), str->y(), str->z(),
+                                                                              str->id() ) );
+                    m_match->addObject( str );
+                    m_structures[str->id()] = str;
+                }
                     break;
 
-                case common::PlayerCommandMessage::BuildUnit:
-                    m_match->addObject( new Unit( this, msg->x(), msg->y(), msg->z() ) );
+                case common::PlayerCommandMessage::BuildUnit: {
+                    auto* unit = new Unit( this, msg->x(), msg->y(), msg->z() );
+                    m_messages.push_back(
+                            common::PlayerServerMessage::unitCreatedMsg( unit->x(), unit->y(), unit->z(),
+                                                                         unit->id() ) );
+                    m_match->addObject( unit );
+                    m_units[unit->id()] = unit;
+                }
                     break;
 
                 default:

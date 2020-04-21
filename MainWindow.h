@@ -59,10 +59,9 @@ protected:
 
     isomap::server::Match* m_serverMatch = nullptr;
     isomap::server::Player* m_serverPlayer = nullptr;
+    isomap::client::Player* m_clientPlayer = nullptr;
 
     isomap::client::Terrain* m_clientTerrain = nullptr;
-    isomap::server::Unit* m_serverUnit = nullptr;
-    isomap::client::Unit* m_clientUnit = nullptr;
 
     isomap::server::TerrainGenerator m_generator;
 

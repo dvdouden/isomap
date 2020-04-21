@@ -65,7 +65,8 @@ namespace isomap {
 
             bool m_renderFog = true;
 
-
+            // TODO: Separate render code from game logic
+            // We don't need the AI data structures to be renderable
             vl::ref<vl::SceneManagerActorTree> m_sceneManager;
         };
     }

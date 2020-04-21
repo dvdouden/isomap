@@ -18,6 +18,8 @@ namespace isomap {
 
         class UnitType;
 
+        class Structure;
+
         class StructureType;
 
         class Player;
@@ -27,7 +29,9 @@ namespace isomap {
 
     namespace client {
         class Player;
+
         class Structure;
+
         class Terrain;
 
         class Unit;

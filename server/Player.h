@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <vector>
 #include "../common/types.h"
 
@@ -7,7 +8,7 @@ namespace isomap {
     namespace server {
         class Player {
         public:
-            Player(Match* match);
+            Player( Match* match );
 
             ~Player();
 
@@ -29,12 +30,21 @@ namespace isomap {
 
             void processMessage( common::PlayerCommandMessage* msg );
 
+            std::vector<common::PlayerServerMessage*> serverMessages() {
+                std::vector<common::PlayerServerMessage*> ret = std::move( m_messages );
+                return ret;
+            }
+
         private:
             uint8_t* m_fogMap = nullptr;
             Terrain* m_terrain = nullptr;
             Match* m_match = nullptr;
 
             std::vector<uint32_t> m_uncoveredTiles;
+            std::vector<common::PlayerServerMessage*> m_messages;
+
+            std::map<id_t, Structure*> m_structures;
+            std::map<id_t, Unit*> m_units;
         };
 
     }

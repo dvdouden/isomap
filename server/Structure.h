@@ -11,7 +11,7 @@ namespace isomap {
                     Object( owner ),
                     m_x( x ),
                     m_y( y ),
-                    m_z( z ){ }
+                    m_z( z ) { }
 
             ~Structure() override = default;
 
@@ -25,18 +25,19 @@ namespace isomap {
             void processMessage( common::StructureCommandMessage* msg );
 
             common::StructureServerMessage* statusMessage();
+
             common::StructureServerMessage* createMessage();
 
-            int32_t getX() const {
+            int32_t x() const {
                 return m_x;
             }
 
-            int32_t getY() const {
-                return m_x;
+            int32_t y() const {
+                return m_y;
             }
 
-            int32_t getZ() const {
-                return m_x;
+            int32_t z() const {
+                return m_z;
             }
 
         private:

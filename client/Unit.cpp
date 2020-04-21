@@ -81,7 +81,7 @@ namespace isomap {
                     (m_x / math::fix::fPrecision) + 0.5,
                     (m_y / math::fix::fPrecision) + 0.5,
                     0.25 + (m_z / math::fix::fPrecision) * ::sqrt( 2.0 / 3.0 ) / 2.0 );
-            matrix *= vl::mat4::getRotation( m_orientation - 135, 0, 0, 1 );
+            matrix *= vl::mat4::getRotation( m_orientation, 0, 0, 1 );
             m_transform->setLocalMatrix( matrix );
         }
 

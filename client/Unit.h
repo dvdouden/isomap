@@ -8,7 +8,11 @@ namespace isomap {
     namespace client {
         class Unit {
         public:
-            Unit() = default;
+            Unit( id_t id, int32_t x, int32_t y, int32_t z ) :
+                    m_id( id ),
+                    m_x( x ),
+                    m_y( y ),
+                    m_z( z ) { };
 
             ~Unit() = default;
 
@@ -26,11 +30,14 @@ namespace isomap {
 
 
         private:
+            id_t m_id = 0;
             int32_t m_x = 0;
             int32_t m_y = 0;
             int32_t m_z = 0;
             int32_t m_orientation = 0;
 
+            // TODO: Separate render code from game logic
+            // We don't need the AI data structures to be renderable
             vl::ref<vl::Geometry> m_geom;
             vl::ref<vl::Transform> m_transform;
             vl::ref<vl::Effect> m_effect;

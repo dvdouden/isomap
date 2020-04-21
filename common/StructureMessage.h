@@ -1,4 +1,5 @@
 #pragma once
+
 #include "types.h"
 
 namespace isomap {
@@ -53,6 +54,7 @@ namespace isomap {
             }
 
             static StructureServerMessage* createMsg( int32_t x, int32_t y, int32_t z );
+
             static StructureServerMessage* statusMsg( int32_t x, int32_t y, int32_t z );
 
         private:

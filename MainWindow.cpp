@@ -10,9 +10,11 @@
 #include "server/Terrain.h"
 #include "server/Unit.h"
 
+#include "client/Player.h"
 #include "client/Terrain.h"
 #include "client/Unit.h"
 
+#include "common/PlayerMessage.h"
 #include "common/TerrainMessage.h"
 #include "common/UnitMessage.h"
 #include "server/TerrainGenerator.h"
@@ -61,10 +63,34 @@ void MainWindow::initEvent() {
 
     m_clientTerrain->initRender( rendering() );
 
-    m_serverUnit = new isomap::server::Unit( m_serverPlayer, 0, 0, 0 );
-    m_serverMatch->addObject( m_serverUnit );
-    m_clientUnit = new isomap::client::Unit;
-    m_clientUnit->initRender( rendering() );
+    m_clientPlayer = new isomap::client::Player( m_clientTerrain );
+    m_clientPlayer->initRender( rendering() );
+    printf( "init rendering\n" );
+    auto* playerCmd = m_clientPlayer->buildUnit( 0, 0 );
+    printf( "build unit\n" );
+    m_serverPlayer->processMessage( playerCmd );
+    printf( "server processed message\n" );
+    delete playerCmd;
+    playerCmd = m_clientPlayer->buildStructure( 10, 10 );
+    printf( "build structure\n" );
+    m_serverPlayer->processMessage( playerCmd );
+    printf( "server processed message\n" );
+    delete playerCmd;
+
+    playerCmd = m_clientPlayer->buildStructure( 13, 10 );
+    printf( "build structure\n" );
+    m_serverPlayer->processMessage( playerCmd );
+    printf( "server processed message\n" );
+    delete playerCmd;
+
+    for ( auto* playerMsg : m_serverPlayer->serverMessages() ) {
+        printf( "got player server message\n" );
+        m_clientPlayer->processMessage( playerMsg );
+        printf( "client player processed server message\n" );
+        delete playerMsg;
+    }
+    printf( "init done\n" );
+
 }
 
 void MainWindow::resizeEvent( int w, int h ) {
@@ -423,17 +449,22 @@ void MainWindow::updateScene() {
 
     m_serverMatch->update();
 
+    for ( auto* playerMsg : m_serverPlayer->serverMessages() ) {
+        m_clientPlayer->processMessage( playerMsg );
+        delete playerMsg;
+    }
+/*
     isomap::common::UnitServerMessage* unitMsg = m_serverUnit->statusMessage();
     m_clientUnit->processMessage( unitMsg );
     delete unitMsg;
-
+*/
     isomap::common::TerrainMessage* terrainMessage = m_serverPlayer->createTerrainMessage();
     m_clientTerrain->processMessage( terrainMessage );
     delete terrainMessage;
 
     m_clientTerrain->updateFog();
     m_clientTerrain->render();
-    m_clientUnit->render();
+    m_clientPlayer->render();
 }
 
 void MainWindow::zoomIn() {
@@ -512,9 +543,13 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
 }
 
 void MainWindow::highlight( int x, int y ) {
-    isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
+    /*isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
     m_serverUnit->processMessage( comMsg );
-    delete comMsg;
+    delete comMsg;*/
+
+    auto* playerCmd = m_clientPlayer->buildStructure( x, y );
+    m_serverPlayer->processMessage( playerCmd );
+    delete playerCmd;
 }
 
 void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y ) {
