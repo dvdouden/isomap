@@ -3,6 +3,7 @@
 #include "Unit.h"
 #include "UnitType.h"
 #include "../util/math.h"
+#include "../common/PlayerMessage.h"
 #include "../common/UnitMessage.h"
 
 namespace isomap {
@@ -24,13 +25,13 @@ namespace isomap {
         }
 
         common::UnitServerMessage* Unit::statusMessage() {
-            return common::UnitServerMessage::statusMsg( m_x, m_y, m_z );
+            return common::UnitServerMessage::statusMsg( id(), m_x, m_y, m_z );
         }
 
-        bool Unit::update( Terrain* terrain ) {
+        common::PlayerServerMessage* Unit::update( Terrain* terrain ) {
             // should probably do something with states
             if ( m_wayPoints.empty() ) {
-                return false;
+                return nullptr;
             }
 
             // let's keep things simple for now...
@@ -63,9 +64,9 @@ namespace isomap {
             player()->unFog( m_x, m_y, 20 );
             if ( m_x == wayPoint.x && m_y == wayPoint.y ) {
                 m_wayPoints.pop_back();
-                return true;
+                return common::PlayerServerMessage::unitMsg( statusMessage() );
             }
-            return false;
+            return nullptr;
 
             /*if ( getSubTileX() != 0 || getSubTileY() != 0 ) {
                 // not at a tile boundary, keep moving

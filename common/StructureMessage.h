@@ -41,6 +41,10 @@ namespace isomap {
                 return m_type;
             }
 
+            id_t id() const {
+                return m_id;
+            }
+
             int32_t x() const {
                 return m_x;
             }
@@ -53,16 +57,23 @@ namespace isomap {
                 return m_z;
             }
 
-            static StructureServerMessage* createMsg( int32_t x, int32_t y, int32_t z );
+            int32_t constructionProgress() const {
+                return m_constructionProgress;
+            }
 
-            static StructureServerMessage* statusMsg( int32_t x, int32_t y, int32_t z );
+            static StructureServerMessage* createMsg( id_t id, int32_t x, int32_t y, int32_t z );
+
+            static StructureServerMessage*
+            statusMsg( id_t id, int32_t x, int32_t y, int32_t z, int32_t constructionProgress );
 
         private:
             Type m_type;
 
+            id_t m_id;
             int32_t m_x;
             int32_t m_y;
             int32_t m_z;
+            int32_t m_constructionProgress;
 
         };
 

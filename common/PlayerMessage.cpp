@@ -25,8 +25,19 @@ namespace isomap {
             return msg;
         }
 
-        PlayerServerMessage* PlayerServerMessage::structureCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
-            auto* msg = new PlayerServerMessage( StructureCreated );
+        PlayerServerMessage*
+        PlayerServerMessage::buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
+            auto* msg = new PlayerServerMessage( BuildStructureAccepted );
+            msg->m_x = x;
+            msg->m_y = y;
+            msg->m_z = z;
+            msg->m_id = id;
+            return msg;
+        }
+
+        PlayerServerMessage*
+        PlayerServerMessage::buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
+            auto* msg = new PlayerServerMessage( BuildStructureRejected );
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
@@ -41,6 +52,19 @@ namespace isomap {
             msg->m_z = z;
             msg->m_id = id;
             return msg;
+        }
+
+
+        PlayerServerMessage* PlayerServerMessage::structureMsg( StructureServerMessage* msg ) {
+            auto* ret = new PlayerServerMessage( StructureMessage );
+            ret->m_structureMessage = msg;
+            return ret;
+        }
+
+        PlayerServerMessage* PlayerServerMessage::unitMsg( UnitServerMessage* msg ) {
+            auto* ret = new PlayerServerMessage( UnitMessage );
+            ret->m_unitMessage = msg;
+            return ret;
         }
     }
 }

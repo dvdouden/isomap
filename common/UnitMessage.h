@@ -50,6 +50,10 @@ namespace isomap {
                 return m_type;
             }
 
+            id_t id() const {
+                return m_id;
+            }
+
             int32_t x() const {
                 return m_x;
             }
@@ -62,11 +66,12 @@ namespace isomap {
                 return m_z;
             }
 
-            static UnitServerMessage* statusMsg( int32_t x, int32_t y, int32_t z );
+            static UnitServerMessage* statusMsg( id_t id, int32_t x, int32_t y, int32_t z );
 
         private:
             Type m_type;
 
+            id_t m_id;
             int32_t m_x;
             int32_t m_y;
             int32_t m_z;

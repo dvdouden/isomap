@@ -20,6 +20,10 @@ namespace isomap {
 
             void processMessage( common::PlayerServerMessage* msg );
 
+            void processMessage( common::StructureServerMessage* msg );
+
+            void processMessage( common::UnitServerMessage* msg );
+
             common::PlayerCommandMessage* buildStructure( int32_t tileX, int32_t tileY );
 
             common::PlayerCommandMessage* buildUnit( int32_t tileX, int32_t tileY );

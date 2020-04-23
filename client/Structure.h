@@ -37,6 +37,7 @@ namespace isomap {
             int32_t m_y = 0;
             int32_t m_z = 0;
             int32_t m_orientation = 0;
+            int32_t m_constructionProgress = 0;
 
             uint32_t m_width = 2;
             uint32_t m_height = 3;

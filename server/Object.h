@@ -23,7 +23,7 @@ namespace isomap {
                 return m_player;
             }
 
-            virtual bool update( Terrain* world ) = 0;
+            virtual common::PlayerServerMessage* update( Terrain* world ) = 0;
 
             // health
             //

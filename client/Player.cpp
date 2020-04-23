@@ -3,6 +3,8 @@
 #include "Terrain.h"
 #include "Unit.h"
 #include "../common/PlayerMessage.h"
+#include "../common/StructureMessage.h"
+#include "../common/UnitMessage.h"
 #include "../util/math.h"
 
 namespace isomap {
@@ -10,6 +12,7 @@ namespace isomap {
 
         common::PlayerCommandMessage* Player::buildStructure( int32_t tileX, int32_t tileY ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
+            m_terrain->reserve( tileX, tileY, 2, 3 );
             return common::PlayerCommandMessage::buildStructureMsg( tileX, tileY, tileZ );
         }
 
@@ -26,11 +29,17 @@ namespace isomap {
                 case common::PlayerServerMessage::Status:
                     break;
 
-                case common::PlayerServerMessage::StructureCreated: {
+                case common::PlayerServerMessage::BuildStructureAccepted: {
                     auto* str = new Structure( msg->id(), msg->x(), msg->y(), msg->z() );
                     // TODO: Make sure there's no structure with the given id
                     m_structures[msg->id()] = str;
                     str->initRender( m_rendering );
+                    m_terrain->occupy( msg->x(), msg->y(), 2, 3 );
+                    break;
+                }
+
+                case common::PlayerServerMessage::BuildStructureRejected: {
+                    m_terrain->unreserve( msg->x(), msg->y(), 2, 3 );
                     break;
                 }
 
@@ -42,10 +51,35 @@ namespace isomap {
                     break;
                 }
 
+                case common::PlayerServerMessage::StructureMessage: {
+                    processMessage( msg->structureMessage() );
+                    break;
+                }
+
+                case common::PlayerServerMessage::UnitMessage: {
+                    processMessage( msg->unitMessage() );
+                    break;
+                }
+
                 default:
                     break;
             }
         }
+
+        void Player::processMessage( common::StructureServerMessage* msg ) {
+            if ( msg == nullptr ) {
+                return;
+            }
+            m_structures[msg->id()]->processMessage( msg );
+        }
+
+        void Player::processMessage( common::UnitServerMessage* msg ) {
+            if ( msg == nullptr ) {
+                return;
+            }
+            m_units[msg->id()]->processMessage( msg );
+        }
+
 
         void Player::render() {
             // TODO: This shouldn't be done per player
@@ -64,7 +98,7 @@ namespace isomap {
             }
             for ( uint32_t y = tileY; y < tileY + height; ++y ) {
                 for ( uint32_t x = tileX; x < tileX + width; ++x ) {
-                    if ( !m_terrain->isVisible( x, y ) ) {
+                    if ( !m_terrain->isVisible( x, y ) || m_terrain->occupied( x, y ) != 0 ) {
                         return false;
                     }
                 }

@@ -24,7 +24,7 @@ namespace isomap {
 
             common::UnitServerMessage* statusMessage();
 
-            bool update( Terrain* terrain ) override;
+            common::PlayerServerMessage* update( Terrain* terrain ) override;
 
             UnitType* getType() const {
                 return m_type;

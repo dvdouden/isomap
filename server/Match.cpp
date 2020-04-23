@@ -56,7 +56,10 @@ namespace isomap {
             }
 
             for ( auto obj : m_objects ) {
-                obj.second->update( m_terrain );
+                auto* msg = obj.second->update( m_terrain );
+                if ( msg != nullptr ) {
+                    obj.second->player()->queueMessage( msg );
+                }
             }
         }
 

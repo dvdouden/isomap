@@ -1,4 +1,5 @@
 #include <vlGraphics/FontManager.hpp>
+#include <thread>
 
 #include "MainWindow.h"
 
@@ -453,11 +454,7 @@ void MainWindow::updateScene() {
         m_clientPlayer->processMessage( playerMsg );
         delete playerMsg;
     }
-/*
-    isomap::common::UnitServerMessage* unitMsg = m_serverUnit->statusMessage();
-    m_clientUnit->processMessage( unitMsg );
-    delete unitMsg;
-*/
+
     isomap::common::TerrainMessage* terrainMessage = m_serverPlayer->createTerrainMessage();
     m_clientTerrain->processMessage( terrainMessage );
     delete terrainMessage;
@@ -543,9 +540,6 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
 }
 
 void MainWindow::highlight( int x, int y ) {
-    /*isomap::common::UnitCommandMessage* comMsg = m_clientUnit->moveTo( x, y );
-    m_serverUnit->processMessage( comMsg );
-    delete comMsg;*/
     if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
         auto* playerCmd = m_clientPlayer->buildStructure( x, y );
         m_serverPlayer->processMessage( playerCmd );

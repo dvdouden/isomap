@@ -52,6 +52,36 @@ namespace isomap {
                 return m_fogMap[y * m_width + x] > 1;
             }
 
+            uint8_t occupied( uint32_t x, uint32_t y ) const {
+                return m_occupancyMap[y * m_width + x];
+            }
+
+            void occupy( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+                // occupy area and clear reservation
+                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
+                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
+                        m_occupancyMap[tileY * m_width + tileX] =
+                                (m_occupancyMap[tileY * m_width + tileX] & ~0b0000'0011u) | 0b0000'0001u;
+                    }
+                }
+            }
+
+            void reserve( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
+                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
+                        m_occupancyMap[tileY * m_width + tileX] |= 0b0000'0010u;
+                    }
+                }
+            }
+
+            void unreserve( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
+                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
+                        m_occupancyMap[tileY * m_width + tileX] &= ~0b0000'0010u;
+                    }
+                }
+            }
+
         private:
             uint8_t getCorner( int x, int y, int c ) const;
 
@@ -66,6 +96,7 @@ namespace isomap {
             uint8_t* m_oreMap = nullptr;
             uint8_t* m_fogMap = nullptr;
             uint8_t* m_fogUpdateMap = nullptr;
+            uint8_t* m_occupancyMap = nullptr;
 
             bool m_renderFog = true;
 

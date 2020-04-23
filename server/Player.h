@@ -35,6 +35,10 @@ namespace isomap {
                 return ret;
             }
 
+            void queueMessage( common::PlayerServerMessage* msg ) {
+                m_messages.push_back( msg );
+            }
+
         private:
             uint8_t* m_fogMap = nullptr;
             Terrain* m_terrain = nullptr;

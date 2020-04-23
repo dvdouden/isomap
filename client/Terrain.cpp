@@ -27,11 +27,13 @@ namespace isomap {
                     m_fogUpdateMapWidth = (m_width + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
                     m_fogUpdateMapHeight = (m_height + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
                     m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight];
+                    m_occupancyMap = new uint8_t[m_width * m_height];
                     ::memset( m_heightMap, 0, m_width * m_height );
                     ::memset( m_slopeMap, 0, m_width * m_height );
                     ::memset( m_oreMap, 0, m_width * m_height );
                     ::memset( m_fogMap, 0, m_width * m_height );
                     ::memset( m_fogUpdateMap, 0, m_fogUpdateMapWidth * m_fogUpdateMapHeight );
+                    ::memset( m_occupancyMap, 0, m_width * m_height );
                     break;
 
                 case common::TerrainMessage::Update:

@@ -50,12 +50,17 @@ namespace isomap {
         public:
             enum Type {
                 Status,
-                StructureCreated,
+                BuildStructureAccepted,
+                BuildStructureRejected,
                 UnitCreated,
+                UnitMessage,
+                StructureMessage,
             };
 
             explicit PlayerServerMessage( Type type ) :
                     m_type( type ) { }
+
+            ~PlayerServerMessage() = default;
 
             Type type() const {
                 return m_type;
@@ -63,9 +68,15 @@ namespace isomap {
 
             static PlayerServerMessage* statusMsg();
 
-            static PlayerServerMessage* structureCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+            static PlayerServerMessage* buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+
+            static PlayerServerMessage* buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
 
             static PlayerServerMessage* unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+
+            static PlayerServerMessage* structureMsg( StructureServerMessage* msg );
+
+            static PlayerServerMessage* unitMsg( UnitServerMessage* msg );
 
             uint32_t x() const {
                 return m_x;
@@ -83,6 +94,14 @@ namespace isomap {
                 return m_id;
             }
 
+            StructureServerMessage* structureMessage() const {
+                return m_structureMessage;
+            }
+
+            UnitServerMessage* unitMessage() const {
+                return m_unitMessage;
+            }
+
         private:
             Type m_type;
 
@@ -91,6 +110,9 @@ namespace isomap {
             uint32_t m_z;
 
             id_t m_id;
+
+            StructureServerMessage* m_structureMessage = nullptr;
+            UnitServerMessage* m_unitMessage = nullptr;
         };
 
     }

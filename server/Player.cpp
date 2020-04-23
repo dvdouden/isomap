@@ -80,8 +80,8 @@ namespace isomap {
                 case common::PlayerCommandMessage::BuildStructure: {
                     auto* str = new Structure( this, msg->x(), msg->y(), msg->z() );
                     m_messages.push_back(
-                            common::PlayerServerMessage::structureCreatedMsg( str->x(), str->y(), str->z(),
-                                                                              str->id() ) );
+                            common::PlayerServerMessage::buildStructureAcceptedMsg( str->x(), str->y(), str->z(),
+                                                                                    str->id() ) );
                     m_match->addObject( str );
                     m_structures[str->id()] = str;
                 }

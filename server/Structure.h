@@ -19,7 +19,7 @@ namespace isomap {
 
             const Structure& operator=( const Structure& ) = delete;
 
-            bool update( Terrain* world ) override;
+            common::PlayerServerMessage* update( Terrain* world ) override;
 
 
             void processMessage( common::StructureCommandMessage* msg );
@@ -40,11 +40,16 @@ namespace isomap {
                 return m_z;
             }
 
+            int32_t constructionProcess() const {
+                return m_constructionProgress;
+            }
+
         private:
 
             int32_t m_x = 0;
             int32_t m_y = 0;
             int32_t m_z = 0;
+            int32_t m_constructionProgress = 0;
             // position
             // health
             // type

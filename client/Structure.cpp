@@ -38,6 +38,7 @@ namespace isomap {
                     m_x = msg->x();
                     m_y = msg->y();
                     m_z = msg->z();
+                    m_constructionProgress = msg->constructionProgress();
                     break;
 
                 default:
@@ -76,10 +77,12 @@ namespace isomap {
 
 
         void Structure::render() {
+            vl::real z = (m_constructionProgress * 1.5) / 100.0;
+            z -= 0.75;
             vl::mat4 matrix = vl::mat4::getTranslation(
                     m_x + (m_width / 2.0),
                     m_y + (m_height / 2.0),
-                    0.75 + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
+                    z + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
             matrix *= vl::mat4::getRotation( m_orientation, 0, 0, 1 );
             m_transform->setLocalMatrix( matrix );
         }
