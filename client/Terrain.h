@@ -8,6 +8,31 @@ namespace isomap {
     namespace client {
         class Terrain {
         public:
+            struct Area {
+                uint32_t x = 0;
+                uint32_t y = 0;
+                uint32_t w = 0;
+                uint32_t h = 0;
+
+                Area( uint32_t x, uint32_t y, uint32_t w, uint32_t h ) :
+                        x( x ),
+                        y( y ),
+                        w( w ),
+                        h( h ) { }
+
+                Area() = default;
+
+                Area( const Area& ) = default;
+
+                ~Area() = default;
+
+                Area& operator=( const Area& ) = default;
+
+                bool contains( uint32_t x, uint32_t y ) const {
+                    return x >= this->x && x < this->x + w && y >= this->y && y < this->y + h;
+                }
+            };
+
             Terrain() = default;
 
             ~Terrain() = default;
@@ -82,6 +107,20 @@ namespace isomap {
                 }
             }
 
+            void highLight( const Area& area, const vl::fvec4& color ) {
+                m_highlightArea = area;
+                m_highlightColor = color;
+                m_renderHighlight = true;
+            }
+
+            void addHighlight( const Area& area, const vl::fvec4& color ) {
+                m_highLightAreas.push_back( std::pair<Area, vl::fvec4>( area, color ) );
+            }
+
+            void clearHighlight() {
+                m_highLightAreas.clear();
+            }
+
         private:
             uint8_t getCorner( int x, int y, int c ) const;
 
@@ -99,6 +138,12 @@ namespace isomap {
             uint8_t* m_occupancyMap = nullptr;
 
             bool m_renderFog = true;
+            bool m_renderHighlight = false;
+
+            Area m_highlightArea;
+            vl::fvec4 m_highlightColor;
+
+            std::vector<std::pair<Area, vl::fvec4>> m_highLightAreas;
 
             // TODO: Separate render code from game logic
             // We don't need the AI data structures to be renderable

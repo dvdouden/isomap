@@ -14,7 +14,7 @@ void MouseListener::mouseDownEvent( vl::EMouseButton btn, int x, int y ) {
         int wx = 0;
         int wy = 0;
         m_window->screenToWorld( x, y, wx, wy );
-        m_window->highlight( wx, wy );
+        m_window->place( wx, wy );
         m_mode = Mode_highlight;
     }
 }
@@ -69,11 +69,16 @@ void MouseListener::mouseMoveEvent( int x, int y ) {
             int wx = 0;
             int wy = 0;
             m_window->screenToWorld( x, y, wx, wy );
+            m_window->place( wx, wy );
+            break;
+        }
+        default: {
+            int wx = 0;
+            int wy = 0;
+            m_window->screenToWorld( x, y, wx, wy );
             m_window->highlight( wx, wy );
             break;
         }
-        default:
-            break;
     }
 }
 

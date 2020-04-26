@@ -184,6 +184,19 @@ namespace isomap {
                         g = ((g * fog) + (g / 4u * (255 - fog))) >> 8u;
                         b = ((b * fog) + (b / 4u * (255 - fog))) >> 8u;
                     }
+                    if ( m_renderHighlight && m_highlightArea.contains( x, y ) ) {
+                        r = m_highlightColor.r() * 255;
+                        g = m_highlightColor.g() * 255;
+                        b = m_highlightColor.b() * 255;
+                    }
+                    for ( const auto& area : m_highLightAreas ) {
+                        if ( area.first.contains( x, y ) ) {
+                            r = area.second.r() * 255;
+                            g = area.second.g() * 255;
+                            b = area.second.b() * 255;
+                            break;
+                        }
+                    }
 
                     c[0] = vl::ubvec4( r, g, b, 255 );
                     c[1] = vl::ubvec4( r, g, b, 255 );

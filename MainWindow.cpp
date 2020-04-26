@@ -92,6 +92,7 @@ void MainWindow::initEvent() {
     }
     printf( "init done\n" );
 
+    m_clientTerrain->highLight( isomap::client::Terrain::Area( 0, 0, 1, 1 ), vl::green );
 }
 
 void MainWindow::resizeEvent( int w, int h ) {
@@ -493,6 +494,8 @@ void MainWindow::rotateRight() {
 }
 
 void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
+    m_clientTerrain->clearHighlight();
+
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
     int h = rendering()->as<vl::Rendering>()->camera()->viewport()->height();
@@ -512,34 +515,99 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     vl::real wx = dx / tile_width;
     vl::real wy = dy / tile_height;
 
-    // we have to offset the tile positions because the center of a tile is at the center of the screen
-    // we have to use floor, otherwise both 0.5 and -0.5 will become 0. -0.5 should become -1
-    int tx = (int)::floor( wy + wx + m_x_off );
-    int ty = (int)::floor( wy - wx + m_y_off );
+    vl::real tile_x = wy + wx;
+    vl::real tile_y = wy - wx;
 
-    // and then there's this monstrosity, don't ask...
+    vl::real worldTileX, worldTileY;
+    // now we need to compensate for the camera offset and orientation
     switch ( m_orientation ) {
         default:
         case 0:
-            world_x = m_x + tx;
-            world_y = m_y - ty;
+            worldTileX = m_x + tile_x + m_x_off;
+            worldTileY = m_y - tile_y + m_y_off;
             break;
         case 1:
-            world_x = m_x + ty;
-            world_y = m_y + tx;
+            worldTileX = m_x + tile_y + m_y_off;
+            worldTileY = m_y + tile_x + m_x_off;
             break;
         case 2:
-            world_x = m_x - tx;
-            world_y = m_y + ty;
+            worldTileX = m_x - tile_x + m_x_off;
+            worldTileY = m_y + tile_y + m_y_off;
             break;
         case 3:
-            world_x = m_x - ty;
-            world_y = m_y - tx;
+            worldTileX = m_x - tile_y + m_y_off;
+            worldTileY = m_y - tile_x + m_x_off;
             break;
     }
+
+    vl::real sub_x = worldTileX - ::floor( worldTileX );
+    vl::real sub_y = worldTileY - ::floor( worldTileY );
+
+    world_x = (int)worldTileX;
+    world_y = (int)worldTileY;
+
+    printf( "%f (%f) %f (%f) %d, %d\n", worldTileX, sub_x, worldTileY, sub_y, world_x, world_y );
+
+
+    // our current world coordinates do not take the height of the tile into account, it assumes each tile has height 0
+    // in order to fix that, we need to look at a few more tiles towards the camera
+    m_clientTerrain->addHighlight( isomap::client::Terrain::Area( world_x, world_y, 1, 1 ), vl::red );
+    int x_inc = 0;
+    int y_inc = 0;
+    int temp_x = world_x;
+    int temp_y = world_y;
+    // first we need to figure out in which direction we should be looking
+    bool x_first;
+    switch ( m_orientation ) {
+        default:
+        case 0:
+            x_inc = 1;
+            y_inc = -1;
+            x_first = sub_x + sub_y >= 1.0;
+            break;
+        case 1:
+            x_inc = 1;
+            y_inc = 1;
+            x_first = sub_x >= sub_y;
+            break;
+        case 2:
+            x_inc = -1;
+            y_inc = 1;
+            x_first = sub_x + sub_y <= 1.0;
+            break;
+        case 3:
+            x_inc = -1;
+            y_inc = -1;
+            x_first = sub_x <= sub_y;
+            break;
+    }
+
+
+    for ( int i = 0; i < 16; ++i ) {
+        if ( x_first ) {
+            temp_x += x_inc;
+        } else {
+            temp_y += y_inc;
+        }
+        m_clientTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), vl::green );
+        x_first = !x_first;
+
+        // for every tile, calculate screen coordinates of the four corners, and check if the cursor is inside the
+        // quad...
+        // HOWWWWWWWWWWWW
+    }
+
 }
 
 void MainWindow::highlight( int x, int y ) {
+    /*if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
+        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1), vl::green );
+    } else {
+        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1), vl::red );
+    }*/
+}
+
+void MainWindow::place( int x, int y ) {
     if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
         auto* playerCmd = m_clientPlayer->buildStructure( x, y );
         m_serverPlayer->processMessage( playerCmd );

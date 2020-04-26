@@ -19,7 +19,7 @@ public:
 
     void resizeEvent( int w, int h ) override;
 
-    void updateScene();
+    void updateScene() override;
 
 
     void zoomIn();
@@ -33,6 +33,8 @@ public:
     void screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y );
 
     void highlight( int x, int y );
+
+    void place( int x, int y );
 
     void focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y );
 
