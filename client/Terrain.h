@@ -121,8 +121,13 @@ namespace isomap {
                 m_highLightAreas.clear();
             }
 
+            uint8_t getCorner( uint32_t x, uint32_t y, uint32_t c ) const {
+                return m_heightMap[y * m_width + x] -
+                       (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
+            }
+
         private:
-            uint8_t getCorner( int x, int y, int c ) const;
+            uint8_t getCornerSafe( int x, int y, int c ) const;
 
             uint32_t m_width = 0;
             uint32_t m_height = 0;

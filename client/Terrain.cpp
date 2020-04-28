@@ -61,39 +61,39 @@ namespace isomap {
             rendering->as<vl::Rendering>()->sceneManagers()->push_back( m_sceneManager.get() );
         }
 
-        uint8_t Terrain::getCorner( int x, int y, int i ) const {
+        uint8_t Terrain::getCornerSafe( int x, int y, int c ) const {
             if ( x < 0 ) {
                 x = 0;
-                if ( i == 1 ) {
-                    i = 0;
-                } else if ( i == 2 ) {
-                    i = 3;
+                if ( c == 1 ) {
+                    c = 0;
+                } else if ( c == 2 ) {
+                    c = 3;
                 }
             } else if ( x >= m_width ) {
                 x = (int)m_width - 1;
-                if ( i == 0 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 2;
+                if ( c == 0 ) {
+                    c = 1;
+                } else if ( c == 3 ) {
+                    c = 2;
                 }
             }
             if ( y < 0 ) {
                 y = 0;
-                if ( i == 2 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 0;
+                if ( c == 2 ) {
+                    c = 1;
+                } else if ( c == 3 ) {
+                    c = 0;
                 }
             } else if ( y >= m_height ) {
                 y = (int)m_height - 1;
-                if ( i == 0 ) {
-                    i = 3;
-                } else if ( i == 1 ) {
-                    i = 2;
+                if ( c == 0 ) {
+                    c = 3;
+                } else if ( c == 1 ) {
+                    c = 2;
                 }
             }
             return m_heightMap[y * m_width + x] -
-                   (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( i ) ) & 0b0000'0001u);
+                   (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
         }
 
         void Terrain::render() {
@@ -207,8 +207,8 @@ namespace isomap {
                     ++quads;
 
                     if ( slope & 0b0001'0000u ) {
-                        auto c03 = getCorner( x, y - 1, 3 );
-                        auto c02 = getCorner( x, y - 1, 2 );
+                        auto c03 = getCornerSafe( x, y - 1, 3 );
+                        auto c02 = getCornerSafe( x, y - 1, 2 );
                         vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         vl::real hc02 = c02 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         // TODO: figure out if we need a quad or a tri...
@@ -230,8 +230,8 @@ namespace isomap {
                         ++quads;
                     }
                     if ( slope & 0b0010'0000u ) {
-                        auto c10 = getCorner( x + 1, y, 0 );
-                        auto c13 = getCorner( x + 1, y, 3 );
+                        auto c10 = getCornerSafe( x + 1, y, 0 );
+                        auto c13 = getCornerSafe( x + 1, y, 3 );
                         vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         vl::real hc13 = c13 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         // TODO: figure out if we need a quad or a tri...
@@ -253,8 +253,8 @@ namespace isomap {
                         ++quads;
                     }
                     if ( slope & 0b0100'0000u ) {
-                        auto c21 = getCorner( x, y + 1, 1 );
-                        auto c20 = getCorner( x, y + 1, 0 );
+                        auto c21 = getCornerSafe( x, y + 1, 1 );
+                        auto c20 = getCornerSafe( x, y + 1, 0 );
                         vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         vl::real hc20 = c20 * ::sqrt( 2.0 / 3.0 ) / 2.0;
 
@@ -277,8 +277,8 @@ namespace isomap {
                         ++quads;
                     }
                     if ( slope & 0b1000'0000u ) {
-                        auto c32 = getCorner( x - 1, y, 2 );
-                        auto c31 = getCorner( x - 1, y, 1 );
+                        auto c32 = getCornerSafe( x - 1, y, 2 );
+                        auto c31 = getCornerSafe( x - 1, y, 1 );
                         // TODO: figure out if we need a quad or a tri...
                         vl::real hc32 = c32 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                         vl::real hc31 = c31 * ::sqrt( 2.0 / 3.0 ) / 2.0;

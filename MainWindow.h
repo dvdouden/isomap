@@ -32,6 +32,10 @@ public:
 
     void screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y );
 
+    void worldToScreen( int world_x, int world_y, int world_z, int& screen_x, int& screen_y );
+
+    void worldToScreen( int world_x, int world_y, int world_z, int corner, int& screen_x, int& screen_y );
+
     void highlight( int x, int y );
 
     void place( int x, int y );
@@ -58,6 +62,7 @@ protected:
     int m_width = 256;
     int m_height = 256;
     bool m_paused = true;
+    bool m_renderColumn = false;
 
     isomap::server::Match* m_serverMatch = nullptr;
     isomap::server::Player* m_serverPlayer = nullptr;
@@ -70,6 +75,8 @@ protected:
     vl::ref<vl::Text> m_text;
 
     void updateText();
+
+    bool isBelow( int dx, int dy, int x0, int y0, int x1, int y1 );
 };
 
 

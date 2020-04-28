@@ -326,6 +326,10 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             m_clientTerrain->toggleRenderFog();
             break;
 
+        case vl::Key_F2:
+            m_renderColumn = !m_renderColumn;
+            break;
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -506,7 +510,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
 
     // get screen position relative to center of screen
     int dx = screen_x - hw;
-    int dy = screen_y - hh;
+    int dy = -(screen_y - hh);
 
     vl::real tile_width = ZOOM_LEVELS[m_zoomLevel];
     vl::real tile_height = tile_width / 2.0;
@@ -515,28 +519,28 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     vl::real wx = dx / tile_width;
     vl::real wy = dy / tile_height;
 
-    vl::real tile_x = wy + wx;
-    vl::real tile_y = wy - wx;
+    vl::real tile_x = -wy + wx;
+    vl::real tile_y = -wy - wx;
 
     vl::real worldTileX, worldTileY;
     // now we need to compensate for the camera offset and orientation
     switch ( m_orientation ) {
         default:
         case 0:
-            worldTileX = m_x + tile_x + m_x_off;
-            worldTileY = m_y - tile_y + m_y_off;
+            worldTileX = (tile_x + m_x) + m_x_off;
+            worldTileY = (-tile_y + m_y) + m_y_off;
             break;
         case 1:
-            worldTileX = m_x + tile_y + m_y_off;
-            worldTileY = m_y + tile_x + m_x_off;
+            worldTileX = (tile_y + m_x) + m_y_off;
+            worldTileY = (tile_x + m_y) + m_x_off;
             break;
         case 2:
-            worldTileX = m_x - tile_x + m_x_off;
-            worldTileY = m_y + tile_y + m_y_off;
+            worldTileX = (-tile_x + m_x) + m_x_off;
+            worldTileY = (tile_y + m_y) + m_y_off;
             break;
         case 3:
-            worldTileX = m_x - tile_y + m_y_off;
-            worldTileY = m_y - tile_x + m_x_off;
+            worldTileX = (-tile_y + m_x) + m_y_off;
+            worldTileY = (-tile_x + m_y) + m_x_off;
             break;
     }
 
@@ -546,12 +550,10 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     world_x = (int)worldTileX;
     world_y = (int)worldTileY;
 
-    printf( "%f (%f) %f (%f) %d, %d\n", worldTileX, sub_x, worldTileY, sub_y, world_x, world_y );
-
-
     // our current world coordinates do not take the height of the tile into account, it assumes each tile has height 0
     // in order to fix that, we need to look at a few more tiles towards the camera
-    m_clientTerrain->addHighlight( isomap::client::Terrain::Area( world_x, world_y, 1, 1 ), vl::red );
+    //m_clientTerrain->addHighlight( isomap::client::Terrain::Area( world_x, world_y, 1, 1 ), vl::red );
+
     int x_inc = 0;
     int y_inc = 0;
     int temp_x = world_x;
@@ -581,25 +583,114 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
             x_first = sub_x <= sub_y;
             break;
     }
-
+    int c0 = (0u + m_orientation) % 4u;
+    int c1 = (3u + m_orientation) % 4u;
+    int c2 = (2u + m_orientation) % 4u;
 
     for ( int i = 0; i < 16; ++i ) {
+        // for each tile, we need to find the top line
+        // translate the two corners to screen space
+        // then find the last tile for which the screen coordinates fall below the line
+        if ( temp_x >= 0 && temp_x < m_width && temp_y >= 0 && temp_y < m_height ) {
+            int x0, y0, x1, y1;
+
+            if ( x_first == ((m_orientation % 2) == 0) ) {
+                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c1 ), c1, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c2 ), c2, x1, y1 );
+            } else {
+                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c0 ), c0, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c1 ), c1, x1, y1 );
+            }
+            vl::fvec4 color;
+            if ( isBelow( dx, dy, x0, y0, x1, y1 ) ) {
+                color = vl::green;
+                world_x = temp_x;
+                world_y = temp_y;
+            } else {
+                color = vl::red;
+            }
+            if ( m_renderColumn ) {
+                m_clientTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), color );
+            }
+        }
+
         if ( x_first ) {
             temp_x += x_inc;
         } else {
             temp_y += y_inc;
         }
-        m_clientTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), vl::green );
-        x_first = !x_first;
 
-        // for every tile, calculate screen coordinates of the four corners, and check if the cursor is inside the
-        // quad...
-        // HOWWWWWWWWWWWW
+        x_first = !x_first;
     }
 
 }
 
+
+bool MainWindow::isBelow( int dx, int dy, int x0, int y0, int x1, int y1 ) {
+    dx -= x0;
+    dy -= y0;
+    x1 -= x0;
+    y1 -= y0;
+    if ( dy <= 0 && dy <= y1 ) {
+        return true;
+    }
+    if ( dy > 0 && dy > y1 ) {
+        return false;
+    }
+    return dy <= ((dx * y1) / x1);
+}
+
+void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int& screen_x, int& screen_y ) {
+    int tile_x, tile_y;
+    switch ( m_orientation ) {
+        default:
+        case 0:
+            tile_x = world_x - m_x;
+            tile_y = -world_y + m_y;
+            break;
+        case 1:
+            tile_y = world_x - m_x;
+            tile_x = world_y - m_y;
+            break;
+        case 2:
+            tile_x = -world_x + m_x;
+            tile_y = world_y - m_y;
+            break;
+        case 3:
+            tile_y = -world_x + m_x;
+            tile_x = -world_y + m_y;
+            break;
+    }
+
+    screen_x = ((tile_x - tile_y) * ZOOM_LEVELS[m_zoomLevel] / 2);
+    screen_y = -((tile_x + tile_y) * ZOOM_LEVELS[m_zoomLevel] / 4);
+    screen_y += world_z * ZOOM_LEVELS[m_zoomLevel] / 4;
+}
+
+void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corner, int& screen_x, int& screen_y ) {
+    worldToScreen( world_x, world_y, world_z, screen_x, screen_y );
+    int x_off = 0, y_off = 0;
+    switch ( ((4 + corner) - m_orientation) % 4 ) {
+        default:
+        case 0:
+            x_off = -ZOOM_LEVELS[m_zoomLevel] / 2;
+            break;
+        case 1:
+            y_off = -ZOOM_LEVELS[m_zoomLevel] / 4;
+            break;
+        case 2:
+            x_off = ZOOM_LEVELS[m_zoomLevel] / 2;
+            break;
+        case 3:
+            y_off = ZOOM_LEVELS[m_zoomLevel] / 4;
+            break;
+    }
+    screen_x += x_off;
+    screen_y += y_off;
+}
+
 void MainWindow::highlight( int x, int y ) {
+    m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::pink );
     /*if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
         m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1), vl::green );
     } else {
