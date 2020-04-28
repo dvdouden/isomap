@@ -16,6 +16,7 @@
 #include "client/Unit.h"
 
 #include "common/PlayerMessage.h"
+#include "common/StructureType.h"
 #include "common/TerrainMessage.h"
 #include "common/UnitMessage.h"
 #include "server/TerrainGenerator.h"
@@ -24,6 +25,8 @@
 const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
 
 void MainWindow::initEvent() {
+
+    isomap::common::StructureType::load();
 
     vl::ref<vl::Effect> text_fx = new vl::Effect;
     text_fx->shader()->enable( vl::EN_BLEND );
@@ -690,12 +693,12 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
-    m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::pink );
-    /*if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
-        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1), vl::green );
+    //m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::pink );
+    if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
+        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 2, 3 ), vl::green );
     } else {
-        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1), vl::red );
-    }*/
+        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 2, 3 ), vl::red );
+    }
 }
 
 void MainWindow::place( int x, int y ) {

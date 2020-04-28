@@ -16,11 +16,7 @@ namespace isomap {
 
         class Unit;
 
-        class UnitType;
-
         class Structure;
-
-        class StructureType;
 
         class Player;
 
@@ -49,8 +45,12 @@ namespace isomap {
 
         class UnitServerMessage;
 
+        class UnitType;
+
         class StructureCommandMessage;
 
         class StructureServerMessage;
+
+        class StructureType;
     }
 }

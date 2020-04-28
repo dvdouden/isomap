@@ -26,7 +26,7 @@ namespace isomap {
 
             common::PlayerServerMessage* update( Terrain* terrain ) override;
 
-            UnitType* getType() const {
+            common::UnitType* getType() const {
                 return m_type;
             }
 
@@ -77,7 +77,7 @@ namespace isomap {
 
             int32_t speedY( int32_t speed, int32_t orientation ) const;
 
-            UnitType* m_type;
+            common::UnitType* m_type;
 
             int32_t m_x = 0;
             int32_t m_y = 0;
