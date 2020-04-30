@@ -20,9 +20,14 @@ namespace isomap {
                 return m_type;
             }
 
-            static PlayerCommandMessage* buildStructureMsg( uint32_t x, uint32_t y, uint32_t z );
+            static PlayerCommandMessage*
+            buildStructureMsg( uint32_t x, uint32_t y, uint32_t z, id_t structureType, uint32_t rotation );
 
             static PlayerCommandMessage* buildUnitMsg( uint32_t x, uint32_t y, uint32_t z );
+
+            id_t id() const {
+                return m_id;
+            }
 
             uint32_t x() const {
                 return m_x;
@@ -36,12 +41,18 @@ namespace isomap {
                 return m_z;
             }
 
+            uint32_t rotation() const {
+                return m_rotation;
+            }
+
         private:
             Type m_type;
 
+            id_t m_id;
             uint32_t m_x;
             uint32_t m_y;
             uint32_t m_z;
+            uint32_t m_rotation;
         };
 
 
@@ -68,9 +79,11 @@ namespace isomap {
 
             static PlayerServerMessage* statusMsg();
 
-            static PlayerServerMessage* buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+            static PlayerServerMessage*
+            buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id, id_t typeId, uint32_t rotation );
 
-            static PlayerServerMessage* buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+            static PlayerServerMessage*
+            buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t typeId, uint32_t rotation );
 
             static PlayerServerMessage* unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
 
@@ -90,8 +103,16 @@ namespace isomap {
                 return m_z;
             }
 
+            uint32_t rotation() const {
+                return m_rotation;
+            }
+
             id_t id() const {
                 return m_id;
+            }
+
+            id_t typeId() const {
+                return m_typeId;
             }
 
             StructureServerMessage* structureMessage() const {
@@ -108,8 +129,10 @@ namespace isomap {
             uint32_t m_x;
             uint32_t m_y;
             uint32_t m_z;
+            uint32_t m_rotation;
 
             id_t m_id;
+            id_t m_typeId;
 
             StructureServerMessage* m_structureMessage = nullptr;
             UnitServerMessage* m_unitMessage = nullptr;

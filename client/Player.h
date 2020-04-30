@@ -24,7 +24,8 @@ namespace isomap {
 
             void processMessage( common::UnitServerMessage* msg );
 
-            common::PlayerCommandMessage* buildStructure( int32_t tileX, int32_t tileY );
+            common::PlayerCommandMessage*
+            buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType, uint32_t rotation );
 
             common::PlayerCommandMessage* buildUnit( int32_t tileX, int32_t tileY );
 
@@ -32,7 +33,8 @@ namespace isomap {
                 m_rendering = rendering;
             }
 
-            bool canPlace( int32_t tileX, int32_t tileY, uint32_t width, uint32_t height ) const;
+            bool
+            canPlace( int32_t worldX, int32_t worldY, common::StructureType* structureType, uint32_t rotation ) const;
 
             void render();
 

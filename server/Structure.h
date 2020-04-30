@@ -7,11 +7,12 @@ namespace isomap {
 
         class Structure : public Object {
         public:
-            Structure( Player* owner, uint32_t x, uint32_t y, uint32_t z ) :
+            Structure( Player* owner, uint32_t x, uint32_t y, uint32_t z, common::StructureType* structureType ) :
                     Object( owner ),
                     m_x( x ),
                     m_y( y ),
-                    m_z( z ) { }
+                    m_z( z ),
+                    m_structureType( structureType ) { }
 
             ~Structure() override = default;
 
@@ -50,6 +51,7 @@ namespace isomap {
             int32_t m_y = 0;
             int32_t m_z = 0;
             int32_t m_constructionProgress = 0;
+            common::StructureType* m_structureType = nullptr;
             // position
             // health
             // type

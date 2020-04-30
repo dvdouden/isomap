@@ -35,6 +35,8 @@ namespace isomap {
     }
 
     namespace common {
+        class FootPrint;
+
         class TerrainMessage;
 
         class PlayerCommandMessage;

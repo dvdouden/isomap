@@ -3,11 +3,14 @@
 namespace isomap {
     namespace common {
 
-        PlayerCommandMessage* PlayerCommandMessage::buildStructureMsg( uint32_t x, uint32_t y, uint32_t z ) {
+        PlayerCommandMessage*
+        PlayerCommandMessage::buildStructureMsg( uint32_t x, uint32_t y, uint32_t z, id_t id, uint32_t rotation ) {
             auto* msg = new PlayerCommandMessage( BuildStructure );
+            msg->m_id = id;
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
+            msg->m_rotation = rotation;
             return msg;
         }
 
@@ -26,22 +29,27 @@ namespace isomap {
         }
 
         PlayerServerMessage*
-        PlayerServerMessage::buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
+        PlayerServerMessage::buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id, id_t typeId,
+                                                        uint32_t rotation ) {
             auto* msg = new PlayerServerMessage( BuildStructureAccepted );
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
             msg->m_id = id;
+            msg->m_typeId = typeId;
+            msg->m_rotation = rotation;
             return msg;
         }
 
         PlayerServerMessage*
-        PlayerServerMessage::buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
+        PlayerServerMessage::buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t typeId,
+                                                        uint32_t rotation ) {
             auto* msg = new PlayerServerMessage( BuildStructureRejected );
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
-            msg->m_id = id;
+            msg->m_typeId = typeId;
+            msg->m_rotation = rotation;
             return msg;
         }
 

@@ -2,6 +2,7 @@
 
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
+#include "../common/FootPrint.h"
 #include "../common/types.h"
 
 namespace isomap {
@@ -13,12 +14,21 @@ namespace isomap {
                 uint32_t y = 0;
                 uint32_t w = 0;
                 uint32_t h = 0;
+                const common::FootPrint* footPrint = nullptr;
 
                 Area( uint32_t x, uint32_t y, uint32_t w, uint32_t h ) :
                         x( x ),
                         y( y ),
                         w( w ),
-                        h( h ) { }
+                        h( h ),
+                        footPrint( nullptr ) { }
+
+                Area( uint32_t x, uint32_t y, const common::FootPrint* footPrint ) :
+                        x( x ),
+                        y( y ),
+                        w( footPrint->width() ),
+                        h( footPrint->height() ),
+                        footPrint( footPrint ) { }
 
                 Area() = default;
 
@@ -29,7 +39,13 @@ namespace isomap {
                 Area& operator=( const Area& ) = default;
 
                 bool contains( uint32_t x, uint32_t y ) const {
-                    return x >= this->x && x < this->x + w && y >= this->y && y < this->y + h;
+                    if ( x >= this->x && x < this->x + w && y >= this->y && y < this->y + h ) {
+                        if ( footPrint != nullptr ) {
+                            return footPrint->get( x - this->x, y - this->y ) != 0;
+                        }
+                        return true;
+                    }
+                    return false;
                 }
             };
 
@@ -73,6 +89,10 @@ namespace isomap {
                 m_renderFog = !m_renderFog;
             }
 
+            void toggleRenderOccupancy() {
+                m_renderOccupancy = !m_renderOccupancy;
+            }
+
             bool isVisible( uint32_t x, uint32_t y ) const {
                 return m_fogMap[y * m_width + x] > 1;
             }
@@ -81,28 +101,35 @@ namespace isomap {
                 return m_occupancyMap[y * m_width + x];
             }
 
-            void occupy( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+            void occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
                 // occupy area and clear reservation
-                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
-                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
-                        m_occupancyMap[tileY * m_width + tileX] =
-                                (m_occupancyMap[tileY * m_width + tileX] & ~0b0000'0011u) | 0b0000'0001u;
+                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                        if ( footPrint->get( x, y ) != 0 ) {
+                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] =
+                                    (m_occupancyMap[(y + worldY) * m_width + (x + worldX)] & ~0b0000'0011u) |
+                                    0b0000'0001u;
+                        }
                     }
                 }
             }
 
-            void reserve( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
-                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
-                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
-                        m_occupancyMap[tileY * m_width + tileX] |= 0b0000'0010u;
+            void reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                        if ( footPrint->get( x, y ) != 0 ) {
+                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0010u;
+                        }
                     }
                 }
             }
 
-            void unreserve( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
-                for ( uint32_t tileY = y; tileY < y + height; ++tileY ) {
-                    for ( uint32_t tileX = x; tileX < x + width; ++tileX ) {
-                        m_occupancyMap[tileY * m_width + tileX] &= ~0b0000'0010u;
+            void unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                        if ( footPrint->get( x, y ) != 0 ) {
+                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0010u;
+                        }
                     }
                 }
             }
@@ -144,6 +171,7 @@ namespace isomap {
 
             bool m_renderFog = true;
             bool m_renderHighlight = false;
+            bool m_renderOccupancy = false;
 
             Area m_highlightArea;
             vl::fvec4 m_highlightColor;

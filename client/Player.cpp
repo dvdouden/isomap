@@ -4,16 +4,20 @@
 #include "Unit.h"
 #include "../common/PlayerMessage.h"
 #include "../common/StructureMessage.h"
+#include "../common/StructureType.h"
 #include "../common/UnitMessage.h"
 #include "../util/math.h"
 
 namespace isomap {
     namespace client {
 
-        common::PlayerCommandMessage* Player::buildStructure( int32_t tileX, int32_t tileY ) {
+        common::PlayerCommandMessage*
+        Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
+                                uint32_t rotation ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
-            m_terrain->reserve( tileX, tileY, 2, 3 );
-            return common::PlayerCommandMessage::buildStructureMsg( tileX, tileY, tileZ );
+            m_terrain->reserve( tileX, tileY, structureType->footPrint( rotation ) );
+            return common::PlayerCommandMessage::buildStructureMsg( tileX, tileY, tileZ, structureType->id(),
+                                                                    rotation );
         }
 
         common::PlayerCommandMessage* Player::buildUnit( int32_t tileX, int32_t tileY ) {
@@ -30,16 +34,18 @@ namespace isomap {
                     break;
 
                 case common::PlayerServerMessage::BuildStructureAccepted: {
-                    auto* str = new Structure( msg->id(), msg->x(), msg->y(), msg->z() );
+                    auto* str = new Structure( msg->id(), msg->x(), msg->y(), msg->z(),
+                                               common::StructureType::get( msg->typeId() ), msg->rotation() );
                     // TODO: Make sure there's no structure with the given id
                     m_structures[msg->id()] = str;
                     str->initRender( m_rendering );
-                    m_terrain->occupy( msg->x(), msg->y(), 2, 3 );
+                    m_terrain->occupy( msg->x(), msg->y(), str->footPrint() );
                     break;
                 }
 
                 case common::PlayerServerMessage::BuildStructureRejected: {
-                    m_terrain->unreserve( msg->x(), msg->y(), 2, 3 );
+                    m_terrain->unreserve( msg->x(), msg->y(),
+                                          common::StructureType::get( msg->typeId() )->footPrint( msg->rotation() ) );
                     break;
                 }
 
@@ -91,21 +97,23 @@ namespace isomap {
             }
         }
 
-        bool Player::canPlace( int32_t tileX, int32_t tileY, uint32_t width, uint32_t height ) const {
-            if ( tileX < 0 || tileY < 0 || tileX + width >= m_terrain->width() ||
-                 tileY + height >= m_terrain->height() ) {
+        bool Player::canPlace( int32_t worldX, int32_t worldY, common::StructureType* structureType,
+                               uint32_t rotation ) const {
+            if ( worldX < 0 || worldY < 0 || worldX + structureType->width( rotation ) >= m_terrain->width() ||
+                 worldY + structureType->height( rotation ) >= m_terrain->height() ) {
                 return false;
             }
-            for ( uint32_t y = tileY; y < tileY + height; ++y ) {
-                for ( uint32_t x = tileX; x < tileX + width; ++x ) {
-                    if ( !m_terrain->isVisible( x, y ) || m_terrain->occupied( x, y ) != 0 ) {
+            for ( uint32_t y = 0; y < structureType->height( rotation ); ++y ) {
+                for ( uint32_t x = 0; x < structureType->width( rotation ); ++x ) {
+                    if ( structureType->footPrint( rotation, x, y ) == 0 ) {
+                        continue;
+                    }
+                    if ( !m_terrain->isVisible( worldX + x, worldY + y ) ) {
                         return false;
                     }
-                }
-            }
-            for ( const auto& structure : m_structures ) {
-                if ( structure.second->occupies( tileX, tileY, width, height ) ) {
-                    return false;
+                    if ( m_terrain->occupied( worldX + x, worldY + y ) != 0 ) {
+                        return false;
+                    }
                 }
             }
             return true;

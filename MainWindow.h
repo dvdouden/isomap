@@ -16,11 +16,9 @@ public:
 
     void keyPressEvent( unsigned short, vl::EKey ) override;
 
-
     void resizeEvent( int w, int h ) override;
 
     void updateScene() override;
-
 
     void zoomIn();
 
@@ -73,6 +71,9 @@ protected:
     isomap::server::TerrainGenerator m_generator;
 
     vl::ref<vl::Text> m_text;
+
+    int m_structureType = 1;
+    int m_structureOrientation = 0;
 
     void updateText();
 

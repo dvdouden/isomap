@@ -4,8 +4,9 @@
 #include "Structure.h"
 #include "Terrain.h"
 #include "Unit.h"
-#include "../common/TerrainMessage.h"
 #include "../common/PlayerMessage.h"
+#include "../common/StructureType.h"
+#include "../common/TerrainMessage.h"
 
 namespace isomap {
     namespace server {
@@ -78,10 +79,12 @@ namespace isomap {
         void Player::processMessage( common::PlayerCommandMessage* msg ) {
             switch ( msg->type() ) {
                 case common::PlayerCommandMessage::BuildStructure: {
-                    auto* str = new Structure( this, msg->x(), msg->y(), msg->z() );
+                    auto* str = new Structure( this, msg->x(), msg->y(), msg->z(),
+                                               common::StructureType::get( msg->id() ) );
                     m_messages.push_back(
                             common::PlayerServerMessage::buildStructureAcceptedMsg( str->x(), str->y(), str->z(),
-                                                                                    str->id() ) );
+                                                                                    str->id(), msg->id(),
+                                                                                    msg->rotation() ) );
                     m_match->addObject( str );
                     m_structures[str->id()] = str;
                 }

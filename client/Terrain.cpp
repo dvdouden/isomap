@@ -183,7 +183,36 @@ namespace isomap {
                         r = ((r * fog) + (r / 4u * (255 - fog))) >> 8u;
                         g = ((g * fog) + (g / 4u * (255 - fog))) >> 8u;
                         b = ((b * fog) + (b / 4u * (255 - fog))) >> 8u;
+                    } else {
+                        r /= 2;
+                        g /= 2;
+                        b /= 2;
                     }
+
+                    if ( m_renderOccupancy ) {
+                        if ( m_occupancyMap[idx] == 0 ) {
+                            // free
+                            r = 0;
+                            g = 128;
+                            b = 0;
+                        } else if ( m_occupancyMap[idx] == 1 ) {
+                            // occupied
+                            r = 128;
+                            g = 0;
+                            b = 0;
+                        } else if ( m_occupancyMap[idx] == 2 ) {
+                            // reserved
+                            r = 128;
+                            g = 128;
+                            b = 0;
+                        } else if ( m_occupancyMap[idx] == 3 ) {
+                            // reserved and occupied? :/
+                            r = 128;
+                            g = 64;
+                            b = 0;
+                        }
+                    }
+
                     if ( m_renderHighlight && m_highlightArea.contains( x, y ) ) {
                         r = m_highlightColor.r() * 255;
                         g = m_highlightColor.g() * 255;
@@ -330,6 +359,9 @@ namespace isomap {
         }
 
         void Terrain::updateFog() {
+            if ( !m_renderFog ) {
+                return;
+            }
             uint32_t checks = 0;
             for ( uint32_t fogY = 0; fogY < m_fogUpdateMapHeight; ++fogY ) {
                 for ( uint32_t fogX = 0; fogX < m_fogUpdateMapWidth; ++fogX ) {

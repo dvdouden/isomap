@@ -75,13 +75,15 @@ void MainWindow::initEvent() {
     m_serverPlayer->processMessage( playerCmd );
     printf( "server processed message\n" );
     delete playerCmd;
-    playerCmd = m_clientPlayer->buildStructure( 10, 10 );
+    playerCmd = m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ),
+                                                m_structureOrientation );
     printf( "build structure\n" );
     m_serverPlayer->processMessage( playerCmd );
     printf( "server processed message\n" );
     delete playerCmd;
 
-    playerCmd = m_clientPlayer->buildStructure( 13, 10 );
+    playerCmd = m_clientPlayer->buildStructure( 13, 10, isomap::common::StructureType::get( 2 ),
+                                                m_structureOrientation );
     printf( "build structure\n" );
     m_serverPlayer->processMessage( playerCmd );
     printf( "server processed message\n" );
@@ -331,6 +333,30 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
 
         case vl::Key_F2:
             m_renderColumn = !m_renderColumn;
+            break;
+
+        case vl::Key_F3:
+            m_clientTerrain->toggleRenderOccupancy();
+            break;
+
+        case vl::Key_Z:
+            if ( m_structureType > 1 ) {
+                m_structureType--;
+            }
+            break;
+
+        case vl::Key_X:
+            if ( m_structureType < 4 ) {
+                m_structureType++;
+            }
+            break;
+
+        case vl::Key_A:
+            m_structureOrientation--;
+            break;
+
+        case vl::Key_S:
+            m_structureOrientation++;
             break;
 
         default:
@@ -693,17 +719,20 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
-    //m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::pink );
-    if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
-        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 2, 3 ), vl::green );
+    auto* structureType = isomap::common::StructureType::get( m_structureType );
+    if ( m_clientPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+        m_clientTerrain->highLight(
+                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
     } else {
-        m_clientTerrain->highLight( isomap::client::Terrain::Area( x, y, 2, 3 ), vl::red );
+        m_clientTerrain->highLight(
+                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
     }
 }
 
 void MainWindow::place( int x, int y ) {
-    if ( m_clientPlayer->canPlace( x, y, 2, 3 ) ) {
-        auto* playerCmd = m_clientPlayer->buildStructure( x, y );
+    auto* structureType = isomap::common::StructureType::get( m_structureType );
+    if ( m_clientPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+        auto* playerCmd = m_clientPlayer->buildStructure( x, y, structureType, m_structureOrientation );
         m_serverPlayer->processMessage( playerCmd );
         delete playerCmd;
     }

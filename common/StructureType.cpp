@@ -1,5 +1,4 @@
 #include <map>
-#include <cstring>
 #include "StructureType.h"
 
 namespace isomap {
@@ -17,38 +16,46 @@ namespace isomap {
         }
 
         void StructureType::load() {
-            s_structureTypes[1] = new StructureType( 1, 3, 3,
-                                                     {2, 2, 2,
-                                                      2, 2, 2,
-                                                      1, 1, 1} );
+            s_structureTypes[1] = new StructureType( 1,
+                                                     "constructionyard",
+                                                     new FootPrint( 3, 3,
+                                                                    {2, 2, 2,
+                                                                     2, 2, 2,
+                                                                     1, 1, 1} ) );
 
-            s_structureTypes[2] = new StructureType( 2, 2, 3,
-                                                     {2, 0,
-                                                      2, 2,
-                                                      1, 1} );
-
-
-            s_structureTypes[3] = new StructureType( 3, 2, 3,
-                                                     {2, 2,
-                                                      2, 2,
-                                                      1, 1} );
+            s_structureTypes[2] = new StructureType( 2,
+                                                     "powerplant",
+                                                     new FootPrint( 2, 3,
+                                                                    {2, 0,
+                                                                     2, 2,
+                                                                     1, 1} ) );
 
 
-            s_structureTypes[4] = new StructureType( 4, 3, 4,
-                                                     {0, 2, 0,
-                                                      2, 2, 2,
-                                                      2, 2, 2,
-                                                      1, 1, 1} );
+            s_structureTypes[3] = new StructureType( 3,
+                                                     "barracks",
+                                                     new FootPrint( 2, 3,
+                                                                    {2, 2,
+                                                                     2, 2,
+                                                                     1, 1} ) );
+
+
+            s_structureTypes[4] = new StructureType( 4,
+                                                     "refinery",
+                                                     new FootPrint( 3, 4,
+                                                                    {0, 2, 0,
+                                                                     2, 2, 2,
+                                                                     2, 2, 2,
+                                                                     1, 1, 1} ) );
 
         }
 
-        StructureType::StructureType( isomap::id_t id, uint32_t width, uint32_t height,
-                                      std::initializer_list<uint8_t> footPrint ) :
+        StructureType::StructureType( isomap::id_t id, std::string name, FootPrint* footPrint ) :
                 m_id( id ),
-                m_width( width ),
-                m_height( height ) {
-            m_footPrint = new uint8_t[m_width * m_height];
-            std::copy( footPrint.begin(), footPrint.end(), m_footPrint );
+                m_name( std::move( name ) ) {
+            m_footPrint[0] = footPrint;
+            m_footPrint[1] = m_footPrint[0]->rotate();
+            m_footPrint[2] = m_footPrint[1]->rotate();
+            m_footPrint[3] = m_footPrint[2]->rotate();
         }
     }
 }
