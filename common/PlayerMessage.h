@@ -41,8 +41,8 @@ namespace isomap {
                 return m_z;
             }
 
-            uint32_t rotation() const {
-                return m_rotation;
+            uint32_t orientation() const {
+                return m_orientation;
             }
 
         private:
@@ -52,7 +52,7 @@ namespace isomap {
             uint32_t m_x;
             uint32_t m_y;
             uint32_t m_z;
-            uint32_t m_rotation;
+            uint32_t m_orientation;
         };
 
 
@@ -60,6 +60,8 @@ namespace isomap {
 
         public:
             enum Type {
+                PlayerRegistered,
+                PlayerRejected,
                 Status,
                 BuildStructureAccepted,
                 BuildStructureRejected,
@@ -103,8 +105,8 @@ namespace isomap {
                 return m_z;
             }
 
-            uint32_t rotation() const {
-                return m_rotation;
+            uint32_t orientation() const {
+                return m_orientation;
             }
 
             id_t id() const {
@@ -129,7 +131,7 @@ namespace isomap {
             uint32_t m_x;
             uint32_t m_y;
             uint32_t m_z;
-            uint32_t m_rotation;
+            uint32_t m_orientation;
 
             id_t m_id;
             id_t m_typeId;

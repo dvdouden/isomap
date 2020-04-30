@@ -24,6 +24,8 @@ namespace isomap {
     }
 
     namespace client {
+        class Match;
+
         class Player;
 
         class Structure;

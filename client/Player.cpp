@@ -34,8 +34,15 @@ namespace isomap {
                     break;
 
                 case common::PlayerServerMessage::BuildStructureAccepted: {
-                    auto* str = new Structure( msg->id(), msg->x(), msg->y(), msg->z(),
-                                               common::StructureType::get( msg->typeId() ), msg->rotation() );
+                    auto* str = new Structure(
+                            {
+                                    msg->id(),
+                                    msg->typeId(),
+                                    msg->x(),
+                                    msg->y(),
+                                    msg->z(),
+                                    msg->orientation()
+                            } );
                     // TODO: Make sure there's no structure with the given id
                     m_structures[msg->id()] = str;
                     str->initRender( m_rendering );
@@ -45,7 +52,8 @@ namespace isomap {
 
                 case common::PlayerServerMessage::BuildStructureRejected: {
                     m_terrain->unreserve( msg->x(), msg->y(),
-                                          common::StructureType::get( msg->typeId() )->footPrint( msg->rotation() ) );
+                                          common::StructureType::get( msg->typeId() )->footPrint(
+                                                  msg->orientation() ) );
                     break;
                 }
 

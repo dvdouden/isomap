@@ -7,6 +7,7 @@
 
 namespace isomap {
     namespace server {
+
         class Match {
         public:
             Match();
@@ -21,7 +22,7 @@ namespace isomap {
 
             void generateWorld( uint32_t width, uint32_t height, TerrainGenerator* generator );
 
-            void addPlayer( Player* player );
+            void registerPlayer( Player* player );
 
             void addObject( Object* object );
 

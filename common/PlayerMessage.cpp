@@ -10,7 +10,7 @@ namespace isomap {
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
-            msg->m_rotation = rotation;
+            msg->m_orientation = rotation;
             return msg;
         }
 
@@ -37,7 +37,7 @@ namespace isomap {
             msg->m_z = z;
             msg->m_id = id;
             msg->m_typeId = typeId;
-            msg->m_rotation = rotation;
+            msg->m_orientation = rotation;
             return msg;
         }
 
@@ -49,7 +49,7 @@ namespace isomap {
             msg->m_y = y;
             msg->m_z = z;
             msg->m_typeId = typeId;
-            msg->m_rotation = rotation;
+            msg->m_orientation = rotation;
             return msg;
         }
 

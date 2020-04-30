@@ -34,7 +34,7 @@ namespace isomap {
             }
         }
 
-        void Match::addPlayer( Player* player ) {
+        void Match::registerPlayer( Player* player ) {
             m_players.push_back( player );
             player->setTerrain( m_terrain );
         }
@@ -51,6 +51,7 @@ namespace isomap {
         }
 
         void Match::update() {
+            ++m_time;
             for ( auto* player : m_players ) {
                 player->update();
             }

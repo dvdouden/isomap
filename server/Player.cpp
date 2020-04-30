@@ -79,12 +79,13 @@ namespace isomap {
         void Player::processMessage( common::PlayerCommandMessage* msg ) {
             switch ( msg->type() ) {
                 case common::PlayerCommandMessage::BuildStructure: {
+                    // TODO: validate parameters, send rejection on fail
                     auto* str = new Structure( this, msg->x(), msg->y(), msg->z(),
-                                               common::StructureType::get( msg->id() ) );
+                                               common::StructureType::get( msg->id() ), msg->orientation() );
                     m_messages.push_back(
                             common::PlayerServerMessage::buildStructureAcceptedMsg( str->x(), str->y(), str->z(),
                                                                                     str->id(), msg->id(),
-                                                                                    msg->rotation() ) );
+                                                                                    msg->orientation() ) );
                     m_match->addObject( str );
                     m_structures[str->id()] = str;
                 }

@@ -17,10 +17,10 @@ namespace isomap {
             }
             switch ( msg->type() ) {
                 case common::StructureServerMessage::Status:
-                    m_x = msg->x();
-                    m_y = msg->y();
-                    m_z = msg->z();
-                    m_constructionProgress = msg->constructionProgress();
+                    m_data.x = msg->x();
+                    m_data.y = msg->y();
+                    m_data.z = msg->z();
+                    m_data.constructionProgress = msg->constructionProgress();
                     break;
 
                 default:
@@ -103,20 +103,20 @@ namespace isomap {
 
 
         void Structure::render() {
-            vl::real z = (m_constructionProgress * 1.5) / 100.0;
+            vl::real z = (m_data.constructionProgress * 1.5) / 100.0;
             z = z - 1.5;
             // remember, operations are done in reverse order here
 
             // 4. translate to actual position
             vl::mat4 matrix = vl::mat4::getTranslation(
-                    m_x,
-                    m_y,
-                    z + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
+                    m_data.x,
+                    m_data.y,
+                    z + m_data.z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
             // 3. move model back to 0,0 make sure to use new orientation
-            matrix *= vl::mat4::getTranslation( m_type->footPrint( m_orientation )->width() / 2.0,
-                                                m_type->footPrint( m_orientation )->height() / 2.0, 0 );
+            matrix *= vl::mat4::getTranslation( m_type->footPrint( m_data.orientation )->width() / 2.0,
+                                                m_type->footPrint( m_data.orientation )->height() / 2.0, 0 );
             // 2. rotate to correct orientation
-            matrix *= vl::mat4::getRotation( -m_orientation * 90, 0, 0, 1 );
+            matrix *= vl::mat4::getRotation( -m_data.orientation * 90, 0, 0, 1 );
             // 1. move model to center of model, use default orientation
             matrix *= vl::mat4::getTranslation( m_type->footPrint( 0 )->width() / -2.0,
                                                 m_type->footPrint( 0 )->height() / -2.0, 0 );
@@ -125,16 +125,16 @@ namespace isomap {
 
 
         bool Structure::occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const {
-            if ( x >= m_x + m_type->width( m_orientation ) ) {
+            if ( x >= m_data.x + m_type->width( m_data.orientation ) ) {
                 return false; // structure right of area
             }
-            if ( m_x >= x + width ) {
+            if ( m_data.x >= x + width ) {
                 return false; // structure left of area
             }
-            if ( y >= m_y + m_type->height( m_orientation ) ) {
+            if ( y >= m_data.y + m_type->height( m_data.orientation ) ) {
                 return false; // structure below area
             }
-            if ( m_y >= y + height ) {
+            if ( m_data.y >= y + height ) {
                 return false; // structure above area
             }
             return true; // structure and area overlap

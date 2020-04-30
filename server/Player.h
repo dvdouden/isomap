@@ -40,6 +40,7 @@ namespace isomap {
             }
 
         private:
+            id_t m_id = 0;
             uint8_t* m_fogMap = nullptr;
             Terrain* m_terrain = nullptr;
             Match* m_match = nullptr;

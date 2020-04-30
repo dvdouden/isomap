@@ -56,7 +56,7 @@ void MainWindow::initEvent() {
 
     // FIXME: this sucks, should be changed
     m_serverPlayer = new isomap::server::Player( m_serverMatch );
-    m_serverMatch->addPlayer( m_serverPlayer );
+    m_serverMatch->registerPlayer( m_serverPlayer );
     m_serverMatch->start();
 
 
