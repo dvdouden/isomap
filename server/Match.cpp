@@ -162,6 +162,14 @@ namespace isomap {
             return player->second;
         }
 
+        void Match::enqueueMessageAll( common::MatchServerMessage* msg ) {
+            for ( auto player : m_players ) {
+                // need to clone the message!
+                m_messages[player.first].push_back( msg->clone() );
+            }
+            delete msg;
+        }
+
 
     }
 }

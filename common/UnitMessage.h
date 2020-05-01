@@ -46,6 +46,8 @@ namespace isomap {
             explicit UnitServerMessage( Type type ) :
                     m_type( type ) { }
 
+            UnitServerMessage( const UnitServerMessage& ) = default;
+
             Type type() const {
                 return m_type;
             }
@@ -71,10 +73,10 @@ namespace isomap {
         private:
             Type m_type;
 
-            id_t m_id;
-            int32_t m_x;
-            int32_t m_y;
-            int32_t m_z;
+            id_t m_id = 0;
+            int32_t m_x = 0;
+            int32_t m_y = 0;
+            int32_t m_z = 0;
 
         };
     }

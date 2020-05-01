@@ -1,4 +1,6 @@
 #include "PlayerMessage.h"
+#include "StructureMessage.h"
+#include "UnitMessage.h"
 
 namespace isomap {
     namespace common {
@@ -73,6 +75,24 @@ namespace isomap {
             auto* ret = new PlayerServerMessage( UnitMessage );
             ret->m_unitMessage = msg;
             return ret;
+        }
+
+        PlayerServerMessage::PlayerServerMessage( const PlayerServerMessage& rhs ) :
+                m_type( rhs.m_type ),
+                m_x( rhs.m_x ),
+                m_y( rhs.m_y ),
+                m_z( rhs.m_z ),
+                m_orientation( rhs.m_orientation ),
+                m_id( rhs.m_id ),
+                m_typeId( rhs.m_typeId ),
+                m_structureMessage( rhs.m_structureMessage ),
+                m_unitMessage( rhs.m_unitMessage ) {
+            if ( m_structureMessage != nullptr ) {
+                m_structureMessage = new StructureServerMessage( *m_structureMessage );
+            }
+            if ( m_unitMessage != nullptr ) {
+                m_unitMessage = new UnitServerMessage( *m_unitMessage );
+            }
         }
 
     }

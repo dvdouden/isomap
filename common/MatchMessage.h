@@ -80,6 +80,8 @@ namespace isomap {
 
             static MatchServerMessage* terrainMsg( class TerrainMessage* msg );
 
+            MatchServerMessage* clone();
+
             Type type() const {
                 return m_type;
             }
@@ -108,9 +110,11 @@ namespace isomap {
             explicit MatchServerMessage( Type type ) :
                     m_type( type ) { }
 
+            MatchServerMessage( const MatchServerMessage& rhs );
+
             Type m_type;
 
-            id_t m_id;
+            id_t m_id = 0;
             std::string m_name;
             uint32_t m_time = 0;
 

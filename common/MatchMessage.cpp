@@ -1,4 +1,6 @@
 #include "MatchMessage.h"
+#include "PlayerMessage.h"
+#include "TerrainMessage.h"
 
 namespace isomap {
     namespace common {
@@ -81,6 +83,24 @@ namespace isomap {
             auto* msg = new MatchServerMessage( TerrainMessage );
             msg->m_terrainMessage = terrainMsg;
             return msg;
+        }
+
+        MatchServerMessage* MatchServerMessage::clone() {
+            return new MatchServerMessage( *this );
+        }
+
+        MatchServerMessage::MatchServerMessage( const MatchServerMessage& rhs ) :
+                m_type( rhs.m_type ),
+                m_id( rhs.m_id ),
+                m_name( rhs.m_name ),
+                m_time( rhs.m_time ),
+                m_playerServerMessage( rhs.m_playerServerMessage ) {
+            if ( m_playerServerMessage != nullptr ) {
+                m_playerServerMessage = new PlayerServerMessage( *m_playerServerMessage );
+            }
+            if ( m_terrainMessage != nullptr ) {
+                m_terrainMessage = new class TerrainMessage( *m_terrainMessage );
+            }
         }
 
     }

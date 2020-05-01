@@ -15,6 +15,8 @@ namespace isomap {
             explicit TerrainMessage( Type type ) :
                     m_type( type ) { }
 
+            TerrainMessage( const TerrainMessage& ) = default;
+
             Type type() const {
                 return m_type;
             }

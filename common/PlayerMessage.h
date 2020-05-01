@@ -71,6 +71,8 @@ namespace isomap {
             explicit PlayerServerMessage( Type type ) :
                     m_type( type ) { }
 
+            PlayerServerMessage( const PlayerServerMessage& rhs );
+
             ~PlayerServerMessage() = default;
 
             Type type() const {
@@ -127,13 +129,13 @@ namespace isomap {
         private:
             Type m_type;
 
-            uint32_t m_x;
-            uint32_t m_y;
-            uint32_t m_z;
-            uint32_t m_orientation;
+            uint32_t m_x = 0;
+            uint32_t m_y = 0;
+            uint32_t m_z = 0;
+            uint32_t m_orientation = 0;
 
-            id_t m_id;
-            id_t m_typeId;
+            id_t m_id = 0;
+            id_t m_typeId = 0;
 
             StructureServerMessage* m_structureMessage = nullptr;
             UnitServerMessage* m_unitMessage = nullptr;
