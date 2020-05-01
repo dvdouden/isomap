@@ -8,6 +8,7 @@
 #include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
 #include "../util/math.h"
+#include "ModelCache.h"
 
 namespace isomap {
     namespace client {
@@ -51,50 +52,27 @@ namespace isomap {
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
 
-            std::string path = "models/";
-            path += m_type->name();
-            path += ".obj";
-            vl::ref<vl::ResourceDatabase> resource_db = vl::loadResource( path.c_str(), false );
-            if ( !resource_db || resource_db->count<vl::Actor>() == 0 ) {
-                VL_LOG_ERROR << "No data found.\n";
-                return;
-            }
+            vl::ResourceDatabase* resource_db = ModelCache::get( m_type->name() );
+
             for ( size_t ires = 0; ires < resource_db->resources().size(); ++ires ) {
-                vl::Actor* act = resource_db->resources()[ires]->as<vl::Actor>();
+                auto* act = resource_db->resources()[ires]->as<vl::Actor>();
 
                 if ( !act )
                     continue;
 
-                //if ( act->effect() == NULL ) {
-                //printf( "Set default effect!\n" );
-                act->setEffect( m_effect.get() );
-                /*} else {
-                    vl::Effect* fx = act->effect();
-                    fx->shader()->enable(vl::EN_DEPTH_TEST);
-                    fx->shader()->enable(vl::EN_LIGHTING);
-                    fx->shader()->setRenderState( m_effect->shader()->renderState( vl::RS_Light, 0 ), 0 );
-                    fx->shader()->gocLightModel()->setTwoSide(true);
-                }*/
+                auto* geom = act->lod( 0 )->as<vl::Geometry>();
 
-                vl::Geometry* geom = act->lod( 0 )->as<vl::Geometry>();
-                geom->computeNormals();
-
+                vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
                 sceneManager->tree()->addActor( act );
 
                 if ( geom && geom->normalArray() ) {
-                    act->effect()->shader()->enable( vl::EN_LIGHTING );
-                    act->effect()->shader()->gocLightModel()->setTwoSide( true );
+                    actor->effect()->shader()->enable( vl::EN_LIGHTING );
+                    actor->effect()->shader()->gocLightModel()->setTwoSide( true );
                 }
 
                 if ( geom && !geom->normalArray() ) {
-                    act->effect()->shader()->disable( vl::EN_LIGHTING );
+                    actor->effect()->shader()->disable( vl::EN_LIGHTING );
                 }
-
-                VL_CHECK( act );
-                VL_CHECK( act->effect() );
-                act->setTransform( m_transform.get() );
-
-                //mEffects.insert( act->effect() );
             }
         }
 
