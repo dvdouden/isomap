@@ -24,7 +24,7 @@ namespace isomap {
 
             common::UnitCommandMessage* moveTo( int32_t tileX, int32_t tileY );
 
-            void initRender( vl::RenderingAbstract* rendering );
+            void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
             void render();
 

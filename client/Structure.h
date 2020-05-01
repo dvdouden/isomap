@@ -11,7 +11,8 @@ namespace isomap {
     namespace client {
         class Structure {
         public:
-            explicit Structure( const common::StructureData& data ) :
+            explicit Structure( Player* player, const common::StructureData& data ) :
+                    m_player( player ),
                     m_data( data ),
                     m_type( common::StructureType::get( data.typeId ) ) { };
 
@@ -25,7 +26,7 @@ namespace isomap {
 
             //common::StructureCommandMessage* moveTo( int32_t tileX, int32_t tileY );
 
-            void initRender( vl::RenderingAbstract* rendering );
+            void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
             void render();
 
@@ -44,6 +45,7 @@ namespace isomap {
             }
 
         private:
+            Player* m_player;
             common::StructureData m_data;
             common::StructureType* m_type = nullptr;
 

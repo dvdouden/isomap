@@ -74,6 +74,7 @@ namespace isomap {
             ret->m_unitMessage = msg;
             return ret;
         }
+
     }
 }
 

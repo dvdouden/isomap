@@ -11,10 +11,12 @@
 #include "server/Terrain.h"
 #include "server/Unit.h"
 
+#include "client/Match.h"
 #include "client/Player.h"
 #include "client/Terrain.h"
 #include "client/Unit.h"
 
+#include "common/MatchMessage.h"
 #include "common/PlayerMessage.h"
 #include "common/StructureType.h"
 #include "common/TerrainMessage.h"
@@ -46,58 +48,63 @@ void MainWindow::initEvent() {
 
     sceneManager()->setCullingEnabled( false );
 
+    // this is a bit yucky, but we need a server and two clients (human player and AI)
     m_serverMatch = new isomap::server::Match();
     regenerateMap();
 
-    m_clientTerrain = new isomap::client::Terrain();
-    isomap::common::TerrainMessage* msg = m_serverMatch->terrain()->createMessage();
-    m_clientTerrain->processMessage( msg );
-    delete msg;
+    m_clientPlayerMatch = new isomap::client::Match( 0x12345678 );
+    m_clientPlayerMatch->registerPlayer( "Player1" );
+    sendAndReceiveMessages();
+    m_clientPlayerMatch->startMatch();
+    sendAndReceiveMessages();
 
-    // FIXME: this sucks, should be changed
-    m_serverPlayer = new isomap::server::Player( m_serverMatch );
-    m_serverMatch->registerPlayer( m_serverPlayer );
-    m_serverMatch->start();
+    m_clientAIMatch = new isomap::client::Match( 0xA1A1A1A1 );
+    m_clientAIMatch->registerPlayer( "AI" );
+    sendAndReceiveMessages();
+    m_clientAIMatch->startMatch();
+    sendAndReceiveMessages();
 
+    // FIXME: make sure player is not null
+    m_clientPlayer = m_clientPlayerMatch->player();
+    m_clientAI = m_clientAIMatch->player();
 
-    m_serverPlayer->unFog( 10, 10, 20 );
-    msg = m_serverPlayer->createTerrainMessage();
-    m_clientTerrain->processMessage( msg );
-    delete msg;
+    printf( "client player: %p\n", m_clientPlayer );
+    printf( "client AI: %p\n", m_clientAI );
 
-    m_clientTerrain->initRender( rendering() );
+    m_renderMatch = m_clientAIMatch;
+    m_renderTerrain = m_renderMatch->terrain();
+    m_controllingPlayer = m_clientPlayer;
 
-    m_clientPlayer = new isomap::client::Player( m_clientTerrain );
-    m_clientPlayer->initRender( rendering() );
+    m_clientPlayerTerrain = m_clientPlayerMatch->terrain();
+    m_clientAITerrain = m_clientAIMatch->terrain();
+
     printf( "init rendering\n" );
-    auto* playerCmd = m_clientPlayer->buildUnit( 0, 0 );
-    printf( "build unit\n" );
-    m_serverPlayer->processMessage( playerCmd );
-    printf( "server processed message\n" );
-    delete playerCmd;
-    playerCmd = m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ),
-                                                m_structureOrientation );
-    printf( "build structure\n" );
-    m_serverPlayer->processMessage( playerCmd );
-    printf( "server processed message\n" );
-    delete playerCmd;
+    //m_renderMatch->initRender( rendering() );
+    m_clientAIMatch->initRender( rendering() );
+    m_clientPlayerMatch->initRender( rendering() );
+    m_clientPlayerMatch->disableRendering();
+    m_clientAIMatch->disableRendering();
+    m_renderMatch->enableRendering();
+    printf( "init rendering done\n" );
 
-    playerCmd = m_clientPlayer->buildStructure( 13, 10, isomap::common::StructureType::get( 2 ),
-                                                m_structureOrientation );
-    printf( "build structure\n" );
-    m_serverPlayer->processMessage( playerCmd );
-    printf( "server processed message\n" );
-    delete playerCmd;
+    // we need to uncover this bit of terrain, otherwise construction will end up underground...
+    m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 10, 10, 10 );
+    m_serverMatch->getPlayer( m_clientAI->id() )->unFog( 13, 10, 10 );
+    sendMessages();
+    m_serverMatch->update();
+    receiveMessages();
 
-    for ( auto* playerMsg : m_serverPlayer->serverMessages() ) {
-        printf( "got player server message\n" );
-        m_clientPlayer->processMessage( playerMsg );
-        printf( "client player processed server message\n" );
-        delete playerMsg;
-    }
+    m_clientPlayer->buildUnit( 0, 0 );
+    printf( "Built unit\n" );
+    m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ), m_structureOrientation );
+    printf( "Built structure\n" );
+    m_clientAI->buildStructure( 13, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
+    printf( "Built structure\n" );
+
+    sendAndReceiveMessages();
     printf( "init done\n" );
 
-    m_clientTerrain->highLight( isomap::client::Terrain::Area( 0, 0, 1, 1 ), vl::green );
+
 }
 
 void MainWindow::resizeEvent( int w, int h ) {
@@ -320,15 +327,12 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             m_serverMatch->update();
             break;
 
-        case vl::Key_BackSpace: {
-            auto* msg = m_serverMatch->terrain()->uncoverAll();
-            m_clientTerrain->processMessage( msg );
-            delete msg;
-        }
+        case vl::Key_BackSpace:
+            m_serverMatch->getPlayer( m_controllingPlayer->id() )->uncoverAll();
             break;
 
         case vl::Key_BackSlash:
-            m_clientTerrain->toggleRenderFog();
+            m_renderTerrain->toggleRenderFog();
             break;
 
         case vl::Key_F2:
@@ -336,7 +340,23 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_F3:
-            m_clientTerrain->toggleRenderOccupancy();
+            m_renderTerrain->toggleRenderOccupancy();
+            break;
+
+        case vl::Key_F6:
+            m_renderMatch->disableRendering();
+            m_renderMatch = m_clientPlayerMatch;
+            m_renderMatch->enableRendering();
+            m_renderTerrain = m_renderMatch->terrain();
+            m_controllingPlayer = m_renderMatch->player();
+            break;
+
+        case vl::Key_F7:
+            m_renderMatch->disableRendering();
+            m_renderMatch = m_clientAIMatch;
+            m_renderMatch->enableRendering();
+            m_renderTerrain = m_renderMatch->terrain();
+            m_controllingPlayer = m_renderMatch->player();
             break;
 
         case vl::Key_Z:
@@ -482,20 +502,12 @@ void MainWindow::updateScene() {
     }
     updateText();
 
+    sendMessages();
     m_serverMatch->update();
+    receiveMessages();
 
-    for ( auto* playerMsg : m_serverPlayer->serverMessages() ) {
-        m_clientPlayer->processMessage( playerMsg );
-        delete playerMsg;
-    }
-
-    isomap::common::TerrainMessage* terrainMessage = m_serverPlayer->createTerrainMessage();
-    m_clientTerrain->processMessage( terrainMessage );
-    delete terrainMessage;
-
-    m_clientTerrain->updateFog();
-    m_clientTerrain->render();
-    m_clientPlayer->render();
+    m_renderTerrain->updateFog();
+    m_renderMatch->render();
 }
 
 void MainWindow::zoomIn() {
@@ -527,7 +539,7 @@ void MainWindow::rotateRight() {
 }
 
 void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
-    m_clientTerrain->clearHighlight();
+    m_renderTerrain->clearHighlight();
 
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
@@ -581,7 +593,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
 
     // our current world coordinates do not take the height of the tile into account, it assumes each tile has height 0
     // in order to fix that, we need to look at a few more tiles towards the camera
-    //m_clientTerrain->addHighlight( isomap::client::Terrain::Area( world_x, world_y, 1, 1 ), vl::red );
+    //m_clientPlayerTerrain->addHighlight( isomap::client::Terrain::Area( world_x, world_y, 1, 1 ), vl::red );
 
     int x_inc = 0;
     int y_inc = 0;
@@ -624,11 +636,11 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
             int x0, y0, x1, y1;
 
             if ( x_first == ((m_orientation % 2) == 0) ) {
-                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c1 ), c1, x0, y0 );
-                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c2 ), c2, x1, y1 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c1 ), c1, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c2 ), c2, x1, y1 );
             } else {
-                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c0 ), c0, x0, y0 );
-                worldToScreen( temp_x, temp_y, m_clientTerrain->getCorner( temp_x, temp_y, c1 ), c1, x1, y1 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c0 ), c0, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c1 ), c1, x1, y1 );
             }
             vl::fvec4 color;
             if ( isBelow( dx, dy, x0, y0, x1, y1 ) ) {
@@ -639,7 +651,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
                 color = vl::red;
             }
             if ( m_renderColumn ) {
-                m_clientTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), color );
+                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), color );
             }
         }
 
@@ -720,21 +732,19 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 
 void MainWindow::highlight( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
-    if ( m_clientPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-        m_clientTerrain->highLight(
+    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+        m_renderTerrain->highLight(
                 isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
     } else {
-        m_clientTerrain->highLight(
+        m_renderTerrain->highLight(
                 isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
     }
 }
 
 void MainWindow::place( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
-    if ( m_clientPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-        auto* playerCmd = m_clientPlayer->buildStructure( x, y, structureType, m_structureOrientation );
-        m_serverPlayer->processMessage( playerCmd );
-        delete playerCmd;
+    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+        m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
     }
 }
 
@@ -754,12 +764,6 @@ void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y
 
 void MainWindow::regenerateMap() {
     m_serverMatch->generateWorld( m_width, m_height, &m_generator );
-
-    if ( m_clientTerrain ) {
-        auto* msg = m_serverMatch->terrain()->uncoverAll();
-        m_clientTerrain->processMessage( msg );
-        delete msg;
-    }
 }
 
 void MainWindow::updateText() {
@@ -789,3 +793,42 @@ void MainWindow::updateText() {
                                                  << m_generator.oreThreshold() << m_generator.oreDensity() );
 }
 
+void MainWindow::sendMessages() {
+    //printf( "Sending messages to server\n" );
+    // send all messages to the server
+    for ( auto* match : {m_clientAIMatch, m_clientPlayerMatch} ) {
+        if ( match == nullptr ) {
+            continue;
+        }
+        //printf( "\tfor %08X\n", match->id() );
+        for ( auto* msg : match->clientMessages() ) {
+            //printf( "\t\t type %d\n", msg->type() );
+            m_serverMatch->processMessage( msg );
+            delete msg;
+        }
+    }
+    //printf( "Sending messages completed\n" );
+}
+
+void MainWindow::receiveMessages() {
+    //printf( "Receiving messages from server\n" );
+    // receive all messages from the server and distribute among players
+    for ( auto* match : {m_clientAIMatch, m_clientPlayerMatch} ) {
+        if ( match == nullptr ) {
+            continue;
+        }
+        //printf( "\tfor %08X\n", match->id() );
+        for ( auto* msg : m_serverMatch->serverMessages( match->id() ) ) {
+            //printf( "\t\t type %d\n", msg->type() );
+            match->processMessage( msg );
+            delete msg;
+        }
+    }
+    //printf( "Receiving messages completed\n" );
+}
+
+void MainWindow::sendAndReceiveMessages() {
+    printf( "Send and receive messages\n" );
+    sendMessages();
+    receiveMessages();
+}

@@ -45,7 +45,7 @@ namespace isomap {
             }
         }
 
-        void Unit::initRender( vl::RenderingAbstract* rendering ) {
+        void Unit::initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager ) {
             m_transform = new vl::Transform;
             rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
@@ -68,11 +68,7 @@ namespace isomap {
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
 
-
-            vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
-            scene_manager->setCullingEnabled( false );
-            rendering->as<vl::Rendering>()->sceneManagers()->push_back( scene_manager.get() );
-            scene_manager->tree()->addActor( m_geom.get(), m_effect.get(), m_transform.get() );
+            sceneManager->tree()->addActor( m_geom.get(), m_effect.get(), m_transform.get() );
         }
 
 

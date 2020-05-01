@@ -3,6 +3,7 @@
 #include <vlGraphics/SceneManagerActorTree.hpp>
 #include <vlCore/ResourceDatabase.hpp>
 
+#include "Player.h"
 #include "Structure.h"
 #include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
@@ -28,7 +29,7 @@ namespace isomap {
             }
         }
 
-        void Structure::initRender( vl::RenderingAbstract* rendering ) {
+        void Structure::initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager ) {
             m_transform = new vl::Transform;
             rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
@@ -36,7 +37,7 @@ namespace isomap {
             m_effect = new vl::Effect;
             //m_effect->shader()->gocMaterial()->setColorMaterialEnabled( true );
             m_effect->shader()->setRenderState( new vl::Light, 0 );
-            m_effect->shader()->gocMaterial()->setDiffuse( vl::crimson );
+            m_effect->shader()->gocMaterial()->setDiffuse( m_player->color() );
             m_effect->shader()->enable( vl::EN_DEPTH_TEST );
             m_effect->shader()->enable( vl::EN_LIGHTING );
             m_effect->lod( 0 )->push_back( new vl::Shader );
@@ -49,10 +50,6 @@ namespace isomap {
             //m_effect->shader( 0, 1 )->gocColor()->setValue( vl::red );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
-
-            vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
-            scene_manager->setCullingEnabled( false );
-            rendering->as<vl::Rendering>()->sceneManagers()->push_back( scene_manager.get() );
 
             std::string path = "models/";
             path += m_type->name();
@@ -82,7 +79,7 @@ namespace isomap {
                 vl::Geometry* geom = act->lod( 0 )->as<vl::Geometry>();
                 geom->computeNormals();
 
-                scene_manager->tree()->addActor( act );
+                sceneManager->tree()->addActor( act );
 
                 if ( geom && geom->normalArray() ) {
                     act->effect()->shader()->enable( vl::EN_LIGHTING );

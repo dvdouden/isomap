@@ -63,10 +63,18 @@ protected:
     bool m_renderColumn = false;
 
     isomap::server::Match* m_serverMatch = nullptr;
-    isomap::server::Player* m_serverPlayer = nullptr;
-    isomap::client::Player* m_clientPlayer = nullptr;
 
-    isomap::client::Terrain* m_clientTerrain = nullptr;
+    isomap::client::Match* m_clientPlayerMatch = nullptr;
+    isomap::client::Player* m_clientPlayer = nullptr;
+    isomap::client::Terrain* m_clientPlayerTerrain = nullptr;
+
+    isomap::client::Match* m_clientAIMatch = nullptr;
+    isomap::client::Player* m_clientAI = nullptr;
+    isomap::client::Terrain* m_clientAITerrain = nullptr;
+
+    isomap::client::Match* m_renderMatch = nullptr;
+    isomap::client::Terrain* m_renderTerrain = nullptr;
+    isomap::client::Player* m_controllingPlayer = nullptr;
 
     isomap::server::TerrainGenerator m_generator;
 
@@ -76,6 +84,12 @@ protected:
     int m_structureOrientation = 0;
 
     void updateText();
+
+    void sendMessages();
+
+    void receiveMessages();
+
+    void sendAndReceiveMessages();
 
     bool isBelow( int dx, int dy, int x0, int y0, int x1, int y1 );
 };

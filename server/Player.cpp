@@ -4,6 +4,7 @@
 #include "Structure.h"
 #include "Terrain.h"
 #include "Unit.h"
+#include "../common/MatchMessage.h"
 #include "../common/PlayerMessage.h"
 #include "../common/StructureType.h"
 #include "../common/TerrainMessage.h"
@@ -11,9 +12,11 @@
 namespace isomap {
     namespace server {
 
-        Player::Player( Match* match )
+        Player::Player( Match* match, id_t id, std::string name )
                 :
-                m_match( match ) {
+                m_match( match ),
+                m_id( id ),
+                m_name( std::move( name ) ) {
 
         }
 
@@ -55,6 +58,10 @@ namespace isomap {
             }
         }
 
+        void Player::uncoverAll() {
+            m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->uncoverAll() ) );
+        }
+
         void Player::update() {
             auto* scratch = m_fogMap;
             for ( uint32_t y = 0; y < m_terrain->height(); ++y ) {
@@ -65,9 +72,13 @@ namespace isomap {
                     ++scratch;
                 }
             }
+            auto* terrainMessage = terrainUpdateMessage();
+            if ( terrainMessage != nullptr ) {
+                m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( terrainMessage ) );
+            }
         }
 
-        common::TerrainMessage* Player::createTerrainMessage() {
+        common::TerrainMessage* Player::terrainUpdateMessage() {
             if ( m_uncoveredTiles.empty() ) {
                 return nullptr;
             }
@@ -77,33 +88,45 @@ namespace isomap {
         }
 
         void Player::processMessage( common::PlayerCommandMessage* msg ) {
+            //printf( "Server Player %s process client msg of type %d\n", m_name.c_str(), msg->type() );
             switch ( msg->type() ) {
                 case common::PlayerCommandMessage::BuildStructure: {
                     // TODO: validate parameters, send rejection on fail
                     auto* str = new Structure( this, msg->x(), msg->y(), msg->z(),
                                                common::StructureType::get( msg->id() ), msg->orientation() );
-                    m_messages.push_back(
-                            common::PlayerServerMessage::buildStructureAcceptedMsg( str->x(), str->y(), str->z(),
-                                                                                    str->id(), msg->id(),
-                                                                                    msg->orientation() ) );
+                    // FIXME: what about other players?
+                    m_match->enqueueMessageAll(
+                            common::MatchServerMessage::playerMsg( m_id,
+                                                                   common::PlayerServerMessage::buildStructureAcceptedMsg(
+                                                                           str->x(), str->y(), str->z(), str->id(),
+                                                                           msg->id(), msg->orientation() ) ) );
+                    unFog( msg->x(), msg->y(), 10 );
                     m_match->addObject( str );
                     m_structures[str->id()] = str;
-                }
                     break;
+                }
 
                 case common::PlayerCommandMessage::BuildUnit: {
                     auto* unit = new Unit( this, msg->x(), msg->y(), msg->z() );
-                    m_messages.push_back(
-                            common::PlayerServerMessage::unitCreatedMsg( unit->x(), unit->y(), unit->z(),
-                                                                         unit->id() ) );
+                    // FIXME: what about other players?
+                    m_match->enqueueMessageAll(
+                            common::MatchServerMessage::playerMsg( m_id,
+                                                                   common::PlayerServerMessage::unitCreatedMsg(
+                                                                           unit->x(), unit->y(), unit->z(),
+                                                                           unit->id() ) ) );
                     m_match->addObject( unit );
                     m_units[unit->id()] = unit;
-                }
                     break;
+                }
 
                 default:
                     break;
             }
+        }
+
+        void Player::setTerrain( Terrain* terrain ) {
+            m_terrain = terrain;
+            m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->createMessage() ) );
         }
     }
 }

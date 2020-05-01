@@ -8,7 +8,7 @@ namespace isomap {
     namespace server {
         class Player {
         public:
-            Player( Match* match );
+            Player( Match* match, id_t id, std::string name );
 
             ~Player();
 
@@ -18,35 +18,43 @@ namespace isomap {
 
             void init();
 
-            void setTerrain( Terrain* terrain ) {
-                m_terrain = terrain;
+            id_t id() const {
+                return m_id;
             }
+
+            const std::string& name() const {
+                return m_name;
+            }
+
+            void setTerrain( Terrain* terrain );
 
             void update();
 
             void unFog( int32_t tile_x, int32_t tile_y, int32_t radius );
 
-            common::TerrainMessage* createTerrainMessage();
+            void uncoverAll();
+
+            common::TerrainMessage* terrainUpdateMessage();
 
             void processMessage( common::PlayerCommandMessage* msg );
 
-            std::vector<common::PlayerServerMessage*> serverMessages() {
-                std::vector<common::PlayerServerMessage*> ret = std::move( m_messages );
-                return ret;
+            void startMatch() {
+                m_ready = true;
             }
 
-            void queueMessage( common::PlayerServerMessage* msg ) {
-                m_messages.push_back( msg );
+            bool ready() const {
+                return m_ready;
             }
 
         private:
-            id_t m_id = 0;
+            id_t m_id;
+            std::string m_name;
             uint8_t* m_fogMap = nullptr;
             Terrain* m_terrain = nullptr;
             Match* m_match = nullptr;
+            bool m_ready = false;
 
             std::vector<uint32_t> m_uncoveredTiles;
-            std::vector<common::PlayerServerMessage*> m_messages;
 
             std::map<id_t, Structure*> m_structures;
             std::map<id_t, Unit*> m_units;

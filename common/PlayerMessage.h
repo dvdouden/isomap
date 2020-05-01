@@ -48,11 +48,11 @@ namespace isomap {
         private:
             Type m_type;
 
-            id_t m_id;
-            uint32_t m_x;
-            uint32_t m_y;
-            uint32_t m_z;
-            uint32_t m_orientation;
+            id_t m_id = 0;
+            uint32_t m_x = 0;
+            uint32_t m_y = 0;
+            uint32_t m_z = 0;
+            uint32_t m_orientation = 0;
         };
 
 
@@ -60,8 +60,6 @@ namespace isomap {
 
         public:
             enum Type {
-                PlayerRegistered,
-                PlayerRejected,
                 Status,
                 BuildStructureAccepted,
                 BuildStructureRejected,
@@ -124,6 +122,7 @@ namespace isomap {
             UnitServerMessage* unitMessage() const {
                 return m_unitMessage;
             }
+
 
         private:
             Type m_type;

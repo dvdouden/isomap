@@ -81,6 +81,10 @@ namespace isomap {
 
             void initRender( vl::RenderingAbstract* rendering );
 
+            void disableRendering();
+
+            void enableRendering();
+
             void render();
 
             void updateFog();
@@ -169,7 +173,7 @@ namespace isomap {
             uint8_t* m_fogUpdateMap = nullptr;
             uint8_t* m_occupancyMap = nullptr;
 
-            bool m_renderFog = true;
+            bool m_renderFog = false;
             bool m_renderHighlight = false;
             bool m_renderOccupancy = false;
 

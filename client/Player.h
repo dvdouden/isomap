@@ -3,14 +3,14 @@
 #include <map>
 #include "../common/types.h"
 #include <vlGraphics/RenderingAbstract.hpp>
+#include <vlGraphics/SceneManagerActorTree.hpp>
 
 
 namespace isomap {
     namespace client {
         class Player {
         public:
-            explicit Player( Terrain* terrain ) :
-                    m_terrain( terrain ) { }
+            Player( Match* match, id_t id, std::string name );
 
             ~Player() = default;
 
@@ -18,34 +18,53 @@ namespace isomap {
 
             const Player& operator=( const Player& ) = delete;
 
+            id_t id() const {
+                return m_id;
+            }
+
+            const std::string& name() const {
+                return m_name;
+            }
+
             void processMessage( common::PlayerServerMessage* msg );
 
             void processMessage( common::StructureServerMessage* msg );
 
             void processMessage( common::UnitServerMessage* msg );
 
-            common::PlayerCommandMessage*
+            void
             buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType, uint32_t rotation );
 
-            common::PlayerCommandMessage* buildUnit( int32_t tileX, int32_t tileY );
+            void buildUnit( int32_t tileX, int32_t tileY );
 
-            void initRender( vl::RenderingAbstract* rendering ) {
-                m_rendering = rendering;
-            }
+            void initRender( vl::RenderingAbstract* rendering );
+
+            void disableRendering();
+
+            void enableRendering();
 
             bool
             canPlace( int32_t worldX, int32_t worldY, common::StructureType* structureType, uint32_t rotation ) const;
 
             void render();
 
-        private:
+            const vl::fvec4& color() const {
+                return m_color;
+            }
 
-            Terrain* m_terrain = nullptr;
+        private:
+            Match* m_match;
+            id_t m_id;
+            vl::fvec4 m_color;
+            std::string m_name;
+
+            Terrain* m_terrain;
 
             std::map<id_t, Structure*> m_structures;
             std::map<id_t, Unit*> m_units;
 
             vl::RenderingAbstract* m_rendering = nullptr;
+            vl::ref<vl::SceneManagerActorTree> m_sceneManager;
         };
     }
 }

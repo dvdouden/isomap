@@ -39,7 +39,9 @@ namespace isomap {
     namespace common {
         class FootPrint;
 
-        class TerrainMessage;
+        class MatchClientMessage;
+
+        class MatchServerMessage;
 
         class PlayerCommandMessage;
 
@@ -56,5 +58,7 @@ namespace isomap {
         class StructureServerMessage;
 
         class StructureType;
+
+        class TerrainMessage;
     }
 }
