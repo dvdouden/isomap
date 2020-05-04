@@ -12,7 +12,9 @@ namespace isomap {
                     Object( player ),
                     m_x( x ),
                     m_y( y ),
-                    m_z( z ) { }
+                    m_z( z ) {
+                printf( "Created unit %d\n", id() );
+            }
 
             ~Unit() override = default;
 

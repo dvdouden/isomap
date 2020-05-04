@@ -73,7 +73,7 @@ void MainWindow::initEvent() {
 
     m_renderMatch = m_clientAIMatch;
     m_renderTerrain = m_renderMatch->terrain();
-    m_controllingPlayer = m_clientPlayer;
+    m_controllingPlayer = m_renderMatch->player();
 
     m_clientPlayerTerrain = m_clientPlayerMatch->terrain();
     m_clientAITerrain = m_clientAIMatch->terrain();
@@ -828,7 +828,7 @@ void MainWindow::receiveMessages() {
 }
 
 void MainWindow::sendAndReceiveMessages() {
-    printf( "Send and receive messages\n" );
+    //printf( "Send and receive messages\n" );
     sendMessages();
     receiveMessages();
 }

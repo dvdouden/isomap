@@ -46,6 +46,8 @@ namespace isomap {
                 return m_ready;
             }
 
+            bool canSee( Structure* structure ) const;
+
         private:
             id_t m_id;
             std::string m_name;

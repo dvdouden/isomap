@@ -38,7 +38,9 @@ namespace isomap {
                 m_messages[playerId].push_back( msg );
             }
 
-            void enqueueMessageAll( common::MatchServerMessage* msg );
+            void enqueueMessage( Object* obj, common::PlayerServerMessage* msg );
+
+            void updateSubscriptions( Structure* structure );
 
             std::vector<common::MatchServerMessage*> serverMessages( id_t playerId ) {
                 std::vector<common::MatchServerMessage*> ret = std::move( m_messages[playerId] );

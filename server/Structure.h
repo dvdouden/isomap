@@ -13,7 +13,7 @@ namespace isomap {
                        uint32_t orientation ) :
                     Object( owner ),
                     m_data( {id(), structureType->id(), x, y, z, orientation, 0} ),
-                    m_structureType( structureType ) {
+                    m_type( structureType ) {
             }
 
             ~Structure() override = default;
@@ -29,8 +29,6 @@ namespace isomap {
 
             common::StructureServerMessage* statusMessage();
 
-            common::StructureServerMessage* createMessage();
-
             uint32_t x() const {
                 return m_data.x;
             }
@@ -43,6 +41,10 @@ namespace isomap {
                 return m_data.z;
             }
 
+            uint32_t orientation() const {
+                return m_data.orientation;
+            }
+
             uint32_t constructionProcess() const {
                 return m_data.constructionProgress;
             }
@@ -51,10 +53,20 @@ namespace isomap {
                 return m_data;
             }
 
+            common::StructureType* type() const {
+                return m_type;
+            }
+
+            common::FootPrint* footPrint() const {
+                return m_type->footPrint( m_data.orientation );
+            }
+
+            bool occupies( uint32_t x, uint32_t y ) const;
+
         private:
             common::StructureData m_data;
 
-            common::StructureType* m_structureType = nullptr;
+            common::StructureType* m_type = nullptr;
             // position
             // health
             // type

@@ -1,6 +1,7 @@
 #include "Match.h"
 #include "Object.h"
 #include "Player.h"
+#include "Structure.h"
 #include "Terrain.h"
 #include "TerrainGenerator.h"
 #include "../common/MatchMessage.h"
@@ -148,8 +149,7 @@ namespace isomap {
                 if ( msg != nullptr ) {
                     // FIXME
                     //printf( "Enqueue message for player %s of type %d\n", obj.second->player()->name().c_str(), msg->type() );
-                    enqueueMessageAll(
-                            common::MatchServerMessage::playerMsg( obj.second->player()->id(), msg ) );
+                    enqueueMessage( obj.second, msg );
                 }
             }
         }
@@ -162,14 +162,31 @@ namespace isomap {
             return player->second;
         }
 
-        void Match::enqueueMessageAll( common::MatchServerMessage* msg ) {
+        void Match::enqueueMessage( Object* obj, common::PlayerServerMessage* msg ) {
+            auto* matchMsg = common::MatchServerMessage::playerMsg( obj->player()->id(), msg );
             for ( auto player : m_players ) {
-                // need to clone the message!
-                m_messages[player.first].push_back( msg->clone() );
+                if ( player.second == obj->player() ) {
+                    //printf( "queue for self %s!\n", player.second->name().c_str());
+                    enqueueMessage( player.first, matchMsg );
+                } else if ( obj->isSubscribed( player.second ) ) {
+                    //printf( "queue for other %s!\n", player.second->name().c_str());
+                    enqueueMessage( player.first, matchMsg->clone() );
+                }
             }
-            delete msg;
         }
 
+        void Match::updateSubscriptions( Structure* structure ) {
+            for ( auto player : m_players ) {
+                if ( player.second == structure->player() ) {
+                    continue;
+                }
+                if ( player.second->canSee( structure ) ) {
+                    structure->subscribe( player.second );
+                } else {
+                    structure->unsubscribe( player.second );
+                }
+            }
+        }
 
     }
 }

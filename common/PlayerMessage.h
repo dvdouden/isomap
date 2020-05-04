@@ -63,6 +63,9 @@ namespace isomap {
                 Status,
                 BuildStructureAccepted,
                 BuildStructureRejected,
+                StructureVisible,
+                StructureInvisible,
+                StructureDestroyed,
                 UnitCreated,
                 UnitMessage,
                 StructureMessage,
@@ -82,10 +85,19 @@ namespace isomap {
             static PlayerServerMessage* statusMsg();
 
             static PlayerServerMessage*
-            buildStructureAcceptedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id, id_t typeId, uint32_t rotation );
+            buildStructureAcceptedMsg( const StructureData& structureData );
 
             static PlayerServerMessage*
             buildStructureRejectedMsg( uint32_t x, uint32_t y, uint32_t z, id_t typeId, uint32_t rotation );
+
+            static PlayerServerMessage*
+            structureVisibleMsg( const StructureData& structureData );
+
+            static PlayerServerMessage*
+            structureInvisibleMsg( id_t id );
+
+            static PlayerServerMessage*
+            structureDestroyedMsg( id_t id );
 
             static PlayerServerMessage* unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
 
@@ -125,6 +137,10 @@ namespace isomap {
                 return m_unitMessage;
             }
 
+            StructureData* structureData() const {
+                return m_structureData;
+            }
+
 
         private:
             Type m_type;
@@ -137,6 +153,7 @@ namespace isomap {
             id_t m_id = 0;
             id_t m_typeId = 0;
 
+            StructureData* m_structureData = nullptr;
             StructureServerMessage* m_structureMessage = nullptr;
             UnitServerMessage* m_unitMessage = nullptr;
         };

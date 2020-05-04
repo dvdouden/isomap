@@ -14,9 +14,10 @@ namespace isomap {
             explicit Structure( Player* player, const common::StructureData& data ) :
                     m_player( player ),
                     m_data( data ),
-                    m_type( common::StructureType::get( data.typeId ) ) { };
+                    m_type( common::StructureType::get( data.typeId ) ) {
+            };
 
-            ~Structure() = default;
+            ~Structure();
 
             Structure( const Structure& ) = delete;
 
@@ -24,9 +25,9 @@ namespace isomap {
 
             void processMessage( common::StructureServerMessage* msg );
 
-            //common::StructureCommandMessage* moveTo( int32_t tileX, int32_t tileY );
-
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
+
+            void clearRender( vl::SceneManagerActorTree* sceneManager );
 
             void render();
 
@@ -44,17 +45,43 @@ namespace isomap {
                 return m_data;
             }
 
+            void setVisible( bool visible ) {
+                // TODO: actually make the structure invisible
+                m_visible = visible;
+            }
+
+            bool visible() const {
+                return m_visible;
+            }
+
+            id_t id() const {
+                return m_data.id;
+            }
+
+            uint32_t x() const {
+                return m_data.x;
+            }
+
+            uint32_t y() const {
+                return m_data.y;
+            }
+
+            uint32_t z() const {
+                return m_data.z;
+            }
+
+
         private:
             Player* m_player;
             common::StructureData m_data;
             common::StructureType* m_type = nullptr;
+            bool m_visible = true;
 
             // TODO: Separate render code from game logic
             // We don't need the AI data structures to be renderable
-            std::vector<vl::ref<vl::Geometry>> m_geom;
             vl::ref<vl::Transform> m_transform;
             vl::ref<vl::Effect> m_effect;
-
+            std::vector<vl::Actor*> m_actors;
         };
     }
 }

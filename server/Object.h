@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "../common/types.h"
 
 namespace isomap {
@@ -25,12 +27,16 @@ namespace isomap {
 
             virtual common::PlayerServerMessage* update( Terrain* world ) = 0;
 
-            // health
-            //
+            bool isSubscribed( Player* player ) const;
+
+            void subscribe( Player* player );
+
+            void unsubscribe( Player* player );
 
         private:
             id_t m_id;
             Player* m_player;
+            std::set<id_t> m_subscriptions;
 
         };
     }

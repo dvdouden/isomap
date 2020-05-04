@@ -52,6 +52,12 @@ namespace isomap {
                 return m_color;
             }
 
+            Structure* getStructure( id_t id );
+
+            vl::SceneManagerActorTree* sceneManager() {
+                return m_sceneManager.get();
+            }
+
         private:
             Match* m_match;
             id_t m_id;

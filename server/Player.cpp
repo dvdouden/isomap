@@ -26,8 +26,7 @@ namespace isomap {
 
         void Player::init() {
             auto size = m_terrain->width() * m_terrain->height();
-            m_fogMap = new uint8_t[size];
-            ::memset( m_fogMap, 0, size );
+            m_fogMap = new uint8_t[size]();
             m_uncoveredTiles.clear();
         }
 
@@ -41,7 +40,6 @@ namespace isomap {
 
                 int32_t deltaY = (y - tile_y) * (y - tile_y);
                 for ( int32_t x = tile_x - radius; x <= tile_x + radius; ++x ) {
-
                     if ( x < 0 || x >= m_terrain->width() ) {
                         continue;
                     }
@@ -82,6 +80,21 @@ namespace isomap {
             if ( m_uncoveredTiles.empty() ) {
                 return nullptr;
             }
+            for ( uint32_t tile : m_uncoveredTiles ) {
+                uint32_t x = tile % m_terrain->width();
+                uint32_t y = tile / m_terrain->width();
+                Structure* str = m_terrain->getStructureAt( x, y );
+                if ( str != nullptr ) {
+                    if ( !str->isSubscribed( this ) ) {
+                        str->subscribe( this );
+                        m_match->enqueueMessage( m_id,
+                                                 common::MatchServerMessage::playerMsg(
+                                                         str->player()->id(),
+                                                         common::PlayerServerMessage::structureVisibleMsg(
+                                                                 str->data() ) ) );
+                    }
+                }
+            }
             auto* msg = m_terrain->updateMessage( m_uncoveredTiles );
             m_uncoveredTiles.clear();
             return msg;
@@ -94,26 +107,23 @@ namespace isomap {
                     // TODO: validate parameters, send rejection on fail
                     auto* str = new Structure( this, msg->x(), msg->y(), msg->z(),
                                                common::StructureType::get( msg->id() ), msg->orientation() );
-                    // FIXME: what about other players?
-                    m_match->enqueueMessageAll(
-                            common::MatchServerMessage::playerMsg( m_id,
-                                                                   common::PlayerServerMessage::buildStructureAcceptedMsg(
-                                                                           str->x(), str->y(), str->z(), str->id(),
-                                                                           msg->id(), msg->orientation() ) ) );
-                    unFog( msg->x(), msg->y(), 10 );
+                    m_match->updateSubscriptions( str );
+                    m_match->enqueueMessage( str, common::PlayerServerMessage::buildStructureAcceptedMsg(
+                            str->data() ) );
+                    unFog( str->x(), str->y(), 10 );
                     m_match->addObject( str );
+                    m_terrain->addStructure( str );
                     m_structures[str->id()] = str;
                     break;
                 }
 
                 case common::PlayerCommandMessage::BuildUnit: {
                     auto* unit = new Unit( this, msg->x(), msg->y(), msg->z() );
-                    // FIXME: what about other players?
-                    m_match->enqueueMessageAll(
-                            common::MatchServerMessage::playerMsg( m_id,
-                                                                   common::PlayerServerMessage::unitCreatedMsg(
-                                                                           unit->x(), unit->y(), unit->z(),
-                                                                           unit->id() ) ) );
+                    // FIXME: update subscriptions
+                    m_match->enqueueMessage(
+                            unit,
+                            common::PlayerServerMessage::unitCreatedMsg(
+                                    unit->x(), unit->y(), unit->z(), unit->id() ) );
                     m_match->addObject( unit );
                     m_units[unit->id()] = unit;
                     break;
@@ -127,6 +137,22 @@ namespace isomap {
         void Player::setTerrain( Terrain* terrain ) {
             m_terrain = terrain;
             m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->createMessage() ) );
+        }
+
+        bool Player::canSee( Structure* structure ) const {
+            auto* footPrint = structure->footPrint();
+            for ( uint32_t footPrintY = 0; footPrintY < footPrint->height(); ++footPrintY ) {
+                for ( uint32_t footPrintX = 0; footPrintX < footPrint->width(); ++footPrintX ) {
+                    if ( footPrint->get( footPrintX, footPrintY ) == 0 ) {
+                        continue;
+                    }
+                    if ( m_fogMap[(structure->y() + footPrintY) * m_terrain->width() + (structure->x() + footPrintX)] >=
+                         1 ) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

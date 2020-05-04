@@ -49,21 +49,13 @@ namespace isomap {
                     break;
 
                 case common::PlayerServerMessage::BuildStructureAccepted: {
-                    auto* str = new Structure( this,
-                                               {
-                                                       msg->id(),
-                                                       msg->typeId(),
-                                                       msg->x(),
-                                                       msg->y(),
-                                                       msg->z(),
-                                                       msg->orientation()
-                                               } );
+                    auto* str = new Structure( this, *msg->structureData() );
                     // TODO: Make sure there's no structure with the given id
-                    m_structures[msg->id()] = str;
+                    m_structures[str->id()] = str;
                     if ( m_rendering != nullptr ) {
                         str->initRender( m_rendering, m_sceneManager.get() );
                     }
-                    m_terrain->occupy( msg->x(), msg->y(), str->footPrint() );
+                    m_terrain->occupy( str->x(), str->y(), str->footPrint() );
                     break;
                 }
 
@@ -71,6 +63,38 @@ namespace isomap {
                     m_terrain->unreserve( msg->x(), msg->y(),
                                           common::StructureType::get( msg->typeId() )->footPrint(
                                                   msg->orientation() ) );
+                    break;
+                }
+
+                case common::PlayerServerMessage::StructureVisible: {
+                    auto* str = getStructure( msg->structureData()->id );
+                    if ( str == nullptr ) {
+                        str = new Structure( this, *msg->structureData() );
+                        m_structures[str->id()] = str;
+                        if ( m_rendering != nullptr ) {
+                            str->initRender( m_rendering, m_sceneManager.get() );
+                        }
+                        m_terrain->occupy( str->x(), str->y(), str->footPrint() );
+                    } else {
+                        str->setVisible( true );
+                    }
+                    break;
+                }
+
+                case common::PlayerServerMessage::StructureInvisible: {
+                    auto* str = getStructure( msg->id() );
+                    if ( str != nullptr ) {
+                        str->setVisible( false );
+                    }
+                    break;
+                }
+
+                case common::PlayerServerMessage::StructureDestroyed: {
+                    auto* str = getStructure( msg->id() );
+                    if ( str != nullptr ) {
+                        delete str;
+                        m_structures.erase( msg->id() );
+                    }
                     break;
                 }
 
@@ -97,21 +121,23 @@ namespace isomap {
                 default:
                     break;
             }
-            //printf( "Player process Done\n");
+            //printf( "Client Session[%s] Player %s process server msg completed\n", m_match->player()->name().c_str(), m_name.c_str());
         }
 
         void Player::processMessage( common::StructureServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
-            //printf( "Process message for structure %d\n", msg->id() );
-            m_structures[msg->id()]->processMessage( msg );
+            //printf( "Process message for structure %d\n", msg->data().id );
+            // FIXME: check if structure with ID exists
+            m_structures[msg->data().id]->processMessage( msg );
         }
 
         void Player::processMessage( common::UnitServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
+            // FIXME: check if unit with ID exists
             m_units[msg->id()]->processMessage( msg );
         }
 
@@ -161,6 +187,14 @@ namespace isomap {
 
         void Player::enableRendering() {
             m_sceneManager->setEnableMask( 0xFFFFFFFF );
+        }
+
+        Structure* Player::getStructure( id_t id ) {
+            auto str = m_structures.find( id );
+            if ( str == m_structures.end() ) {
+                return nullptr;
+            }
+            return str->second;
         }
 
     }

@@ -26,12 +26,24 @@ namespace isomap {
         }
 
         common::StructureServerMessage* Structure::statusMessage() {
-            return common::StructureServerMessage::statusMsg( id(), m_data.x, m_data.y, m_data.z,
-                                                              m_data.constructionProgress );
+            return common::StructureServerMessage::statusMsg( m_data );
         }
 
-        common::StructureServerMessage* Structure::createMessage() {
-            return common::StructureServerMessage::createMsg( id(), m_data.x, m_data.y, m_data.z );
+
+        bool Structure::occupies( uint32_t x, uint32_t y ) const {
+            if ( x >= m_data.x + m_type->width( m_data.orientation ) ) {
+                return false; // structure right of point
+            }
+            if ( x < m_data.x ) {
+                return false; // structure left of point
+            }
+            if ( y >= m_data.y + m_type->height( m_data.orientation ) ) {
+                return false; // structure below point
+            }
+            if ( y < m_data.y ) {
+                return false; // structure above point
+            }
+            return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
         }
 
     }

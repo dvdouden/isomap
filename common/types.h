@@ -55,6 +55,8 @@ namespace isomap {
 
         class StructureCommandMessage;
 
+        struct StructureData;
+
         class StructureServerMessage;
 
         class StructureType;

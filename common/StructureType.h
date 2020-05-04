@@ -23,20 +23,20 @@ namespace isomap {
                 return m_name;
             }
 
-            uint32_t width( uint32_t rotation ) const {
-                return m_footPrint[rotation % 4u]->width();
+            uint32_t width( uint32_t orientation ) const {
+                return m_footPrint[orientation % 4u]->width();
             }
 
-            uint32_t height( uint32_t rotation ) const {
-                return m_footPrint[rotation % 4u]->height();
+            uint32_t height( uint32_t orientation ) const {
+                return m_footPrint[orientation % 4u]->height();
             }
 
-            FootPrint* footPrint( uint32_t rotation ) const {
-                return m_footPrint[rotation % 4u];
+            FootPrint* footPrint( uint32_t orientation ) const {
+                return m_footPrint[orientation % 4u];
             }
 
-            uint8_t footPrint( uint32_t rotation, uint32_t x, uint32_t y ) const {
-                return m_footPrint[rotation % 4u]->get( x, y );
+            uint8_t footPrint( uint32_t orientation, uint32_t x, uint32_t y ) const {
+                return m_footPrint[orientation % 4u]->get( x, y );
             }
 
             static StructureType* get( id_t id );

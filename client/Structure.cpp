@@ -13,16 +13,21 @@
 namespace isomap {
     namespace client {
 
+
+        Structure::~Structure() {
+            for ( auto* actor : m_actors ) {
+                // TODO: make sure this actually destroys the actor
+                m_player->sceneManager()->tree()->eraseActor( actor );
+            }
+        }
+
         void Structure::processMessage( common::StructureServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
             switch ( msg->type() ) {
                 case common::StructureServerMessage::Status:
-                    m_data.x = msg->x();
-                    m_data.y = msg->y();
-                    m_data.z = msg->z();
-                    m_data.constructionProgress = msg->constructionProgress();
+                    m_data = msg->data();
                     break;
 
                 default:
@@ -54,8 +59,8 @@ namespace isomap {
 
             vl::ResourceDatabase* resource_db = ModelCache::get( m_type->name() );
 
-            for ( size_t ires = 0; ires < resource_db->resources().size(); ++ires ) {
-                auto* act = resource_db->resources()[ires]->as<vl::Actor>();
+            for ( auto& ires : resource_db->resources() ) {
+                auto* act = ires->as<vl::Actor>();
 
                 if ( !act )
                     continue;
@@ -63,7 +68,8 @@ namespace isomap {
                 auto* geom = act->lod( 0 )->as<vl::Geometry>();
 
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
-                sceneManager->tree()->addActor( act );
+                sceneManager->tree()->addActor( actor );
+                m_actors.push_back( actor );
 
                 if ( geom && geom->normalArray() ) {
                     actor->effect()->shader()->enable( vl::EN_LIGHTING );
@@ -73,6 +79,12 @@ namespace isomap {
                 if ( geom && !geom->normalArray() ) {
                     actor->effect()->shader()->disable( vl::EN_LIGHTING );
                 }
+            }
+        }
+
+        void Structure::clearRender( vl::SceneManagerActorTree* sceneManager ) {
+            for ( auto* actor : m_actors ) {
+                sceneManager->tree()->eraseActor( actor );
             }
         }
 
