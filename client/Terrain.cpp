@@ -383,11 +383,15 @@ namespace isomap {
         }
 
         void Terrain::disableRendering() {
-            m_sceneManager->setEnableMask( 0 );
+            if ( m_sceneManager ) {
+                m_sceneManager->setEnableMask( 0 );
+            }
         }
 
         void Terrain::enableRendering() {
-            m_sceneManager->setEnableMask( 0xFFFFFFFF );
+            if ( m_sceneManager ) {
+                m_sceneManager->setEnableMask( 0xFFFFFFFF );
+            }
         }
     }
 

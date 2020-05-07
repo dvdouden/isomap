@@ -131,5 +131,11 @@ namespace isomap {
             }
         }
 
+        void Match::dumpActors() {
+            for ( auto player : m_players ) {
+                player.second->dumpActors();
+            }
+        }
+
     }
 }

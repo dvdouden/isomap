@@ -33,9 +33,9 @@ namespace isomap {
             void processMessage( common::UnitServerMessage* msg );
 
             void
-            buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType, uint32_t rotation );
+            buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType, uint32_t orientation );
 
-            void buildUnit( int32_t tileX, int32_t tileY );
+            void buildUnit( int32_t tileX, int32_t tileY, common::UnitType* unitType, uint32_t orientation );
 
             void initRender( vl::RenderingAbstract* rendering );
 
@@ -54,9 +54,17 @@ namespace isomap {
 
             Structure* getStructure( id_t id );
 
+            Unit* getUnit( id_t id );
+
             vl::SceneManagerActorTree* sceneManager() {
                 return m_sceneManager.get();
             }
+
+            Match* match() {
+                return m_match;
+            }
+
+            void dumpActors();
 
         private:
             Match* m_match;

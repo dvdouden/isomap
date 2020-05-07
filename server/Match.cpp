@@ -4,6 +4,7 @@
 #include "Structure.h"
 #include "Terrain.h"
 #include "TerrainGenerator.h"
+#include "Unit.h"
 #include "../common/MatchMessage.h"
 #include "../common/PlayerMessage.h"
 
@@ -26,6 +27,7 @@ namespace isomap {
 
 
         void Match::processMessage( common::MatchClientMessage* msg ) {
+            //printf( "Server Match process client msg of type %d\n", msg->type() );
             switch ( msg->type() ) {
                 case common::MatchClientMessage::RegisterPlayer: {
                     if ( m_players.size() >= m_maxPlayers ) {
@@ -105,11 +107,13 @@ namespace isomap {
                         return;
                     }
                     player->processMessage( msg->playerMsg() );
+                    break;
                 }
 
                 default:
                     break;
             }
+            //printf( "Server Match process client done\n" );
         }
 
         void Match::generateWorld( uint32_t width, uint32_t height ) {
@@ -184,6 +188,19 @@ namespace isomap {
                     structure->subscribe( player.second );
                 } else {
                     structure->unsubscribe( player.second );
+                }
+            }
+        }
+
+        void Match::updateSubscriptions( Unit* unit ) {
+            for ( auto player : m_players ) {
+                if ( player.second == unit->player() ) {
+                    continue;
+                }
+                if ( player.second->canSee( unit ) ) {
+                    unit->subscribe( player.second );
+                } else {
+                    unit->unsubscribe( player.second );
                 }
             }
         }

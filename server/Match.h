@@ -42,6 +42,8 @@ namespace isomap {
 
             void updateSubscriptions( Structure* structure );
 
+            void updateSubscriptions( Unit* unit );
+
             std::vector<common::MatchServerMessage*> serverMessages( id_t playerId ) {
                 std::vector<common::MatchServerMessage*> ret = std::move( m_messages[playerId] );
                 return ret;

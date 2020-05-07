@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "types.h"
+#include "UnitData.h"
 
 namespace isomap {
     namespace common {
@@ -52,31 +53,16 @@ namespace isomap {
                 return m_type;
             }
 
-            id_t id() const {
-                return m_id;
+            const UnitData& data() {
+                return m_data;
             }
 
-            int32_t x() const {
-                return m_x;
-            }
-
-            int32_t y() const {
-                return m_y;
-            }
-
-            int32_t z() const {
-                return m_z;
-            }
-
-            static UnitServerMessage* statusMsg( id_t id, int32_t x, int32_t y, int32_t z );
+            static UnitServerMessage* statusMsg( const UnitData& data );
 
         private:
             Type m_type;
 
-            id_t m_id = 0;
-            int32_t m_x = 0;
-            int32_t m_y = 0;
-            int32_t m_z = 0;
+            UnitData m_data;
 
         };
     }

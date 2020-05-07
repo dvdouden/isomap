@@ -29,6 +29,7 @@ const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 25
 void MainWindow::initEvent() {
 
     isomap::common::StructureType::load();
+    isomap::common::UnitType::load();
 
     vl::ref<vl::Effect> text_fx = new vl::Effect;
     text_fx->shader()->enable( vl::EN_BLEND );
@@ -68,38 +69,30 @@ void MainWindow::initEvent() {
     m_clientPlayer = m_clientPlayerMatch->player();
     m_clientAI = m_clientAIMatch->player();
 
-    printf( "client player: %p\n", m_clientPlayer );
-    printf( "client AI: %p\n", m_clientAI );
-
-    m_renderMatch = m_clientAIMatch;
+    m_renderMatch = m_clientPlayerMatch;
     m_renderTerrain = m_renderMatch->terrain();
     m_controllingPlayer = m_renderMatch->player();
 
     m_clientPlayerTerrain = m_clientPlayerMatch->terrain();
     m_clientAITerrain = m_clientAIMatch->terrain();
 
-    printf( "init rendering\n" );
-    //m_renderMatch->initRender( rendering() );
     m_clientAIMatch->initRender( rendering() );
     m_clientPlayerMatch->initRender( rendering() );
     m_clientPlayerMatch->disableRendering();
     m_clientAIMatch->disableRendering();
     m_renderMatch->enableRendering();
-    printf( "init rendering done\n" );
 
     // we need to uncover this bit of terrain, otherwise construction will end up underground...
+    m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 0, 0, 10 );
     m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 10, 10, 10 );
     m_serverMatch->getPlayer( m_clientAI->id() )->unFog( 13, 10, 10 );
     sendMessages();
     m_serverMatch->update();
     receiveMessages();
 
-    m_clientPlayer->buildUnit( 0, 0 );
-    printf( "Built unit\n" );
+    m_clientPlayer->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ), m_structureOrientation );
-    printf( "Built structure\n" );
     m_clientAI->buildStructure( 13, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
-    printf( "Built structure\n" );
 
     sendAndReceiveMessages();
     printf( "init done\n" );
@@ -357,6 +350,10 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             m_renderMatch->enableRendering();
             m_renderTerrain = m_renderMatch->terrain();
             m_controllingPlayer = m_renderMatch->player();
+            break;
+
+        case vl::Key_F8:
+            m_renderMatch->dumpActors();
             break;
 
         case vl::Key_Z:
@@ -742,10 +739,15 @@ void MainWindow::highlight( int x, int y ) {
 }
 
 void MainWindow::place( int x, int y ) {
-    auto* structureType = isomap::common::StructureType::get( m_structureType );
+    /*auto* structureType = isomap::common::StructureType::get( m_structureType );
     if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
         m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
+    }*/
+    if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
+         m_renderTerrain->isVisible( x, y ) ) {
+        m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
     }
+
 }
 
 void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y ) {

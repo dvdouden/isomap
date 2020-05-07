@@ -11,7 +11,7 @@ namespace isomap {
     namespace client {
         class Structure {
         public:
-            explicit Structure( Player* player, const common::StructureData& data ) :
+            Structure( Player* player, const common::StructureData& data ) :
                     m_player( player ),
                     m_data( data ),
                     m_type( common::StructureType::get( data.typeId ) ) {

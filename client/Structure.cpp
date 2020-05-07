@@ -68,6 +68,7 @@ namespace isomap {
                 auto* geom = act->lod( 0 )->as<vl::Geometry>();
 
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
+                actor->setObjectName( m_player->name() + " structure " + std::to_string( m_data.id ) + "-" + std::to_string( m_actors.size() ) );
                 sceneManager->tree()->addActor( actor );
                 m_actors.push_back( actor );
 

@@ -1,5 +1,6 @@
 #include "Structure.h"
 #include "Terrain.h"
+#include "Unit.h"
 #include "../common/TerrainMessage.h"
 
 namespace isomap {
@@ -12,6 +13,7 @@ namespace isomap {
             m_slopeMap = new uint8_t[m_width * m_height];
             m_oreMap = new uint8_t[m_width * m_height];
             m_structures = new std::vector<Structure*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
+            m_units = new std::vector<Unit*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
         }
 
         Terrain::~Terrain() {
@@ -19,6 +21,7 @@ namespace isomap {
             delete[] m_slopeMap;
             delete[] m_oreMap;
             delete[] m_structures;
+            delete[] m_units;
         }
 
         common::TerrainMessage* Terrain::createMessage() const {
@@ -60,6 +63,21 @@ namespace isomap {
             }
         }
 
+
+        void Terrain::addUnit( Unit* unit ) {
+            m_units[getChunk( unit->tileX(), unit->tileY() )].push_back( unit );
+        }
+
+        void Terrain::removeUnit( Unit* unit ) {
+            uint32_t chunk = getChunk( unit->tileX(), unit->tileY() );
+            for ( auto it = m_units[chunk].begin(); it != m_units[chunk].end(); ++it ) {
+                if ( (*it) == unit ) {
+                    m_units[chunk].erase( it );
+                    break;
+                }
+            }
+        }
+
         std::vector<uint32_t> Terrain::getChunks( Structure* structure ) {
             std::vector<uint32_t> chunks;
             uint32_t x1 = structure->x() / m_chunkSize;
@@ -74,13 +92,27 @@ namespace isomap {
             return std::move( chunks );
         }
 
-        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
+        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) {
             uint32_t chunkX = x / m_chunkSize;
             uint32_t chunkY = y / m_chunkSize;
-            uint32_t chunk = chunkY * (m_width / m_chunkSize) + chunkX;
+            return chunkY * (m_width / m_chunkSize) + chunkX;
+        }
+
+        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
+            uint32_t chunk = getChunk( x, y );
             for ( Structure* structure : m_structures[chunk] ) {
                 if ( structure->occupies( x, y ) ) {
                     return structure;
+                }
+            }
+            return nullptr;
+        }
+
+        Unit* Terrain::getUnitAt( uint32_t x, uint32_t y ) {
+            uint32_t chunk = getChunk( x, y );
+            for ( Unit* unit : m_units[chunk] ) {
+                if ( unit->tileX() == x && unit->tileY() == y ) {
+                    return unit;
                 }
             }
             return nullptr;

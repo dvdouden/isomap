@@ -62,5 +62,7 @@ namespace isomap {
         class StructureType;
 
         class TerrainMessage;
+
+        struct UnitData;
     }
 }

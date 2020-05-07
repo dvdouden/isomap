@@ -40,6 +40,10 @@ namespace isomap {
 
             void removeStructure( Structure* structure );
 
+            void addUnit( Unit* unit );
+
+            void removeUnit( Unit* unit );
+
             common::TerrainMessage* createMessage() const;
 
             common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
@@ -47,6 +51,8 @@ namespace isomap {
             common::TerrainMessage* uncoverAll() const;
 
             Structure* getStructureAt( uint32_t x, uint32_t y );
+
+            Unit* getUnitAt( uint32_t x, uint32_t y );
 
         private:
             uint32_t m_width;
@@ -58,8 +64,11 @@ namespace isomap {
 
             uint32_t m_chunkSize = 16;
             std::vector<Structure*>* m_structures;
+            std::vector<Unit*>* m_units;
 
             std::vector<uint32_t> getChunks( Structure* pStructure );
+
+            uint32_t getChunk( uint32_t x, uint32_t y );
         };
     }
 }

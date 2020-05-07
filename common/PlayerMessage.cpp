@@ -17,11 +17,14 @@ namespace isomap {
             return msg;
         }
 
-        PlayerCommandMessage* PlayerCommandMessage::buildUnitMsg( uint32_t x, uint32_t y, uint32_t z ) {
+        PlayerCommandMessage*
+        PlayerCommandMessage::buildUnitMsg( uint32_t x, uint32_t y, uint32_t z, id_t typeId, uint32_t orientation ) {
             auto* msg = new PlayerCommandMessage( BuildUnit );
             msg->m_x = x;
             msg->m_y = y;
             msg->m_z = z;
+            msg->m_id = typeId;
+            msg->m_orientation = orientation;
             return msg;
         }
 
@@ -50,12 +53,9 @@ namespace isomap {
             return msg;
         }
 
-        PlayerServerMessage* PlayerServerMessage::unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id ) {
+        PlayerServerMessage* PlayerServerMessage::unitCreatedMsg( const UnitData& unitData ) {
             auto* msg = new PlayerServerMessage( UnitCreated );
-            msg->m_x = x;
-            msg->m_y = y;
-            msg->m_z = z;
-            msg->m_id = id;
+            msg->m_unitData = new UnitData( unitData );
             return msg;
         }
 
@@ -82,7 +82,8 @@ namespace isomap {
                 m_typeId( rhs.m_typeId ),
                 m_structureMessage( rhs.m_structureMessage ),
                 m_unitMessage( rhs.m_unitMessage ),
-                m_structureData( rhs.m_structureData ) {
+                m_structureData( rhs.m_structureData ),
+                m_unitData( rhs.m_unitData ) {
             if ( m_structureMessage != nullptr ) {
                 m_structureMessage = new StructureServerMessage( *m_structureMessage );
             }
@@ -91,6 +92,9 @@ namespace isomap {
             }
             if ( m_structureData != nullptr ) {
                 m_structureData = new StructureData( *m_structureData );
+            }
+            if ( m_unitData != nullptr ) {
+                m_unitData = new UnitData( *m_unitData );
             }
         }
 
@@ -109,6 +113,25 @@ namespace isomap {
 
         PlayerServerMessage* PlayerServerMessage::structureDestroyedMsg( id_t id ) {
             auto* msg = new PlayerServerMessage( StructureDestroyed );
+            msg->m_id = id;
+            return msg;
+        }
+
+        PlayerServerMessage*
+        PlayerServerMessage::unitVisibleMsg( const UnitData& unitData ) {
+            auto* msg = new PlayerServerMessage( UnitVisible );
+            msg->m_unitData = new UnitData( unitData );
+            return msg;
+        }
+
+        PlayerServerMessage* PlayerServerMessage::unitInvisibleMsg( id_t id ) {
+            auto* msg = new PlayerServerMessage( UnitInvisible );
+            msg->m_id = id;
+            return msg;
+        }
+
+        PlayerServerMessage* PlayerServerMessage::unitDestroyedMsg( id_t id ) {
+            auto* msg = new PlayerServerMessage( UnitDestroyed );
             msg->m_id = id;
             return msg;
         }

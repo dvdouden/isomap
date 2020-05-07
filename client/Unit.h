@@ -2,19 +2,18 @@
 
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/Geometry.hpp>
+#include "../common/UnitData.h"
+#include "../common/UnitType.h"
 #include "../common/types.h"
 
 namespace isomap {
     namespace client {
         class Unit {
         public:
-            Unit( id_t id, int32_t x, int32_t y, int32_t z ) :
-                    m_id( id ),
-                    m_x( x ),
-                    m_y( y ),
-                    m_z( z ) { };
 
-            ~Unit() = default;
+            Unit( Player* player, const common::UnitData& data );
+
+            ~Unit();
 
             Unit( const Unit& ) = delete;
 
@@ -26,22 +25,47 @@ namespace isomap {
 
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
+            void clearRender( vl::SceneManagerActorTree* sceneManager );
+
             void render();
 
+            void setVisible( bool visible ) {
+                // TODO: actually make the structure invisible
+                m_visible = visible;
+            }
+
+            bool visible() const {
+                return m_visible;
+            }
+
+
+            id_t id() const {
+                return m_data.id;
+            }
+
+            uint32_t x() const {
+                return m_data.x;
+            }
+
+            uint32_t y() const {
+                return m_data.y;
+            }
+
+            uint32_t z() const {
+                return m_data.z;
+            }
 
         private:
-            id_t m_id = 0;
-            int32_t m_x = 0;
-            int32_t m_y = 0;
-            int32_t m_z = 0;
-            int32_t m_orientation = 0;
+            Player* m_player;
+            common::UnitData m_data;
+            common::UnitType* m_type = nullptr;
+            bool m_visible = true;
 
             // TODO: Separate render code from game logic
             // We don't need the AI data structures to be renderable
-            vl::ref<vl::Geometry> m_geom;
             vl::ref<vl::Transform> m_transform;
             vl::ref<vl::Effect> m_effect;
-
+            std::vector<vl::Actor*> m_actors;
         };
     }
 }

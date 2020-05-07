@@ -9,12 +9,9 @@ namespace isomap {
             return msg;
         }
 
-        UnitServerMessage* UnitServerMessage::statusMsg( id_t id, int32_t x, int32_t y, int32_t z ) {
+        UnitServerMessage* UnitServerMessage::statusMsg( const UnitData& data ) {
             auto* msg = new UnitServerMessage( Status );
-            msg->m_id = id;
-            msg->m_x = x;
-            msg->m_y = y;
-            msg->m_z = z;
+            msg->m_data = data;
             return msg;
         }
     }

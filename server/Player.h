@@ -48,6 +48,8 @@ namespace isomap {
 
             bool canSee( Structure* structure ) const;
 
+            bool canSee( Unit* structure ) const;
+
         private:
             id_t m_id;
             std::string m_name;

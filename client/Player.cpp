@@ -27,16 +27,17 @@ namespace isomap {
         }
 
         void Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
-                                     uint32_t rotation ) {
+                                     uint32_t orientation ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
-            m_terrain->reserve( tileX, tileY, structureType->footPrint( rotation ) );
+            m_terrain->reserve( tileX, tileY, structureType->footPrint( orientation ) );
             m_match->enqueueMessage( common::PlayerCommandMessage::buildStructureMsg(
-                    tileX, tileY, tileZ, structureType->id(), rotation ) );
+                    tileX, tileY, tileZ, structureType->id(), orientation ) );
         }
 
-        void Player::buildUnit( int32_t tileX, int32_t tileY ) {
+        void Player::buildUnit( int32_t tileX, int32_t tileY, common::UnitType* unitType, uint32_t orientation ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
-            m_match->enqueueMessage( common::PlayerCommandMessage::buildUnitMsg( tileX, tileY, tileZ ) );
+            m_match->enqueueMessage(
+                    common::PlayerCommandMessage::buildUnitMsg( tileX, tileY, tileZ, unitType->id(), orientation ) );
         }
 
         void Player::processMessage( common::PlayerServerMessage* msg ) {
@@ -99,11 +100,42 @@ namespace isomap {
                 }
 
                 case common::PlayerServerMessage::UnitCreated: {
-                    auto* unit = new Unit( msg->id(), msg->x(), msg->y(), msg->z() );
+                    auto* unit = new Unit( this, *msg->unitData() );
                     // TODO: Make sure there's no unit with the given id
-                    m_units[msg->id()] = unit;
+                    m_units[unit->id()] = unit;
                     if ( m_rendering != nullptr ) {
                         unit->initRender( m_rendering, m_sceneManager.get() );
+                    }
+                    break;
+                }
+
+                case common::PlayerServerMessage::UnitVisible: {
+                    auto* unit = getUnit( msg->unitData()->id );
+                    if ( unit == nullptr ) {
+                        unit = new Unit( this, *msg->unitData() );
+                        m_units[unit->id()] = unit;
+                        if ( m_rendering != nullptr ) {
+                            unit->initRender( m_rendering, m_sceneManager.get() );
+                        }
+                    } else {
+                        unit->setVisible( true );
+                    }
+                    break;
+                }
+
+                case common::PlayerServerMessage::UnitInvisible: {
+                    auto* unit = getUnit( msg->id() );
+                    if ( unit != nullptr ) {
+                        unit->setVisible( false );
+                    }
+                    break;
+                }
+
+                case common::PlayerServerMessage::UnitDestroyed: {
+                    auto* unit = getUnit( msg->id() );
+                    if ( unit != nullptr ) {
+                        delete unit;
+                        m_units.erase( msg->id() );
                     }
                     break;
                 }
@@ -138,7 +170,7 @@ namespace isomap {
                 return;
             }
             // FIXME: check if unit with ID exists
-            m_units[msg->id()]->processMessage( msg );
+            m_units[msg->data().id]->processMessage( msg );
         }
 
 
@@ -182,11 +214,15 @@ namespace isomap {
         }
 
         void Player::disableRendering() {
-            m_sceneManager->setEnableMask( 0 );
+            if ( m_sceneManager ) {
+                m_sceneManager->setEnableMask( 0 );
+            }
         }
 
         void Player::enableRendering() {
-            m_sceneManager->setEnableMask( 0xFFFFFFFF );
+            if ( m_sceneManager ) {
+                m_sceneManager->setEnableMask( 0xFFFFFFFF );
+            }
         }
 
         Structure* Player::getStructure( id_t id ) {
@@ -195,6 +231,20 @@ namespace isomap {
                 return nullptr;
             }
             return str->second;
+        }
+
+        Unit* Player::getUnit( id_t id ) {
+            auto unit = m_units.find( id );
+            if ( unit == m_units.end() ) {
+                return nullptr;
+            }
+            return unit->second;
+        }
+
+        void Player::dumpActors() {
+            for ( auto actor : m_sceneManager->tree()->actors()->vector() ) {
+                printf( "%s at %f %f %f\n", actor->objectName().c_str(), actor->transform()->worldMatrix().getT().x(), actor->transform()->worldMatrix().getT().y());
+            }
         }
 
     }

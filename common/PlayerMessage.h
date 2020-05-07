@@ -21,9 +21,10 @@ namespace isomap {
             }
 
             static PlayerCommandMessage*
-            buildStructureMsg( uint32_t x, uint32_t y, uint32_t z, id_t structureType, uint32_t rotation );
+            buildStructureMsg( uint32_t x, uint32_t y, uint32_t z, id_t structureType, uint32_t orientation );
 
-            static PlayerCommandMessage* buildUnitMsg( uint32_t x, uint32_t y, uint32_t z );
+            static PlayerCommandMessage*
+            buildUnitMsg( uint32_t x, uint32_t y, uint32_t z, id_t unitType, uint32_t orientation );
 
             id_t id() const {
                 return m_id;
@@ -66,9 +67,12 @@ namespace isomap {
                 StructureVisible,
                 StructureInvisible,
                 StructureDestroyed,
-                UnitCreated,
-                UnitMessage,
                 StructureMessage,
+                UnitCreated,
+                UnitVisible,
+                UnitInvisible,
+                UnitDestroyed,
+                UnitMessage,
             };
 
             explicit PlayerServerMessage( Type type ) :
@@ -99,7 +103,13 @@ namespace isomap {
             static PlayerServerMessage*
             structureDestroyedMsg( id_t id );
 
-            static PlayerServerMessage* unitCreatedMsg( uint32_t x, uint32_t y, uint32_t z, id_t id );
+            static PlayerServerMessage* unitCreatedMsg( const UnitData& unitData );
+
+            static PlayerServerMessage* unitVisibleMsg( const UnitData& unitData );
+
+            static PlayerServerMessage* unitInvisibleMsg( id_t id );
+
+            static PlayerServerMessage* unitDestroyedMsg( id_t id );
 
             static PlayerServerMessage* structureMsg( StructureServerMessage* msg );
 
@@ -141,6 +151,10 @@ namespace isomap {
                 return m_structureData;
             }
 
+            UnitData* unitData() const {
+                return m_unitData;
+            }
+
 
         private:
             Type m_type;
@@ -154,6 +168,7 @@ namespace isomap {
             id_t m_typeId = 0;
 
             StructureData* m_structureData = nullptr;
+            UnitData* m_unitData = nullptr;
             StructureServerMessage* m_structureMessage = nullptr;
             UnitServerMessage* m_unitMessage = nullptr;
         };

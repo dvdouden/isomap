@@ -61,6 +61,7 @@ namespace isomap {
         }
 
         void Player::update() {
+            //printf( "Player %s update!\n", m_name.c_str() );
             auto* scratch = m_fogMap;
             for ( uint32_t y = 0; y < m_terrain->height(); ++y ) {
                 for ( uint32_t x = 0; x < m_terrain->width(); ++x ) {
@@ -94,6 +95,18 @@ namespace isomap {
                                                                  str->data() ) ) );
                     }
                 }
+                Unit* unit = m_terrain->getUnitAt( x, y );
+                if ( unit != nullptr ) {
+
+                    if ( !unit->isSubscribed( this ) ) {
+                        unit->subscribe( this );
+                        m_match->enqueueMessage( m_id,
+                                                 common::MatchServerMessage::playerMsg(
+                                                         unit->player()->id(),
+                                                         common::PlayerServerMessage::unitVisibleMsg(
+                                                                 unit->data() ) ) );
+                    }
+                }
             }
             auto* msg = m_terrain->updateMessage( m_uncoveredTiles );
             m_uncoveredTiles.clear();
@@ -118,13 +131,13 @@ namespace isomap {
                 }
 
                 case common::PlayerCommandMessage::BuildUnit: {
-                    auto* unit = new Unit( this, msg->x(), msg->y(), msg->z() );
-                    // FIXME: update subscriptions
-                    m_match->enqueueMessage(
-                            unit,
-                            common::PlayerServerMessage::unitCreatedMsg(
-                                    unit->x(), unit->y(), unit->z(), unit->id() ) );
+                    auto* unit = new Unit( this, msg->x(), msg->y(), msg->z(),
+                                           common::UnitType::get( msg->id() ), msg->orientation() );
+                    m_match->updateSubscriptions( unit );
+                    m_match->enqueueMessage( unit, common::PlayerServerMessage::unitCreatedMsg( unit->data() ) );
+                    unFog( unit->tileX(), unit->tileY(), 10 );
                     m_match->addObject( unit );
+                    m_terrain->addUnit( unit );
                     m_units[unit->id()] = unit;
                     break;
                 }
@@ -132,6 +145,7 @@ namespace isomap {
                 default:
                     break;
             }
+            //printf( "Server Player %s process client msg done\n", m_name.c_str() );
         }
 
         void Player::setTerrain( Terrain* terrain ) {
@@ -153,6 +167,10 @@ namespace isomap {
                 }
             }
             return false;
+        }
+
+        bool Player::canSee( Unit* unit ) const {
+            return m_fogMap[unit->tileY() * m_terrain->width() + unit->tileX()] >= 1;
         }
     }
 }

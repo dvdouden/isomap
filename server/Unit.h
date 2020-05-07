@@ -2,18 +2,21 @@
 
 #include <vector>
 #include "Object.h"
+#include "../common/UnitData.h"
+#include "../common/UnitType.h"
+#include "../util/math.h"
 
 
 namespace isomap {
     namespace server {
         class Unit : public Object {
         public:
-            Unit( Player* player, uint32_t x, uint32_t y, uint32_t z ) :
-                    Object( player ),
-                    m_x( x ),
-                    m_y( y ),
-                    m_z( z ) {
-                printf( "Created unit %d\n", id() );
+            Unit( Player* owner, int32_t x, int32_t y, int32_t z, common::UnitType* unitType,
+                  uint32_t orientation ) :
+                    Object( owner ),
+                    m_data( {id(), unitType->id(), x * math::fix::precision, y * math::fix::precision,
+                             z * math::fix::precision, orientation} ),
+                    m_type( unitType ) {
             }
 
             ~Unit() override = default;
@@ -35,43 +38,52 @@ namespace isomap {
             // state
 
             int32_t x() const {
-                return m_x;
+                return m_data.x;
             }
 
             int32_t y() const {
-                return m_y;
+                return m_data.y;
             }
 
             int32_t z() const {
-                return m_z;
+                return m_data.z;
             }
 
             int32_t tileX() const {
-                return m_x >> 16;
+                return m_data.x >> math::fix::precisionBits;
             }
 
             int32_t tileY() const {
-                return m_y >> 16;
+                return m_data.y >> math::fix::precisionBits;
             }
 
             int32_t tileZ() const {
-                return m_z >> 16;
+                return m_data.z >> math::fix::precisionBits;
             }
 
             int32_t subTileX() const {
-                return m_x & 0x0000FFFF;
+                return m_data.x & math::fix::precisionMask;
             }
 
             int32_t subTileY() const {
-                return m_y & 0x0000FFFF;
+                return m_data.y & math::fix::precisionMask;
             }
 
             int32_t subTileZ() const {
-                return m_z & 0x0000FFFF;
+                return m_data.z & math::fix::precisionMask;
             }
 
             int32_t orientation() const {
-                return m_orientation;
+                return m_data.orientation;
+            }
+
+
+            const common::UnitData& data() const {
+                return m_data;
+            }
+
+            common::UnitType* type() const {
+                return m_type;
             }
 
         private:
@@ -79,13 +91,8 @@ namespace isomap {
 
             int32_t speedY( int32_t speed, int32_t orientation ) const;
 
-            common::UnitType* m_type;
-
-            int32_t m_x = 0;
-            int32_t m_y = 0;
-            int32_t m_z = 0;
-            int32_t m_orientation = 0;
-
+            common::UnitData m_data;
+            common::UnitType* m_type = nullptr;
 
             int32_t m_speed;
 

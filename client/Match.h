@@ -60,6 +60,8 @@ namespace isomap {
                 return m_terrain;
             }
 
+            void dumpActors();
+
         private:
             Player* getPlayer( id_t id );
 

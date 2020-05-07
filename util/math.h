@@ -51,6 +51,7 @@ namespace math {
 
         const uint32_t precisionBits = 12u;
         const int32_t precision = 1u << precisionBits;
+        const int32_t precisionMask = precision - 1;
         const float fPrecision = precision;
     }
 }

@@ -25,7 +25,7 @@ namespace isomap {
         }
 
         common::UnitServerMessage* Unit::statusMessage() {
-            return common::UnitServerMessage::statusMsg( id(), m_x, m_y, m_z );
+            return common::UnitServerMessage::statusMsg( m_data );
         }
 
         common::PlayerServerMessage* Unit::update( Terrain* terrain ) {
@@ -36,33 +36,33 @@ namespace isomap {
 
             // let's keep things simple for now...
             WayPoint& wayPoint = m_wayPoints.back();
-            if ( m_x != wayPoint.x ) {
-                if ( m_x < wayPoint.x ) {
-                    ++m_x;
+            if ( m_data.x != wayPoint.x ) {
+                if ( m_data.x < wayPoint.x ) {
+                    ++m_data.x;
                 } else {
-                    --m_x;
+                    --m_data.x;
                 }
             }
-            if ( m_y != wayPoint.y ) {
-                if ( m_y < wayPoint.y ) {
-                    ++m_y;
+            if ( m_data.y != wayPoint.y ) {
+                if ( m_data.y < wayPoint.y ) {
+                    ++m_data.y;
                 } else {
-                    --m_y;
+                    --m_data.y;
                 }
             }
-            if ( m_x < 0 ) {
-                m_x = 0;
-            } else if ( m_x >= terrain->width() ) {
-                m_x = terrain->width() - 1;
+            if ( m_data.x < 0 ) {
+                m_data.x = 0;
+            } else if ( m_data.x >= terrain->width() ) {
+                m_data.x = terrain->width() - 1;
             }
-            if ( m_y < 0 ) {
-                m_y = 0;
-            } else if ( m_y >= terrain->height() ) {
-                m_y = terrain->height() - 1;
+            if ( m_data.y < 0 ) {
+                m_data.y = 0;
+            } else if ( m_data.y >= terrain->height() ) {
+                m_data.y = terrain->height() - 1;
             }
-            m_z = terrain->heightMap()[m_y * terrain->width() + m_x];
-            player()->unFog( m_x, m_y, 20 );
-            if ( m_x == wayPoint.x && m_y == wayPoint.y ) {
+            m_data.z = terrain->heightMap()[m_data.y * terrain->width() + m_data.x];
+            player()->unFog( m_data.x, m_data.y, 20 );
+            if ( m_data.x == wayPoint.x && m_data.y == wayPoint.y ) {
                 m_wayPoints.pop_back();
                 return common::PlayerServerMessage::unitMsg( statusMessage() );
             }
