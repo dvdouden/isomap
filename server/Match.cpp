@@ -198,9 +198,25 @@ namespace isomap {
                     continue;
                 }
                 if ( player.second->canSee( unit ) ) {
-                    unit->subscribe( player.second );
+                    if ( !unit->isSubscribed( player.second ) ) {
+                        // set visible
+                        enqueueMessage(
+                                player.first,
+                                common::MatchServerMessage::playerMsg(
+                                        unit->player()->id(),
+                                        common::PlayerServerMessage::unitVisibleMsg( unit->data() ) ) );
+                        unit->subscribe( player.second );
+                    }
                 } else {
-                    unit->unsubscribe( player.second );
+                    if ( unit->isSubscribed( player.second ) ) {
+                        // set invisible
+                        enqueueMessage(
+                                player.first,
+                                common::MatchServerMessage::playerMsg(
+                                        unit->player()->id(),
+                                        common::PlayerServerMessage::unitInvisibleMsg( unit->id() ) ) );
+                        unit->unsubscribe( player.second );
+                    }
                 }
             }
         }

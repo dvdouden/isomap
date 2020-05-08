@@ -28,14 +28,9 @@ namespace isomap {
 
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
-            void clearRender( vl::SceneManagerActorTree* sceneManager );
-
             void render();
 
-            void setVisible( bool visible ) {
-                // TODO: actually make the structure invisible
-                m_visible = visible;
-            }
+            void setVisible( bool visible );
 
             bool visible() const {
                 return m_visible;

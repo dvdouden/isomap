@@ -76,16 +76,15 @@ void MainWindow::initEvent() {
     m_renderMatch->enableRendering();
 
     // we need to uncover this bit of terrain, otherwise construction will end up underground...
-    m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 0, 0, 10 );
     m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 10, 10, 10 );
-    m_serverMatch->getPlayer( m_clientAI->id() )->unFog( 13, 10, 10 );
+    m_serverMatch->getPlayer( m_clientAI->id() )->unFog( 30, 10, 10 );
     sendMessages();
     m_serverMatch->update();
     receiveMessages();
 
     m_clientPlayer->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ), m_structureOrientation );
-    m_clientAI->buildStructure( 13, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
+    m_clientAI->buildStructure( 30, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
 
     sendAndReceiveMessages();
     printf( "init done\n" );

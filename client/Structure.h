@@ -27,8 +27,6 @@ namespace isomap {
 
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
-            void clearRender( vl::SceneManagerActorTree* sceneManager );
-
             void render();
 
             bool occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const;
@@ -45,10 +43,7 @@ namespace isomap {
                 return m_data;
             }
 
-            void setVisible( bool visible ) {
-                // TODO: actually make the structure invisible
-                m_visible = visible;
-            }
+            void setVisible( bool visible );
 
             bool visible() const {
                 return m_visible;

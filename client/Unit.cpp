@@ -23,7 +23,7 @@ namespace isomap {
 
         Unit::~Unit() {
             for ( auto* actor : m_actors ) {
-                // TODO: make sure this actually destroys the actor
+                // this deletes the actor (reduces refcount and *poof*)
                 m_player->sceneManager()->tree()->eraseActor( actor );
             }
         }
@@ -120,7 +120,6 @@ namespace isomap {
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
                 actor->setObjectName( m_player->name() + " unit " + std::to_string( m_data.id ) + "-" +
                                       std::to_string( m_actors.size() ) );
-                sceneManager->tree()->addActor( actor );
                 m_actors.push_back( actor );
 
                 if ( geom && geom->normalArray() ) {
@@ -133,13 +132,6 @@ namespace isomap {
                 }
             }
         }
-
-        void Unit::clearRender( vl::SceneManagerActorTree* sceneManager ) {
-            for ( auto* actor : m_actors ) {
-                sceneManager->tree()->eraseActor( actor );
-            }
-        }
-
 
         void Unit::render() {
             // remember, operations are done in reverse order here
@@ -159,6 +151,16 @@ namespace isomap {
             matrix *= vl::mat4::getTranslation( 1.0 / -2.0,
                                                 1.0 / -2.0, 0 );
             m_transform->setLocalMatrix( matrix );
+        }
+
+        void Unit::setVisible( bool visible ) {
+            if ( m_visible == visible ) {
+                return;
+            }
+            m_visible = visible;
+            for ( auto* actor : m_actors ) {
+                actor->setEnabled( visible );
+            }
         }
 
     }

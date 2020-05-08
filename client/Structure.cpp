@@ -16,7 +16,7 @@ namespace isomap {
 
         Structure::~Structure() {
             for ( auto* actor : m_actors ) {
-                // TODO: make sure this actually destroys the actor
+                // this deletes the actor (reduces refcount and *poof*)
                 m_player->sceneManager()->tree()->eraseActor( actor );
             }
         }
@@ -70,7 +70,6 @@ namespace isomap {
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
                 actor->setObjectName( m_player->name() + " structure " + std::to_string( m_data.id ) + "-" +
                                       std::to_string( m_actors.size() ) );
-                sceneManager->tree()->addActor( actor );
                 m_actors.push_back( actor );
 
                 if ( geom && geom->normalArray() ) {
@@ -83,13 +82,6 @@ namespace isomap {
                 }
             }
         }
-
-        void Structure::clearRender( vl::SceneManagerActorTree* sceneManager ) {
-            for ( auto* actor : m_actors ) {
-                sceneManager->tree()->eraseActor( actor );
-            }
-        }
-
 
         void Structure::render() {
             vl::real z = (m_data.constructionProgress * 1.5) / 100.0;
@@ -128,6 +120,16 @@ namespace isomap {
                 return false; // structure above area
             }
             return true; // structure and area overlap
+        }
+
+        void Structure::setVisible( bool visible ) {
+            if ( m_visible == visible ) {
+                return;
+            }
+            m_visible = visible;
+            for ( auto* actor : m_actors ) {
+                actor->setEnabled( visible );
+            }
         }
 
     }

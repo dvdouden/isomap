@@ -50,6 +50,10 @@ namespace isomap {
 
             bool canSee( Unit* structure ) const;
 
+            Match* match() {
+                return m_match;
+            }
+
         private:
             id_t m_id;
             std::string m_name;

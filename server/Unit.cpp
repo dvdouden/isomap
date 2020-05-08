@@ -1,3 +1,4 @@
+#include "Match.h"
 #include "Player.h"
 #include "Terrain.h"
 #include "Unit.h"
@@ -63,7 +64,8 @@ namespace isomap {
             // FIXME: move height calculation to somewhere else
             m_data.z = terrain->heightMap()[tileY() * terrain->width() + tileX()] * math::fix::precision;
             if ( tileY() != oldTileY || tileX() != oldTileX ) {
-                player()->unFog( tileX(), tileY(), 20 );
+                player()->unFog( tileX(), tileY(), 10 );
+                player()->match()->updateSubscriptions( this );
             }
 
             if ( m_data.motionState == common::Stopped ) {
