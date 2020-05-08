@@ -173,6 +173,12 @@ namespace isomap {
             m_units[msg->data().id]->processMessage( msg );
         }
 
+        void Player::update() {
+            for ( auto unit : m_units ) {
+                unit.second->update();
+            }
+        }
+
 
         void Player::render() {
             // TODO: This shouldn't be done per player
@@ -243,7 +249,8 @@ namespace isomap {
 
         void Player::dumpActors() {
             for ( auto actor : m_sceneManager->tree()->actors()->vector() ) {
-                printf( "%s at %f %f %f\n", actor->objectName().c_str(), actor->transform()->worldMatrix().getT().x(), actor->transform()->worldMatrix().getT().y());
+                printf( "%s at %f %f %f\n", actor->objectName().c_str(), actor->transform()->worldMatrix().getT().x(),
+                        actor->transform()->worldMatrix().getT().y() );
             }
         }
 

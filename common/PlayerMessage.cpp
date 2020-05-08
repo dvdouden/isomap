@@ -28,6 +28,13 @@ namespace isomap {
             return msg;
         }
 
+        PlayerCommandMessage* PlayerCommandMessage::unitCommandMsg( id_t id, UnitCommandMessage* unitCommandMessage ) {
+            auto* msg = new PlayerCommandMessage( UnitCommand );
+            msg->m_id = id;
+            msg->m_unitCommandMessage = unitCommandMessage;
+            return msg;
+        }
+
 
         PlayerServerMessage* PlayerServerMessage::statusMsg() {
             auto* msg = new PlayerServerMessage( Status );

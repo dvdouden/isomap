@@ -16,11 +16,7 @@
 #include "client/Terrain.h"
 #include "client/Unit.h"
 
-#include "common/MatchMessage.h"
-#include "common/PlayerMessage.h"
 #include "common/StructureType.h"
-#include "common/TerrainMessage.h"
-#include "common/UnitMessage.h"
 #include "server/TerrainGenerator.h"
 
 
@@ -72,9 +68,6 @@ void MainWindow::initEvent() {
     m_renderMatch = m_clientPlayerMatch;
     m_renderTerrain = m_renderMatch->terrain();
     m_controllingPlayer = m_renderMatch->player();
-
-    m_clientPlayerTerrain = m_clientPlayerMatch->terrain();
-    m_clientAITerrain = m_clientAIMatch->terrain();
 
     m_clientAIMatch->initRender( rendering() );
     m_clientPlayerMatch->initRender( rendering() );
@@ -502,6 +495,9 @@ void MainWindow::updateScene() {
     sendMessages();
     m_serverMatch->update();
     receiveMessages();
+    for ( auto* match : {m_clientAIMatch, m_clientPlayerMatch} ) {
+        match->update();
+    }
 
     m_renderTerrain->updateFog();
     m_renderMatch->render();
@@ -743,10 +739,12 @@ void MainWindow::place( int x, int y ) {
     if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
         m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
     }*/
-    if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
+    /*if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
          m_renderTerrain->isVisible( x, y ) ) {
         m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
-    }
+    }*/
+
+    m_clientPlayer->getUnit( 1 )->moveTo( x, y );
 
 }
 

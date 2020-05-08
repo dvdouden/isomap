@@ -11,6 +11,7 @@ namespace isomap {
             enum Type {
                 BuildStructure,
                 BuildUnit,
+                UnitCommand,
             };
 
             explicit PlayerCommandMessage( Type type ) :
@@ -25,6 +26,8 @@ namespace isomap {
 
             static PlayerCommandMessage*
             buildUnitMsg( uint32_t x, uint32_t y, uint32_t z, id_t unitType, uint32_t orientation );
+
+            static PlayerCommandMessage* unitCommandMsg( id_t id, UnitCommandMessage* msg );
 
             id_t id() const {
                 return m_id;
@@ -46,6 +49,10 @@ namespace isomap {
                 return m_orientation;
             }
 
+            UnitCommandMessage* unitCommandMessage() const {
+                return m_unitCommandMessage;
+            }
+
         private:
             Type m_type;
 
@@ -54,6 +61,7 @@ namespace isomap {
             uint32_t m_y = 0;
             uint32_t m_z = 0;
             uint32_t m_orientation = 0;
+            UnitCommandMessage* m_unitCommandMessage = nullptr;
         };
 
 

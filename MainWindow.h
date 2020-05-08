@@ -66,11 +66,9 @@ protected:
 
     isomap::client::Match* m_clientPlayerMatch = nullptr;
     isomap::client::Player* m_clientPlayer = nullptr;
-    isomap::client::Terrain* m_clientPlayerTerrain = nullptr;
 
     isomap::client::Match* m_clientAIMatch = nullptr;
     isomap::client::Player* m_clientAI = nullptr;
-    isomap::client::Terrain* m_clientAITerrain = nullptr;
 
     isomap::client::Match* m_renderMatch = nullptr;
     isomap::client::Terrain* m_renderTerrain = nullptr;

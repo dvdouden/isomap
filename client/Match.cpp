@@ -77,6 +77,12 @@ namespace isomap {
             }
         }
 
+        void Match::update() {
+            for ( auto player : m_players ) {
+                player.second->update();
+            }
+        }
+
         void Match::registerPlayer( const std::string& name ) {
             enqueueMessage( common::MatchClientMessage::registerPlayer( m_connectionId, name ) );
         }

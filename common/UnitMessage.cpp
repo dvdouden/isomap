@@ -14,6 +14,18 @@ namespace isomap {
             msg->m_data = data;
             return msg;
         }
+
+        UnitServerMessage* UnitServerMessage::moveToMsg( const UnitData& data ) {
+            auto* msg = new UnitServerMessage( MoveTo );
+            msg->m_data = data;
+            return msg;
+        }
+
+        UnitServerMessage* UnitServerMessage::stopMsg( const UnitData& data ) {
+            auto* msg = new UnitServerMessage( Stop );
+            msg->m_data = data;
+            return msg;
+        }
     }
 }
 

@@ -2,6 +2,8 @@
 
 #include <map>
 #include "../common/types.h"
+#include "../common/PlayerMessage.h"
+#include "Match.h"
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 
@@ -31,6 +33,8 @@ namespace isomap {
             void processMessage( common::StructureServerMessage* msg );
 
             void processMessage( common::UnitServerMessage* msg );
+
+            void update();
 
             void
             buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType, uint32_t orientation );
@@ -64,7 +68,20 @@ namespace isomap {
                 return m_match;
             }
 
+            Terrain* terrain() {
+                return m_terrain;
+            }
+
             void dumpActors();
+
+
+            void enqueueMessage( common::PlayerCommandMessage* msg ) {
+                m_match->enqueueMessage( msg );
+            }
+
+            void enqueueMessage( id_t id, common::UnitCommandMessage* msg ) {
+                enqueueMessage( common::PlayerCommandMessage::unitCommandMsg( id, msg ) );
+            }
 
         private:
             Match* m_match;

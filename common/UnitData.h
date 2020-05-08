@@ -13,6 +13,10 @@ namespace isomap {
             int32_t y = 0;
             int32_t z = 0;
             uint32_t orientation = 0;
+            UnitMotionState motionState = UnitMotionState::Stopped;
+            WayPoint wayPoint = {0, 0};
+
+            void updateMotion();
         };
 
     }

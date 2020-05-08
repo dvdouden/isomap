@@ -21,6 +21,8 @@ namespace isomap {
 
             void processMessage( common::MatchServerMessage* msg );
 
+            void update();
+
             void registerPlayer( const std::string& name );
 
             void unregisterPlayer();

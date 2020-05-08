@@ -142,6 +142,13 @@ namespace isomap {
                     break;
                 }
 
+                case common::PlayerCommandMessage::UnitCommand: {
+                    // FIXME: check if unit actually exists
+                    auto* unit = m_units[msg->id()];
+                    unit->processMessage( msg->unitCommandMessage() );
+                    break;
+                }
+
                 default:
                     break;
             }

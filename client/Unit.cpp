@@ -5,6 +5,7 @@
 
 #include "Match.h"
 #include "Player.h"
+#include "Terrain.h"
 #include "Unit.h"
 #include "../common/UnitMessage.h"
 #include "../util/math.h"
@@ -27,9 +28,9 @@ namespace isomap {
             }
         }
 
-        common::UnitCommandMessage* Unit::moveTo( int32_t tileX, int32_t tileY ) {
+        void Unit::moveTo( int32_t tileX, int32_t tileY ) {
             // convert into way points
-            std::vector<common::UnitCommandMessage::WayPoint> wayPoints;
+            std::vector<common::WayPoint> wayPoints;
             do {
                 wayPoints.push_back( {tileX, tileY} );
                 if ( tileX < (m_data.x / math::fix::precision) ) {
@@ -44,7 +45,7 @@ namespace isomap {
                 }
 
             } while ( tileX != (m_data.x / math::fix::precision) || tileY != (m_data.y / math::fix::precision) );
-            return common::UnitCommandMessage::moveMsg( wayPoints );
+            m_player->enqueueMessage( id(), common::UnitCommandMessage::moveMsg( wayPoints ) );
         }
 
         void Unit::processMessage( common::UnitServerMessage* msg ) {
@@ -56,8 +57,38 @@ namespace isomap {
                     m_data = msg->data();
                     break;
 
+                case common::UnitServerMessage::MoveTo:
+                    m_data = msg->data();
+                    break;
+
+                case common::UnitServerMessage::Stop:
+                    m_data = msg->data();
+                    break;
+
                 default:
                     break;
+            }
+        }
+
+        void Unit::update() {
+            if ( m_data.motionState == common::Moving ) {
+                m_data.updateMotion();
+
+                // FIXME: move out of bounds check to somewhere else
+                if ( m_data.x < 0 ) {
+                    m_data.x = 0;
+                } else if ( m_data.x >= m_player->terrain()->width() * math::fix::precision ) {
+                    m_data.x = (m_player->terrain()->width() - 1) * math::fix::precision;
+                }
+                if ( m_data.y < 0 ) {
+                    m_data.y = 0;
+                } else if ( m_data.y >= m_player->terrain()->height() * math::fix::precision ) {
+                    m_data.y = (m_player->terrain()->height() - 1) * math::fix::precision;
+                }
+
+                // FIXME: move height calculation to somewhere else
+                m_data.z = m_player->terrain()->heightMap()[tileY() * m_player->terrain()->width() + tileX()] *
+                           math::fix::precision;
             }
         }
 
@@ -87,7 +118,8 @@ namespace isomap {
                 auto* geom = act->lod( 0 )->as<vl::Geometry>();
 
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
-                actor->setObjectName( m_player->name() + " unit " + std::to_string( m_data.id ) + "-" + std::to_string( m_actors.size() ) );
+                actor->setObjectName( m_player->name() + " unit " + std::to_string( m_data.id ) + "-" +
+                                      std::to_string( m_actors.size() ) );
                 sceneManager->tree()->addActor( actor );
                 m_actors.push_back( actor );
 
@@ -110,12 +142,22 @@ namespace isomap {
 
 
         void Unit::render() {
-            vl::mat4 matrix = vl::mat4::getTranslation(
-                    (m_data.x / math::fix::fPrecision),
-                    (m_data.y / math::fix::fPrecision),
-                    (m_data.z / math::fix::fPrecision) * ::sqrt( 2.0 / 3.0 ) / 2.0 );
+            // remember, operations are done in reverse order here
 
-            matrix *= vl::mat4::getRotation( m_data.orientation, 0, 0, 1 );
+            // 4. translate to actual position
+            vl::mat4 matrix = vl::mat4::getTranslation(
+                    vl::real( m_data.x ) / math::fix::fPrecision,
+                    vl::real( m_data.y ) / math::fix::fPrecision,
+                    vl::real( m_data.z ) / math::fix::fPrecision * ::sqrt( 2.0 / 3.0 ) / 2.0 );
+            // 3. move model back to 0,0 make sure to use new orientation
+            matrix *= vl::mat4::getTranslation( 1.0 / 2.0,
+                                                1.0 / 2.0, 0 );
+            // 2. rotate to correct orientation
+            matrix *= vl::mat4::getRotation( m_data.orientation * -1.0, 0, 0, 1 );
+
+            // 1. move model to center of model, use default orientation
+            matrix *= vl::mat4::getTranslation( 1.0 / -2.0,
+                                                1.0 / -2.0, 0 );
             m_transform->setLocalMatrix( matrix );
         }
 

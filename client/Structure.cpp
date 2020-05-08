@@ -68,7 +68,8 @@ namespace isomap {
                 auto* geom = act->lod( 0 )->as<vl::Geometry>();
 
                 vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
-                actor->setObjectName( m_player->name() + " structure " + std::to_string( m_data.id ) + "-" + std::to_string( m_actors.size() ) );
+                actor->setObjectName( m_player->name() + " structure " + std::to_string( m_data.id ) + "-" +
+                                      std::to_string( m_actors.size() ) );
                 sceneManager->tree()->addActor( actor );
                 m_actors.push_back( actor );
 
@@ -104,7 +105,8 @@ namespace isomap {
             matrix *= vl::mat4::getTranslation( m_type->footPrint( m_data.orientation )->width() / 2.0,
                                                 m_type->footPrint( m_data.orientation )->height() / 2.0, 0 );
             // 2. rotate to correct orientation
-            matrix *= vl::mat4::getRotation( -m_data.orientation * 90, 0, 0, 1 );
+            matrix *= vl::mat4::getRotation( m_data.orientation * -90.0, 0, 0, 1 );
+
             // 1. move model to center of model, use default orientation
             matrix *= vl::mat4::getTranslation( m_type->footPrint( 0 )->width() / -2.0,
                                                 m_type->footPrint( 0 )->height() / -2.0, 0 );

@@ -21,11 +21,6 @@ namespace isomap {
                 return m_type;
             }
 
-            struct WayPoint {
-                int32_t x;
-                int32_t y;
-            };
-
             const std::vector<WayPoint>& wayPoints() const {
                 return m_wayPoints;
             }
@@ -41,7 +36,9 @@ namespace isomap {
         public:
             enum Type {
                 Create,
-                Status
+                Status,
+                MoveTo,
+                Stop,
             };
 
             explicit UnitServerMessage( Type type ) :
@@ -58,6 +55,10 @@ namespace isomap {
             }
 
             static UnitServerMessage* statusMsg( const UnitData& data );
+
+            static UnitServerMessage* moveToMsg( const UnitData& data );
+
+            static UnitServerMessage* stopMsg( const UnitData& data );
 
         private:
             Type m_type;

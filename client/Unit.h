@@ -5,6 +5,7 @@
 #include "../common/UnitData.h"
 #include "../common/UnitType.h"
 #include "../common/types.h"
+#include "../util/math.h"
 
 namespace isomap {
     namespace client {
@@ -21,7 +22,9 @@ namespace isomap {
 
             void processMessage( common::UnitServerMessage* msg );
 
-            common::UnitCommandMessage* moveTo( int32_t tileX, int32_t tileY );
+            void update();
+
+            void moveTo( int32_t tileX, int32_t tileY );
 
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
@@ -53,6 +56,30 @@ namespace isomap {
 
             uint32_t z() const {
                 return m_data.z;
+            }
+
+            int32_t tileX() const {
+                return m_data.x >> math::fix::precisionBits;
+            }
+
+            int32_t tileY() const {
+                return m_data.y >> math::fix::precisionBits;
+            }
+
+            int32_t tileZ() const {
+                return m_data.z >> math::fix::precisionBits;
+            }
+
+            int32_t subTileX() const {
+                return m_data.x & math::fix::precisionMask;
+            }
+
+            int32_t subTileY() const {
+                return m_data.y & math::fix::precisionMask;
+            }
+
+            int32_t subTileZ() const {
+                return m_data.z & math::fix::precisionMask;
             }
 
         private:

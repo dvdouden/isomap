@@ -64,5 +64,16 @@ namespace isomap {
         class TerrainMessage;
 
         struct UnitData;
+
+
+        enum UnitMotionState {
+            Stopped,
+            Moving,
+        };
+
+        struct WayPoint {
+            int32_t x;
+            int32_t y;
+        };
     }
 }

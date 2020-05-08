@@ -9,14 +9,19 @@
 namespace isomap {
     namespace server {
 
+        Unit::Unit( Player* owner, int32_t x, int32_t y, int32_t z, common::UnitType* unitType,
+                    uint32_t orientation ) :
+                Object( owner ),
+                m_data( {id(), unitType->id(), x * math::fix::precision, y * math::fix::precision,
+                         z * math::fix::precision, orientation} ),
+                m_type( unitType ) {
+        }
+
+
         void Unit::processMessage( common::UnitCommandMessage* msg ) {
             switch ( msg->type() ) {
                 case common::UnitCommandMessage::Move:
-                    m_wayPoints.clear();
-                    for ( const auto& wayPoint : msg->wayPoints() ) {
-                        // TODO: fix orientation
-                        m_wayPoints.push_back( {wayPoint.x, wayPoint.y, 0} );
-                    }
+                    m_wayPoints = msg->wayPoints();
                     break;
 
                 default:
@@ -24,49 +29,51 @@ namespace isomap {
             }
         }
 
-        common::UnitServerMessage* Unit::statusMessage() {
-            return common::UnitServerMessage::statusMsg( m_data );
-        }
-
         common::PlayerServerMessage* Unit::update( Terrain* terrain ) {
-            // should probably do something with states
-            if ( m_wayPoints.empty() ) {
+            if ( m_wayPoints.empty() && m_data.motionState == common::Stopped ) {
                 return nullptr;
             }
 
+            common::PlayerServerMessage* msg = nullptr;
+            if ( m_data.motionState == common::Stopped ) {
+                m_data.motionState = common::Moving;
+                m_data.wayPoint = m_wayPoints.back();
+                m_wayPoints.pop_back();
+                msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );
+            }
+
+            int32_t oldTileX = tileX();
+            int32_t oldTileY = tileY();
+
             // let's keep things simple for now...
-            WayPoint& wayPoint = m_wayPoints.back();
-            if ( m_data.x != wayPoint.x ) {
-                if ( m_data.x < wayPoint.x ) {
-                    ++m_data.x;
-                } else {
-                    --m_data.x;
-                }
-            }
-            if ( m_data.y != wayPoint.y ) {
-                if ( m_data.y < wayPoint.y ) {
-                    ++m_data.y;
-                } else {
-                    --m_data.y;
-                }
-            }
+            m_data.updateMotion();
+
+            // FIXME: move out of bounds check to somewhere else
             if ( m_data.x < 0 ) {
                 m_data.x = 0;
-            } else if ( m_data.x >= terrain->width() ) {
-                m_data.x = terrain->width() - 1;
+            } else if ( m_data.x >= terrain->width() * math::fix::precision ) {
+                m_data.x = (terrain->width() - 1) * math::fix::precision;
             }
             if ( m_data.y < 0 ) {
                 m_data.y = 0;
-            } else if ( m_data.y >= terrain->height() ) {
-                m_data.y = terrain->height() - 1;
+            } else if ( m_data.y >= terrain->height() * math::fix::precision ) {
+                m_data.y = (terrain->height() - 1) * math::fix::precision;
             }
-            m_data.z = terrain->heightMap()[m_data.y * terrain->width() + m_data.x];
-            player()->unFog( m_data.x, m_data.y, 20 );
-            if ( m_data.x == wayPoint.x && m_data.y == wayPoint.y ) {
-                m_wayPoints.pop_back();
-                return common::PlayerServerMessage::unitMsg( statusMessage() );
+
+            // FIXME: move height calculation to somewhere else
+            m_data.z = terrain->heightMap()[tileY() * terrain->width() + tileX()] * math::fix::precision;
+            if ( tileY() != oldTileY || tileX() != oldTileX ) {
+                player()->unFog( tileX(), tileY(), 20 );
             }
-            return nullptr;
+
+            if ( m_data.motionState == common::Stopped ) {
+                // reached wayPoint
+                if ( m_wayPoints.empty() ) {
+                    delete msg;
+                    msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::stopMsg( m_data ) );
+                }
+            }
+            return msg;
 
             /*if ( getSubTileX() != 0 || getSubTileY() != 0 ) {
                 // not at a tile boundary, keep moving
