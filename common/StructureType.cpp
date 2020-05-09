@@ -19,33 +19,33 @@ namespace isomap {
             s_structureTypes[1] = new StructureType( 1,
                                                      "constructionyard",
                                                      new FootPrint( 3, 3,
-                                                                    {2, 2, 2,
-                                                                     2, 2, 2,
-                                                                     1, 1, 1} ) );
+                                                                    {3, 3, 3,
+                                                                     3, 3, 3,
+                                                                     2, 2, 2} ) );
 
             s_structureTypes[2] = new StructureType( 2,
                                                      "powerplant",
                                                      new FootPrint( 2, 3,
-                                                                    {2, 0,
-                                                                     2, 2,
-                                                                     1, 1} ) );
+                                                                    {3, 0,
+                                                                     3, 3,
+                                                                     2, 2} ) );
 
 
             s_structureTypes[3] = new StructureType( 3,
                                                      "barracks",
                                                      new FootPrint( 2, 3,
-                                                                    {2, 2,
-                                                                     2, 2,
-                                                                     1, 1} ) );
+                                                                    {3, 3,
+                                                                     3, 3,
+                                                                     2, 2} ) );
 
 
             s_structureTypes[4] = new StructureType( 4,
                                                      "refinery",
                                                      new FootPrint( 3, 4,
-                                                                    {0, 2, 0,
-                                                                     2, 2, 2,
-                                                                     2, 2, 2,
-                                                                     1, 1, 1} ) );
+                                                                    {0, 3, 0,
+                                                                     3, 3, 3,
+                                                                     3, 3, 3,
+                                                                     2, 2, 2} ) );
 
         }
 

@@ -114,38 +114,11 @@ namespace isomap {
                 return m_data.occupancyMap[y * m_width + x];
             }
 
-            void occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
-                // occupy area and clear reservation
-                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
-                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
-                        if ( footPrint->get( x, y ) != 0 ) {
-                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] =
-                                    (m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] & ~0b0000'0011u) |
-                                    0b0000'0001u;
-                        }
-                    }
-                }
-            }
+            void occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 
-            void reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
-                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
-                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
-                        if ( footPrint->get( x, y ) != 0 ) {
-                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0010u;
-                        }
-                    }
-                }
-            }
+            void reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 
-            void unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
-                for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
-                    for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
-                        if ( footPrint->get( x, y ) != 0 ) {
-                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0010u;
-                        }
-                    }
-                }
-            }
+            void unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 
             void highLight( const Area& area, const vl::fvec4& color ) {
                 m_highlightArea = area;

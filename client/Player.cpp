@@ -55,6 +55,7 @@ namespace isomap {
                     if ( m_rendering != nullptr ) {
                         str->initRender( m_rendering, m_sceneManager.get() );
                     }
+                    m_terrain->unreserve( str->x(), str->y(), str->footPrint() );
                     m_terrain->occupy( str->x(), str->y(), str->footPrint() );
                     break;
                 }

@@ -391,6 +391,18 @@ namespace isomap {
                 m_sceneManager->setEnableMask( 0xFFFFFFFF );
             }
         }
+
+        void Terrain::occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            m_data.occupy( worldX, worldY, footPrint );
+        }
+
+        void Terrain::reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            m_data.reserve( worldX, worldY, footPrint );
+        }
+
+        void Terrain::unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            m_data.unreserve( worldX, worldY, footPrint );
+        }
     }
 
 }

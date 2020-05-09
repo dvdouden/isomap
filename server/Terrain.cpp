@@ -118,27 +118,11 @@ namespace isomap {
         }
 
         void Terrain::occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
-            // occupy area
-            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
-                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
-                    if ( footPrint->get( x, y ) != 0 ) {
-                        m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0001u;
-                    }
-                }
-            }
-            m_data.updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+            m_data.occupy( worldX, worldY, footPrint );
         }
 
         void Terrain::vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
-            // vacate area
-            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
-                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
-                    if ( footPrint->get( x, y ) != 0 ) {
-                        m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0001u;
-                    }
-                }
-            }
-            m_data.updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+            m_data.vacate( worldX, worldY, footPrint );
         }
 
     }

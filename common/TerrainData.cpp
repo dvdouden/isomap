@@ -1,4 +1,5 @@
 #include <list>
+#include "FootPrint.h"
 #include "TerrainData.h"
 
 namespace isomap {
@@ -21,6 +22,53 @@ namespace isomap {
             delete[] oreMap;
             delete[] occupancyMap;
             delete[] pathMap;
+        }
+
+        void TerrainData::occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // occupy area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    uint8_t footPrintBits = footPrint->get( x, y );
+                    if ( footPrintBits != 0 ) {
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |= footPrintBits & 0b0000'0011u;
+                    }
+                }
+            }
+            updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+        }
+
+        void TerrainData::vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // vacate area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    if ( footPrint->get( x, y ) != 0 ) {
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~0b0000'0011u;
+                    }
+                }
+            }
+            updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+        }
+
+        void TerrainData::reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // reserve area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    if ( footPrint->get( x, y ) != 0 ) {
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |= 0b0000'0100u;
+                    }
+                }
+            }
+        }
+
+        void TerrainData::unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // unreserve area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    if ( footPrint->get( x, y ) != 0 ) {
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~0b0000'0100u;
+                    }
+                }
+            }
         }
 
         void TerrainData::updatePathMap() {
