@@ -56,6 +56,11 @@ namespace isomap {
             return msg;
         }
 
+        MatchServerMessage* MatchServerMessage::initTerrain( uint32_t width, uint32_t height ) {
+            auto* msg = new MatchServerMessage( InitTerrain );
+            msg->m_terrainMessage = TerrainMessage::createMsg( width, height );
+            return msg;
+        }
 
         MatchServerMessage*
         MatchServerMessage::matchStarted() {

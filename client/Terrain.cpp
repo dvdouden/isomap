@@ -12,29 +12,27 @@
 namespace isomap {
     namespace client {
 
+
+        Terrain::Terrain( uint32_t width, uint32_t height ) :
+                m_width( width ),
+                m_height( height ),
+                m_data( width, height ) {
+            m_fogMap = new uint8_t[m_width * m_height]();
+            m_fogUpdateMapWidth = (m_width + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
+            m_fogUpdateMapHeight = (m_height + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
+            m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight]();
+        }
+
         void Terrain::processMessage( isomap::common::TerrainMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
             switch ( msg->type() ) {
-                case common::TerrainMessage::Create:
-                    m_width = msg->width();
-                    m_height = msg->height();
-                    m_heightMap = new uint8_t[m_width * m_height]();
-                    m_slopeMap = new uint8_t[m_width * m_height]();
-                    m_oreMap = new uint8_t[m_width * m_height]();
-                    m_fogMap = new uint8_t[m_width * m_height]();
-                    m_fogUpdateMapWidth = (m_width + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
-                    m_fogUpdateMapHeight = (m_height + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
-                    m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight]();
-                    m_occupancyMap = new uint8_t[m_width * m_height]();
-                    break;
-
                 case common::TerrainMessage::Update:
                     for ( const auto& cell : msg->cells() ) {
-                        m_heightMap[cell.id] = cell.height;
-                        m_oreMap[cell.id] = cell.ore;
-                        m_slopeMap[cell.id] = cell.slope;
+                        m_data.heightMap[cell.id] = cell.height;
+                        m_data.oreMap[cell.id] = cell.ore;
+                        m_data.slopeMap[cell.id] = cell.slope;
                         m_fogMap[cell.id] = 255;
                         uint32_t x = cell.id % m_width;
                         uint32_t y = cell.id / m_height;
@@ -86,8 +84,8 @@ namespace isomap {
                     c = 2;
                 }
             }
-            return m_heightMap[y * m_width + x] -
-                   (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
+            return m_data.heightMap[y * m_width + x] -
+                   (uint8_t( m_data.slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
         }
 
         void Terrain::render() {
@@ -111,9 +109,9 @@ namespace isomap {
                         continue;
                     }
 
-                    uint8_t h = m_heightMap[idx];
-                    uint8_t slope = m_slopeMap[idx];
-                    uint8_t ore = m_oreMap[idx];
+                    uint8_t h = m_data.heightMap[idx];
+                    uint8_t slope = m_data.slopeMap[idx];
+                    uint8_t ore = m_data.oreMap[idx];
 
                     uint8_t ha = h - (slope & 0b0000'0001u);
                     slope >>= 1u;
@@ -184,22 +182,22 @@ namespace isomap {
                     }
 
                     if ( m_renderOccupancy ) {
-                        if ( m_occupancyMap[idx] == 0 ) {
+                        if ( m_data.occupancyMap[idx] == 0 ) {
                             // free
                             r = 0;
                             g = 128;
                             b = 0;
-                        } else if ( m_occupancyMap[idx] == 1 ) {
+                        } else if ( m_data.occupancyMap[idx] == 1 ) {
                             // occupied
                             r = 128;
                             g = 0;
                             b = 0;
-                        } else if ( m_occupancyMap[idx] == 2 ) {
+                        } else if ( m_data.occupancyMap[idx] == 2 ) {
                             // reserved
                             r = 128;
                             g = 128;
                             b = 0;
-                        } else if ( m_occupancyMap[idx] == 3 ) {
+                        } else if ( m_data.occupancyMap[idx] == 3 ) {
                             // reserved and occupied? :/
                             r = 128;
                             g = 64;

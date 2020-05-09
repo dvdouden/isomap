@@ -17,8 +17,7 @@ namespace isomap {
         Player::Player( Match* match, id_t id, std::string name ) :
                 m_match( match ),
                 m_id( id ),
-                m_name( std::move( name ) ),
-                m_terrain( match->terrain() ) {
+                m_name( std::move( name ) ) {
             m_color = vl::fvec4(
                     ((id >> 24u) & 0xFFu) / 255.0,
                     ((id >> 16u) & 0xFFu) / 255.0,
@@ -252,6 +251,10 @@ namespace isomap {
                 printf( "%s at %f %f %f\n", actor->objectName().c_str(), actor->transform()->worldMatrix().getT().x(),
                         actor->transform()->worldMatrix().getT().y() );
             }
+        }
+
+        void Player::startMatch() {
+            m_terrain = m_match->terrain();
         }
 
     }

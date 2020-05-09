@@ -36,7 +36,7 @@ namespace isomap {
         private:
             id_t m_id;
             Player* m_player;
-            std::set<id_t> m_subscriptions;
+            std::set<id_t> m_subscribers;
 
         };
     }

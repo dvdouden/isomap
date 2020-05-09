@@ -28,6 +28,8 @@ namespace isomap {
                 return m_name;
             }
 
+            void startMatch();
+
             void processMessage( common::PlayerServerMessage* msg );
 
             void processMessage( common::StructureServerMessage* msg );

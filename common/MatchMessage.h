@@ -57,6 +57,7 @@ namespace isomap {
                 PlayerRejected,
                 PlayerJoined,
                 PlayerLeft,
+                InitTerrain,
                 MatchStarted,
                 MatchUpdate,
                 PlayerMessage,
@@ -71,6 +72,8 @@ namespace isomap {
             static MatchServerMessage* playerJoined( id_t joinedId, const std::string& joinedName );
 
             static MatchServerMessage* playerLeft( id_t leftId );
+
+            static MatchServerMessage* initTerrain( uint32_t width, uint32_t height );
 
             static MatchServerMessage* matchStarted();
 

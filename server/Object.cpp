@@ -13,16 +13,15 @@ namespace isomap {
         }
 
         bool Object::isSubscribed( Player* player ) const {
-            return player == m_player ||
-                   m_subscriptions.find( player->id() ) != m_subscriptions.cend();
+            return player == m_player || m_subscribers.find( player->id() ) != m_subscribers.cend();
         }
 
         void Object::subscribe( Player* player ) {
-            m_subscriptions.insert( player->id() );
+            m_subscribers.insert( player->id() );
         }
 
         void Object::unsubscribe( Player* player ) {
-            m_subscriptions.erase( player->id() );
+            m_subscribers.erase( player->id() );
         }
     }
 }

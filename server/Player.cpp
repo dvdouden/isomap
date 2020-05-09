@@ -157,7 +157,6 @@ namespace isomap {
 
         void Player::setTerrain( Terrain* terrain ) {
             m_terrain = terrain;
-            m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->createMessage() ) );
         }
 
         bool Player::canSee( Structure* structure ) const {

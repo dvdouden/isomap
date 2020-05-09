@@ -132,11 +132,11 @@ namespace isomap {
         }
 
         int32_t Unit::speedX( int32_t speed, int32_t orientation ) const {
-            return static_cast<int32_t>(speed * ::cos( (orientation * math::fPi) / 65536.0f ) );
+            return static_cast<int32_t>(speed * ::cosf( (orientation * math::fPi) / 65536.0f ) );
         }
 
         int32_t Unit::speedY( int32_t speed, int32_t orientation ) const {
-            return static_cast<int32_t>(speed * ::sin( (orientation * math::fPi) / 65536.0f ) );
+            return static_cast<int32_t>(speed * ::sinf( (orientation * math::fPi) / 65536.0f ) );
         }
     }
 }

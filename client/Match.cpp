@@ -2,12 +2,13 @@
 #include "Player.h"
 #include "Terrain.h"
 #include "../common/MatchMessage.h"
+#include "../common/TerrainMessage.h"
 
 namespace isomap {
     namespace client {
         Match::Match( id_t connectionID ) :
                 m_connectionId( connectionID ) {
-            m_terrain = new Terrain();
+
         }
 
         Match::~Match() {
@@ -48,9 +49,17 @@ namespace isomap {
                     break;
                 }
 
+                case common::MatchServerMessage::InitTerrain: {
+                    // TODO: add sanity checks
+                    m_terrain = new Terrain( msg->terrainMsg()->width(), msg->terrainMsg()->height() );
+                }
+
                 case common::MatchServerMessage::MatchStarted: {
                     // TODO: add sanity checks
                     m_started = true;
+                    for ( auto player : m_players ) {
+                        player.second->startMatch();
+                    }
                     break;
                 }
 

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../common/types.h"
+#include "../common/TerrainData.h"
 
 namespace isomap {
     namespace server {
@@ -25,16 +26,26 @@ namespace isomap {
             }
 
             uint8_t* heightMap() const {
-                return m_heightMap;
+                return m_data.heightMap;
             }
 
             uint8_t* slopeMap() const {
-                return m_slopeMap;
+                return m_data.slopeMap;
             }
 
             uint8_t* oreMap() const {
-                return m_oreMap;
+                return m_data.oreMap;
             }
+
+            uint8_t* occupancyMap() const {
+                return m_data.occupancyMap;
+            }
+
+            uint8_t* pathMap() const {
+                return m_data.pathMap;
+            }
+
+            void init();
 
             void addStructure( Structure* structure );
 
@@ -44,8 +55,6 @@ namespace isomap {
 
             void removeUnit( Unit* unit );
 
-            common::TerrainMessage* createMessage() const;
-
             common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
 
             common::TerrainMessage* uncoverAll() const;
@@ -54,13 +63,16 @@ namespace isomap {
 
             Unit* getUnitAt( uint32_t x, uint32_t y );
 
+            void occupy( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
+
+            void vacate( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
+
         private:
+
             uint32_t m_width;
             uint32_t m_height;
 
-            uint8_t* m_heightMap = nullptr;
-            uint8_t* m_slopeMap = nullptr;
-            uint8_t* m_oreMap = nullptr;
+            common::TerrainData m_data;
 
             uint32_t m_chunkSize = 16;
             std::vector<Structure*>* m_structures;

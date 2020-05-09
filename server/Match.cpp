@@ -136,8 +136,11 @@ namespace isomap {
         void Match::start() {
             m_started = true;
             m_time = 0;
+            m_terrain->init();
             for ( auto player : m_players ) {
                 player.second->init();
+                enqueueMessage( player.first,
+                                common::MatchServerMessage::initTerrain( m_terrain->width(), m_terrain->height() ) );
                 enqueueMessage( player.first, common::MatchServerMessage::matchStarted() );
             }
         }

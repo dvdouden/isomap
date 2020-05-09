@@ -3,6 +3,7 @@
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 #include "../common/FootPrint.h"
+#include "../common/TerrainData.h"
 #include "../common/types.h"
 
 namespace isomap {
@@ -49,7 +50,7 @@ namespace isomap {
                 }
             };
 
-            Terrain() = default;
+            Terrain( uint32_t width, uint32_t height );
 
             ~Terrain() = default;
 
@@ -68,15 +69,23 @@ namespace isomap {
             }
 
             uint8_t* heightMap() const {
-                return m_heightMap;
+                return m_data.heightMap;
             }
 
             uint8_t* slopeMap() const {
-                return m_slopeMap;
+                return m_data.slopeMap;
             }
 
             uint8_t* oreMap() const {
-                return m_oreMap;
+                return m_data.oreMap;
+            }
+
+            uint8_t* occupancyMap() const {
+                return m_data.occupancyMap;
+            }
+
+            uint8_t* pathMap() const {
+                return m_data.pathMap;
             }
 
             void initRender( vl::RenderingAbstract* rendering );
@@ -102,7 +111,7 @@ namespace isomap {
             }
 
             uint8_t occupied( uint32_t x, uint32_t y ) const {
-                return m_occupancyMap[y * m_width + x];
+                return m_data.occupancyMap[y * m_width + x];
             }
 
             void occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
@@ -110,8 +119,8 @@ namespace isomap {
                 for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                     for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                         if ( footPrint->get( x, y ) != 0 ) {
-                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] =
-                                    (m_occupancyMap[(y + worldY) * m_width + (x + worldX)] & ~0b0000'0011u) |
+                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] =
+                                    (m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] & ~0b0000'0011u) |
                                     0b0000'0001u;
                         }
                     }
@@ -122,7 +131,7 @@ namespace isomap {
                 for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                     for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                         if ( footPrint->get( x, y ) != 0 ) {
-                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0010u;
+                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0010u;
                         }
                     }
                 }
@@ -132,7 +141,7 @@ namespace isomap {
                 for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                     for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                         if ( footPrint->get( x, y ) != 0 ) {
-                            m_occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0010u;
+                            m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0010u;
                         }
                     }
                 }
@@ -145,7 +154,7 @@ namespace isomap {
             }
 
             void addHighlight( const Area& area, const vl::fvec4& color ) {
-                m_highLightAreas.push_back( std::pair<Area, vl::fvec4>( area, color ) );
+                m_highLightAreas.emplace_back( area, color );
             }
 
             void clearHighlight() {
@@ -153,8 +162,8 @@ namespace isomap {
             }
 
             uint8_t getCorner( uint32_t x, uint32_t y, uint32_t c ) const {
-                return m_heightMap[y * m_width + x] -
-                       (uint8_t( m_slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
+                return m_data.heightMap[y * m_width + x] -
+                       (uint8_t( m_data.slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
             }
 
         private:
@@ -166,12 +175,10 @@ namespace isomap {
             uint32_t m_fogUpdateMapWidth = 0;
             uint32_t m_fogUpdateMapHeight = 0;
 
-            uint8_t* m_heightMap = nullptr;
-            uint8_t* m_slopeMap = nullptr;
-            uint8_t* m_oreMap = nullptr;
+            common::TerrainData m_data;
+
             uint8_t* m_fogMap = nullptr;
             uint8_t* m_fogUpdateMap = nullptr;
-            uint8_t* m_occupancyMap = nullptr;
 
             bool m_renderFog = false;
             bool m_renderHighlight = false;

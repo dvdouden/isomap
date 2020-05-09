@@ -8,31 +8,26 @@ namespace isomap {
 
         Terrain::Terrain( uint32_t width, uint32_t height ) :
                 m_width( width ),
-                m_height( height ) {
-            m_heightMap = new uint8_t[m_width * m_height];
-            m_slopeMap = new uint8_t[m_width * m_height];
-            m_oreMap = new uint8_t[m_width * m_height];
+                m_height( height ),
+                m_data( width, height ) {
             m_structures = new std::vector<Structure*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
             m_units = new std::vector<Unit*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
         }
 
         Terrain::~Terrain() {
-            delete[] m_heightMap;
-            delete[] m_slopeMap;
-            delete[] m_oreMap;
             delete[] m_structures;
             delete[] m_units;
         }
 
-        common::TerrainMessage* Terrain::createMessage() const {
-            return common::TerrainMessage::createMsg( m_width, m_height );
+        void Terrain::init() {
+            m_data.updatePathMap();
         }
 
         common::TerrainMessage* Terrain::updateMessage( const std::vector<uint32_t>& ids ) const {
             std::vector<common::TerrainMessage::Cell> cells;
             cells.reserve( ids.size() );
             for ( auto id : ids ) {
-                cells.push_back( {id, m_heightMap[id], m_slopeMap[id], m_oreMap[id]} );
+                cells.push_back( {id, m_data.heightMap[id], m_data.slopeMap[id], m_data.oreMap[id]} );
             }
             return common::TerrainMessage::updateMsg( cells );
         }
@@ -41,7 +36,7 @@ namespace isomap {
             std::vector<common::TerrainMessage::Cell> cells;
             cells.reserve( m_width * m_height );
             for ( uint32_t id = 0; id < m_width * m_height; ++id ) {
-                cells.push_back( {id, m_heightMap[id], m_slopeMap[id], m_oreMap[id]} );
+                cells.push_back( {id, m_data.heightMap[id], m_data.slopeMap[id], m_data.oreMap[id]} );
             }
             return common::TerrainMessage::updateMsg( cells );
         }
@@ -50,6 +45,7 @@ namespace isomap {
             for ( uint32_t chunk : getChunks( structure ) ) {
                 m_structures[chunk].push_back( structure );
             }
+            occupy( structure->x(), structure->y(), structure->footPrint() );
         }
 
         void Terrain::removeStructure( Structure* structure ) {
@@ -61,8 +57,8 @@ namespace isomap {
                     }
                 }
             }
+            vacate( structure->x(), structure->y(), structure->footPrint() );
         }
-
 
         void Terrain::addUnit( Unit* unit ) {
             m_units[getChunk( unit->tileX(), unit->tileY() )].push_back( unit );
@@ -99,6 +95,9 @@ namespace isomap {
         }
 
         Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
+            if ( (m_data.occupancyMap[y * m_width + x] & 0b0000'0001u) == 0 ) {
+                return nullptr;
+            }
             uint32_t chunk = getChunk( x, y );
             for ( Structure* structure : m_structures[chunk] ) {
                 if ( structure->occupies( x, y ) ) {
@@ -117,5 +116,30 @@ namespace isomap {
             }
             return nullptr;
         }
+
+        void Terrain::occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // occupy area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    if ( footPrint->get( x, y ) != 0 ) {
+                        m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] |= 0b0000'0001u;
+                    }
+                }
+            }
+            m_data.updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+        }
+
+        void Terrain::vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            // vacate area
+            for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
+                for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
+                    if ( footPrint->get( x, y ) != 0 ) {
+                        m_data.occupancyMap[(y + worldY) * m_width + (x + worldX)] &= ~0b0000'0001u;
+                    }
+                }
+            }
+            m_data.updatePathMap( worldX, worldY, footPrint->width(), footPrint->height() );
+        }
+
     }
 }
