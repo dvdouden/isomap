@@ -7,21 +7,13 @@ namespace isomap {
             if ( motionState == Stopped ) {
                 return;
             }
+            int32_t dX = wayPoint.x * math::fix::precision - x;
+            int32_t dY = wayPoint.y * math::fix::precision - y;
+            orientation = getOrientation( dX, dY );
+            getMotion( dX, dY, orientation );
+            x += dX * math::fix::precision / 16;
+            y += dY * math::fix::precision / 16;
 
-            if ( x != wayPoint.x * math::fix::precision ) {
-                if ( x < wayPoint.x * math::fix::precision ) {
-                    x += math::fix::precision / 16;
-                } else {
-                    x -= math::fix::precision / 16;
-                }
-            }
-            if ( y != wayPoint.y * math::fix::precision ) {
-                if ( y < wayPoint.y * math::fix::precision ) {
-                    y += math::fix::precision / 16;
-                } else {
-                    y -= math::fix::precision / 16;
-                }
-            }
             // FIXME: bounds checking!
             /*
             if ( x < 0 ) {
@@ -40,6 +32,75 @@ namespace isomap {
             //player()->unFog( m_data.x/  math::fix::precision, m_data.y/  math::fix::precision, 20 );
             if ( x == wayPoint.x * math::fix::precision && y == wayPoint.y * math::fix::precision ) {
                 motionState = common::Stopped;
+            }
+        }
+
+        uint32_t UnitData::getOrientation( int32_t dX, int32_t dY ) {
+            if ( dY > 0 ) {
+                if ( dX > 0 ) {
+                    return 1;
+                } else if ( dX == 0 ) {
+                    return 0;
+                } else {
+                    return 7;
+                }
+            } else if ( dY == 0 ) {
+                if ( dX > 0 ) {
+                    return 2;
+                } else if ( dX == 0 ) {
+                    return 8; // yeah, I don't know either...
+                } else {
+                    return 6;
+                }
+            } else {
+                if ( dX > 0 ) {
+                    return 3;
+                } else if ( dX == 0 ) {
+                    return 4;
+                } else {
+                    return 5;
+                }
+            }
+        }
+
+        void UnitData::getMotion( int32_t& dX, int32_t& dY, uint32_t orientation ) {
+            switch ( orientation ) {
+                case 0:
+                    dX = 0;
+                    dY = 1;
+                    break;
+                case 1:
+                    dX = 1;
+                    dY = 1;
+                    break;
+                case 2:
+                    dX = 1;
+                    dY = 0;
+                    break;
+                case 3:
+                    dX = 1;
+                    dY = -1;
+                    break;
+                case 4:
+                    dX = 0;
+                    dY = -1;
+                    break;
+                case 5:
+                    dX = -1;
+                    dY = -1;
+                    break;
+                case 6:
+                    dX = -1;
+                    dY = 0;
+                    break;
+                case 7:
+                    dX = -1;
+                    dY = 1;
+                    break;
+                default:
+                    dX = 0;
+                    dY = 0;
+                    break;
             }
         }
     }

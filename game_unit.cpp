@@ -7,101 +7,6 @@
 
 namespace isomap {
 
-    game_unit::game_unit( vl::RenderingAbstract* rendering, game_map* world ) :
-            m_world( world ) {
-        m_transform = new vl::Transform;
-        rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
-
-        m_geom = vl::makeBox( vl::vec3( 0, 0, 0 ), 1, 1, 1 );
-        m_geom->computeNormals();
-
-        m_effect = new vl::Effect;
-        m_effect->shader()->gocMaterial()->setColorMaterialEnabled( true );
-        m_effect->shader()->gocMaterial()->setDiffuse( vl::crimson );
-        m_effect->shader()->enable( vl::EN_DEPTH_TEST );
-        m_effect->shader()->enable( vl::EN_LIGHTING );
-        m_effect->lod( 0 )->push_back( new vl::Shader );
-        m_effect->shader( 0, 1 )->enable( vl::EN_BLEND );
-        //m_effect->shader(0,1)->enable(vl::EN_LINE_SMOOTH);
-        m_effect->shader( 0, 1 )->enable( vl::EN_DEPTH_TEST );
-        m_effect->shader( 0, 1 )->enable( vl::EN_POLYGON_OFFSET_LINE );
-        m_effect->shader( 0, 1 )->gocPolygonOffset()->set( -1.0f, -1.0f );
-        m_effect->shader( 0, 1 )->gocPolygonMode()->set( vl::PM_LINE, vl::PM_LINE );
-        m_effect->shader( 0, 1 )->gocColor()->setValue( vl::lightgreen );
-        m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
-        m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
-
-
-        vl::ref<vl::SceneManagerActorTree> scene_manager = new vl::SceneManagerActorTree;
-        scene_manager->setCullingEnabled( false );
-        rendering->as<vl::Rendering>()->sceneManagers()->push_back( scene_manager.get() );
-        scene_manager->tree()->addActor( m_geom.get(), m_effect.get(), m_transform.get() );
-    }
-
-    void game_unit::setPosition( int x, int y, int z ) {
-        m_x = x;
-        m_y = y;
-        m_z = z;
-    }
-
-    unsigned char getDirection( int x, int y ) {
-        if ( x == 1 && y == 0 ) {
-            return 3;
-        } else if ( x == 1 && y == 1 ) {
-            return 4;
-        } else if ( x == 0 && y == 1 ) {
-            return 5;
-        } else if ( x == -1 && y == 1 ) {
-            return 6;
-        } else if ( x == -1 && y == 0 ) {
-            return 7;
-        } else if ( x == -1 && y == -1 ) {
-            return 0;
-        } else if ( x == 0 && y == -1 ) {
-            return 1;
-        } else if ( x == 1 && y == -1 ) {
-            return 2;
-        }
-        return 0;
-    }
-
-    void getMotion( unsigned char direction, int& x, int& y ) {
-        switch ( direction ) {
-            default:
-            case 3:
-                x = 1;
-                y = 0;
-                break;
-            case 4:
-                x = 1;
-                y = 1;
-                break;
-            case 5:
-                x = 0;
-                y = 1;
-                break;
-            case 6:
-                x = -1;
-                y = 1;
-                break;
-            case 7:
-                x = -1;
-                y = 0;
-                break;
-            case 0:
-                x = -1;
-                y = -1;
-                break;
-            case 1:
-                x = 0;
-                y = -1;
-                break;
-            case 2:
-                x = 1;
-                y = -1;
-                break;
-        }
-    }
 
     bool game_unit::hasReachedTarget() const {
         real intx, inty;
@@ -195,9 +100,6 @@ namespace isomap {
             }
         }
 
-        vl::mat4 matrix = vl::mat4::getTranslation( m_x + 0.5, m_y + 0.5, 0.5 + m_z * ::sqrt( 2.0 / 3.0 ) / 2.0 );
-        matrix *= vl::mat4::getRotation( m_orientation - 135, 0, 0, 1 );
-        m_transform->setLocalMatrix( matrix );
     }
 
     void game_unit::moveTo( int x, int y ) {
@@ -339,16 +241,5 @@ namespace isomap {
         delete[] tmp;
     }
 
-    void game_unit::updateWorldSize() {
-        if ( ((int)m_x) >= m_world->width() ) {
-            m_x = m_world->width() - 1;
-        }
-        if ( ((int)m_y) >= m_world->height() ) {
-            m_y = m_world->height() - 1;
-        }
-        m_targetX = m_x;
-        m_targetY = m_y;
-        m_wayPoints.clear();
-    }
 
 }

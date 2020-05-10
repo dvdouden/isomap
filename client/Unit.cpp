@@ -145,7 +145,7 @@ namespace isomap {
             matrix *= vl::mat4::getTranslation( 1.0 / 2.0,
                                                 1.0 / 2.0, 0 );
             // 2. rotate to correct orientation
-            matrix *= vl::mat4::getRotation( m_data.orientation * -1.0, 0, 0, 1 );
+            matrix *= vl::mat4::getRotation( m_data.orientation * -45.0, 0, 0, 1 );
 
             // 1. move model to center of model, use default orientation
             matrix *= vl::mat4::getTranslation( 1.0 / -2.0,

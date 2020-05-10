@@ -16,6 +16,10 @@ namespace isomap {
             UnitMotionState motionState = UnitMotionState::Stopped;
             WayPoint wayPoint = {0, 0};
 
+            uint32_t getOrientation( int32_t dX, int32_t dY );
+
+            void getMotion( int32_t& dX, int32_t& dY, uint32_t orientation );
+
             void updateMotion();
         };
 

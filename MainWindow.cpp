@@ -3,9 +3,6 @@
 
 #include "MainWindow.h"
 
-#include "game_map.h"
-#include "game_unit.h"
-
 #include "server/Match.h"
 #include "server/Player.h"
 #include "server/Terrain.h"
@@ -723,13 +720,52 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
-    auto* structureType = isomap::common::StructureType::get( m_structureType );
+    /*auto* structureType = isomap::common::StructureType::get( m_structureType );
     if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
         m_renderTerrain->highLight(
                 isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
     } else {
         m_renderTerrain->highLight(
                 isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
+    }*/
+    if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+        uint8_t pathBits = m_renderTerrain->pathMap()[y * m_renderTerrain->width() + x];
+        if ( y < m_renderTerrain->height() - 1 ) {
+            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y + 1, 1, 1 ),
+                                           (pathBits & isomap::common::path::bitUp) != 0 ? vl::green : vl::red );
+            if ( x > 0 ) {
+                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y + 1, 1, 1 ),
+                                               (pathBits & isomap::common::path::bitUpLeft) != 0 ? vl::green
+                                                                                                 : vl::red );
+            }
+            if ( x < m_renderTerrain->width() - 1 ) {
+                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y + 1, 1, 1 ),
+                                               (pathBits & isomap::common::path::bitUpRight) != 0 ? vl::green
+                                                                                                  : vl::red );
+            }
+        }
+        if ( y > 0 ) {
+            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y - 1, 1, 1 ),
+                                           (pathBits & isomap::common::path::bitDown) != 0 ? vl::green : vl::red );
+            if ( x > 0 ) {
+                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y - 1, 1, 1 ),
+                                               (pathBits & isomap::common::path::bitDownLeft) != 0 ? vl::green
+                                                                                                   : vl::red );
+            }
+            if ( x < m_renderTerrain->width() - 1 ) {
+                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y - 1, 1, 1 ),
+                                               (pathBits & isomap::common::path::bitDownRight) != 0 ? vl::green
+                                                                                                    : vl::red );
+            }
+        }
+        if ( x > 0 ) {
+            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y, 1, 1 ),
+                                           (pathBits & isomap::common::path::bitLeft) != 0 ? vl::green : vl::red );
+        }
+        if ( x < m_renderTerrain->width() - 1 ) {
+            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y, 1, 1 ),
+                                           (pathBits & isomap::common::path::bitRight) != 0 ? vl::green : vl::red );
+        }
     }
 }
 

@@ -39,6 +39,7 @@ namespace isomap {
                         uint32_t fogX = x / m_fogUpdateMapScale;
                         uint32_t fogY = y / m_fogUpdateMapScale;
                         m_fogUpdateMap[fogY * m_fogUpdateMapWidth + fogX] = 1;
+                        m_data.updatePathMap( x, y, 1, 1 );
                     }
                     break;
 
