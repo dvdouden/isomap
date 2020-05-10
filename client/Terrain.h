@@ -131,6 +131,7 @@ namespace isomap {
             }
 
             void clearHighlight() {
+                m_renderHighlight = false;
                 m_highLightAreas.clear();
             }
 

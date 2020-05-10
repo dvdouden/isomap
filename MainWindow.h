@@ -15,6 +15,8 @@ public:
 
     void keyPressEvent( unsigned short, vl::EKey ) override;
 
+    void keyReleaseEvent( unsigned short, vl::EKey ) override;
+
     void resizeEvent( int w, int h ) override;
 
     void updateScene() override;
@@ -40,11 +42,25 @@ public:
     void focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y );
 
 protected:
+
+    enum Mode {
+        PlaceStructure,
+        DeleteStructure,
+        PlaceUnit,
+        DeleteUnit,
+        SelectUnit,
+        MoveUnit,
+    };
+
     void updateProjection();
 
     void updateCamera();
 
     void regenerateMap();
+
+    void renderPathMap( int x, int y );
+
+    void renderStructurePlacement( int x, int y );
 
     vl::real m_zoom;
     int m_zoomLevel;
@@ -77,6 +93,8 @@ protected:
 
     vl::ref<vl::Text> m_text;
 
+    Mode m_mode = PlaceStructure;
+
     int m_structureType = 1;
     int m_structureOrientation = 0;
 
@@ -89,6 +107,10 @@ protected:
     void sendAndReceiveMessages();
 
     bool isBelow( int dx, int dy, int x0, int y0, int x1, int y1 );
+
+    const char* getModeName() const;
+
+
 };
 
 

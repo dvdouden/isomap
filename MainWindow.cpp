@@ -5,6 +5,7 @@
 
 #include "server/Match.h"
 #include "server/Player.h"
+#include "server/Structure.h"
 #include "server/Terrain.h"
 #include "server/Unit.h"
 
@@ -359,14 +360,53 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
 
         case vl::Key_A:
             m_structureOrientation--;
+            if ( m_structureOrientation < 0 ) {
+                m_structureOrientation += 4;
+            }
             break;
 
         case vl::Key_S:
             m_structureOrientation++;
+            if ( m_structureOrientation >= 4 ) {
+                m_structureOrientation -= 4;
+            }
+            break;
+
+        case vl::Key_B:
+            m_mode = PlaceStructure;
+            break;
+
+        case vl::Key_V:
+            m_mode = DeleteStructure;
+            break;
+
+        case vl::Key_M:
+            m_mode = MoveUnit;
+            break;
+
+        case vl::Key_G:
+            m_mode = PlaceUnit;
+            break;
+
+        case vl::Key_F:
+            m_mode = DeleteUnit;
             break;
 
         default:
             Applet::keyPressEvent( ch, key );
+            break;
+    }
+}
+
+void MainWindow::keyReleaseEvent( unsigned short ch, vl::EKey key ) {
+    switch ( key ) {
+        // we want to use these keys for other purposes (and it'll break stuff if we let the default behavior kick in)
+        case vl::Key_F: // camera controls
+        case vl::Key_T: // don't touch my camera!
+            break;
+
+        default:
+            Applet::keyReleaseEvent( ch, key );
             break;
     }
 }
@@ -720,14 +760,43 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
-    /*auto* structureType = isomap::common::StructureType::get( m_structureType );
-    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-        m_renderTerrain->highLight(
-                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
-    } else {
-        m_renderTerrain->highLight(
-                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
-    }*/
+    switch ( m_mode ) {
+        case PlaceStructure:
+            renderStructurePlacement( x, y );
+            break;
+
+        case DeleteStructure:
+            // FIXME: shouldn't be using server structure here but client...
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* structure = m_serverMatch->terrain()->getStructureAt( x, y );
+                if ( structure != nullptr ) {
+                    m_renderTerrain->highLight(
+                            isomap::client::Terrain::Area( structure->x(), structure->y(), structure->footPrint() ),
+                            structure->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                } else {
+                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                }
+            }
+            break;
+
+        case PlaceUnit:
+            break;
+
+        case DeleteUnit:
+            break;
+
+        case SelectUnit:
+            break;
+
+        case MoveUnit:
+            renderPathMap( x, y );
+            break;
+    }
+
+}
+
+
+void MainWindow::renderPathMap( int x, int y ) {
     if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
         uint8_t pathBits = m_renderTerrain->pathMap()[y * m_renderTerrain->width() + x];
         if ( y < m_renderTerrain->height() - 1 ) {
@@ -767,20 +836,51 @@ void MainWindow::highlight( int x, int y ) {
                                            (pathBits & isomap::common::path::bitRight) != 0 ? vl::green : vl::red );
         }
     }
+
+}
+
+void MainWindow::renderStructurePlacement( int x, int y ) {
+    auto* structureType = isomap::common::StructureType::get( m_structureType );
+    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+        m_renderTerrain->highLight(
+                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
+    } else {
+        m_renderTerrain->highLight(
+                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
+    }
 }
 
 void MainWindow::place( int x, int y ) {
-    /*auto* structureType = isomap::common::StructureType::get( m_structureType );
-    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-        m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
-    }*/
-    /*if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
-         m_renderTerrain->isVisible( x, y ) ) {
-        m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
-    }*/
+    switch ( m_mode ) {
+        case PlaceStructure: {
+            auto* structureType = isomap::common::StructureType::get( m_structureType );
+            if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
+                m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
+            }
+            break;
+        }
 
-    m_clientPlayer->getUnit( 1 )->moveTo( x, y );
+        case DeleteStructure:
+            break;
 
+        case PlaceUnit: {
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
+                 m_renderTerrain->isVisible( x, y ) ) {
+                m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
+            }
+            break;
+        }
+
+        case DeleteUnit:
+            break;
+
+        case SelectUnit:
+            break;
+
+        case MoveUnit:
+            m_clientPlayer->getUnit( 1 )->moveTo( x, y );
+            break;
+    }
 }
 
 void MainWindow::focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y ) {
@@ -803,6 +903,7 @@ void MainWindow::regenerateMap() {
 
 void MainWindow::updateText() {
     m_text->setText( vl::Say( "FPS %n\n"
+                              "Mode: %s\n"
                               "Seed %n\n"
                               "Shore bits %n\n"
                               "Terrain height %n\n"
@@ -817,7 +918,8 @@ void MainWindow::updateText() {
                               "Ore scale %n\n"
                               "Ore noise %n\n"
                               "Ore threshold %n\n"
-                              "Ore density %n" ) << fps() << m_generator.seed() << m_generator.shoreBits()
+                              "Ore density %n" ) << fps() << getModeName() << m_generator.seed()
+                                                 << m_generator.shoreBits()
                                                  << m_generator.terrainHeight() << m_generator.waterDepth()
                                                  << (1u << m_generator.heightScale())
                                                  << m_generator.heightNoise()
@@ -866,4 +968,22 @@ void MainWindow::sendAndReceiveMessages() {
     //printf( "Send and receive messages\n" );
     sendMessages();
     receiveMessages();
+}
+
+const char* MainWindow::getModeName() const {
+    switch ( m_mode ) {
+        case PlaceStructure:
+            return "Place Structure (B)";
+        case DeleteStructure:
+            return "Delete Structure (V)";
+        case PlaceUnit:
+            return "Place Unit (G)";
+        case DeleteUnit:
+            return "Delete Unit (F)";
+        case SelectUnit:
+            return "Select Unit (N)";
+        case MoveUnit:
+            return "Move Unit (M)";
+    }
+    return "Unknown";
 }

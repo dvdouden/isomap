@@ -257,7 +257,6 @@ namespace isomap {
         void Player::startMatch() {
             m_terrain = m_match->terrain();
         }
-
     }
 
 }

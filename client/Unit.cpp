@@ -33,7 +33,6 @@ namespace isomap {
         void Unit::moveTo( int32_t targetX, int32_t targetY ) {
             printf( "Move to %d %d\n", targetX, targetY );
 
-
             auto width = m_player->terrain()->width();
             auto height = m_player->terrain()->height();
 
