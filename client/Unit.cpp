@@ -1,3 +1,5 @@
+#include <queue>
+
 #include <vlGraphics/GeometryPrimitives.hpp>
 #include <vlGraphics/Rendering.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
@@ -28,25 +30,142 @@ namespace isomap {
             }
         }
 
-        void Unit::moveTo( int32_t tileX, int32_t tileY ) {
-            // convert into way points
-            std::vector<common::WayPoint> wayPoints;
-            do {
-                wayPoints.push_back( {tileX, tileY} );
-                if ( tileX < (m_data.x / math::fix::precision) ) {
-                    ++tileX;
-                } else if ( tileX > (m_data.x / math::fix::precision) ) {
-                    --tileX;
-                }
-                if ( tileY < (m_data.y / math::fix::precision) ) {
-                    ++tileY;
-                } else if ( tileY > (m_data.y / math::fix::precision) ) {
-                    --tileY;
-                }
+        void Unit::moveTo( int32_t targetX, int32_t targetY ) {
+            printf( "Move to %d %d\n", targetX, targetY );
 
-            } while ( tileX != (m_data.x / math::fix::precision) || tileY != (m_data.y / math::fix::precision) );
-            m_player->enqueueMessage( id(), common::UnitCommandMessage::moveMsg( wayPoints ) );
+
+            auto width = m_player->terrain()->width();
+            auto height = m_player->terrain()->height();
+
+            std::vector<common::WayPoint> wayPoints;
+
+            // create buffer for A* algorithm
+            struct node {
+                uint32_t value = 0;
+                uint32_t from = 0;
+
+                bool operator>( const node& rhs ) const {
+                    return value > rhs.value;
+                }
+            };
+
+            auto* nodeMap = new node[width * height]();
+
+            // create a todo list for the algorithm
+            std::priority_queue<node, std::vector<node>, std::greater<>> todo;
+            todo.push( {1, tileY() * width + tileX()} );
+            while ( !todo.empty() ) {
+                auto tile = todo.top();
+                todo.pop();
+                auto value = nodeMap[tile.from];
+                unsigned int tile_x = tile.from % width;
+                unsigned int tile_y = tile.from / width;
+                //printf( "Test %d %d\n", tile_x, tile_y);
+                if ( tile_x == targetX && tile_y == targetY ) {
+                    break;
+                }
+                uint8_t canReach = m_player->terrain()->pathMap()[tile_y * width + tile_x];
+                //printf( "[%2d,%2d] %02X\n", tile_x, tile_y, canReach );
+
+                // for now we're going to move in every direction, as long as we haven't traveled there yet.
+                if ( canReach & common::path::bitDownLeft ) {
+                    //printf( "down left\n" );
+                    auto idx = (tile_y - 1) * width + tile_x - 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 14;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 14, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitDown ) {
+                    //printf( "down\n" );
+                    auto idx = (tile_y - 1) * width + tile_x;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 10;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 10, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitDownRight ) {
+                    //printf( "down right\n" );
+                    auto idx = (tile_y - 1) * width + tile_x + 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 14;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 14, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitRight ) {
+                    //printf( "right\n" );
+                    auto idx = (tile_y) * width + tile_x + 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 10;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 10, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitUpRight ) {
+                    //printf( "right up\n" );
+                    auto idx = (tile_y + 1) * width + tile_x + 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 14;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 14, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitUp ) {
+                    //printf( "up\n" );
+                    auto idx = (tile_y + 1) * width + tile_x;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 10;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 10, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitUpLeft ) {
+                    //printf( "up left\n" );
+                    auto idx = (tile_y + 1) * width + tile_x - 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 14;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 14, idx} );
+                    }
+                }
+                if ( canReach & common::path::bitLeft ) {
+                    //printf( "left\n" );
+                    auto idx = (tile_y) * width + tile_x - 1;
+                    if ( nodeMap[idx].value == 0 ) {
+                        nodeMap[idx].value = value.value + 10;
+                        nodeMap[idx].from = tile.from;
+                        todo.push( {value.value + 10, idx} );
+                    }
+                }
+            }
+            uint32_t targetIdx = targetY * width + targetX;
+            uint32_t startIdx = tileY() * width + tileX();
+            if ( nodeMap[targetIdx].value > 0 ) {
+                printf( "Found a route!\n" );
+                while ( targetIdx != startIdx ) {
+                    int wayPointX = (int)(targetIdx % width);
+                    int wayPointY = (int)(targetIdx / width);
+                    targetIdx = nodeMap[targetIdx].from;
+                    int tile_x = (int)(targetIdx % width);
+                    int tile_y = (int)(targetIdx / width);
+                    //unsigned char direction = getDirection( wayPointX - tile_x, wayPointY - tile_y );
+                    //if ( wayPoints.empty() || direction != wayPoints.back().direction ) {
+                    wayPoints.push_back( {wayPointX, wayPointY} );
+                    //}
+                    //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, tile_x, tile_y );
+                }
+                m_player->enqueueMessage( id(), common::UnitCommandMessage::moveMsg( wayPoints ) );
+            } else {
+                printf( "No route!\n" );
+            }
+
+
+            delete[] nodeMap;
         }
+
 
         void Unit::processMessage( common::UnitServerMessage* msg ) {
             if ( msg == nullptr ) {
