@@ -397,6 +397,10 @@ namespace isomap {
             m_data.occupy( worldX, worldY, footPrint );
         }
 
+        void Terrain::vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
+            m_data.vacate( worldX, worldY, footPrint );
+        }
+
         void Terrain::reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
             m_data.reserve( worldX, worldY, footPrint );
         }

@@ -30,14 +30,12 @@ namespace isomap {
                                                                      3, 3,
                                                                      2, 2} ) );
 
-
             s_structureTypes[3] = new StructureType( 3,
                                                      "barracks",
                                                      new FootPrint( 2, 3,
                                                                     {3, 3,
                                                                      3, 3,
                                                                      2, 2} ) );
-
 
             s_structureTypes[4] = new StructureType( 4,
                                                      "refinery",
@@ -46,6 +44,11 @@ namespace isomap {
                                                                      3, 3, 3,
                                                                      3, 3, 3,
                                                                      2, 2, 2} ) );
+
+            s_structureTypes[5] = new StructureType( 5,
+                                                     "turret",
+                                                     new FootPrint( 1, 1,
+                                                                    {3} ) );
 
         }
 

@@ -353,7 +353,7 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_X:
-            if ( m_structureType < 4 ) {
+            if ( m_structureType < 5 ) {
                 m_structureType++;
             }
             break;
@@ -381,7 +381,15 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_M:
-            m_mode = MoveUnit;
+            if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
+                m_mode = MoveUnit;
+            } else {
+                m_mode = SelectUnit;
+            }
+            break;
+
+        case vl::Key_N:
+            m_mode = SelectUnit;
             break;
 
         case vl::Key_G:
@@ -760,6 +768,8 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
+    m_cursorX = x;
+    m_cursorY = y;
     switch ( m_mode ) {
         case PlaceStructure:
             renderStructurePlacement( x, y );
@@ -780,16 +790,57 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case PlaceUnit:
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                if ( m_renderTerrain->isVisible( x, y ) ) {
+                    if ( m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed ) {
+                        m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                    } else {
+                        m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::green );
+                    }
+                }
+            }
             break;
 
         case DeleteUnit:
+            // FIXME: shouldn't be using server unit here but client...
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr ) {
+                    m_renderTerrain->addHighlight(
+                            isomap::client::Terrain::Area( x, y, 1, 1 ),
+                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                } else {
+                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                }
+            }
             break;
 
         case SelectUnit:
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr ) {
+                    m_renderTerrain->addHighlight(
+                            isomap::client::Terrain::Area( x, y, 1, 1 ),
+                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                } else {
+                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                }
+            }
             break;
 
         case MoveUnit:
-            renderPathMap( x, y );
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr ) {
+                    m_renderTerrain->addHighlight(
+                            isomap::client::Terrain::Area( x, y, 1, 1 ),
+                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                } else if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
+                    renderPathMap( x, y );
+                } else {
+                    m_mode = SelectUnit;
+                }
+            }
             break;
     }
 
@@ -851,6 +902,8 @@ void MainWindow::renderStructurePlacement( int x, int y ) {
 }
 
 void MainWindow::place( int x, int y ) {
+    m_cursorX = x;
+    m_cursorY = y;
     switch ( m_mode ) {
         case PlaceStructure: {
             auto* structureType = isomap::common::StructureType::get( m_structureType );
@@ -861,24 +914,58 @@ void MainWindow::place( int x, int y ) {
         }
 
         case DeleteStructure:
+            // FIXME: shouldn't be using server structure here but client...
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* structure = m_serverMatch->terrain()->getStructureAt( x, y );
+                if ( structure != nullptr && structure->player()->id() == m_controllingPlayer->id() ) {
+                    structure->destroy();
+                }
+            }
             break;
 
         case PlaceUnit: {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
-                 m_renderTerrain->isVisible( x, y ) ) {
+                 m_renderTerrain->isVisible( x, y ) &&
+                 (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 ) {
                 m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
             }
             break;
         }
 
         case DeleteUnit:
+            // FIXME: shouldn't be using server unit here but client...
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr && unit->player()->id() == m_controllingPlayer->id() ) {
+                    unit->destroy();
+                }
+            }
             break;
 
         case SelectUnit:
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr && unit->player()->id() == m_controllingPlayer->id() ) {
+                    m_selectedUnit = unit->id();
+                    m_mode = MoveUnit;
+                }
+            }
             break;
 
         case MoveUnit:
-            m_clientPlayer->getUnit( 1 )->moveTo( x, y );
+            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+                if ( unit != nullptr ) {
+                    if ( unit->player()->id() == m_controllingPlayer->id() ) {
+                        m_selectedUnit = unit->id();
+                    }
+                } else {
+                    if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
+                        m_controllingPlayer->getUnit( m_selectedUnit )->moveTo( x, y );
+                    }
+                }
+            }
+
             break;
     }
 }
@@ -902,6 +989,309 @@ void MainWindow::regenerateMap() {
 }
 
 void MainWindow::updateText() {
+    if ( m_controllingPlayer == nullptr ) {
+        return;
+    }
+
+    // FIXME: Remove duplicated logic!
+    switch ( m_mode ) {
+        case PlaceStructure:
+            m_text->setText( vl::Say( "FPS %n\n"
+                                      "Mode: %s\n"
+                                      "Player: %s\n"
+                                      "Structure Type Id %n\n"
+                                      "Structure Type Name %s\n"
+                                      "Orientation %n\n"
+                                      "X %n\n"
+                                      "Y %n\n"
+                                      "Can Place %s" )
+                                     << fps()
+                                     << getModeName()
+                                     << m_controllingPlayer->name()
+                                     << m_structureType
+                                     << isomap::common::StructureType::get( m_structureType )->name()
+                                     << m_structureOrientation
+                                     << m_cursorX
+                                     << m_cursorY
+                                     << (m_controllingPlayer->canPlace(
+                                             m_cursorX,
+                                             m_cursorY,
+                                             isomap::common::StructureType::get( m_structureType ),
+                                             m_structureOrientation ) ? "yes" : "no") );
+            break;
+
+        case DeleteStructure: {
+            isomap::server::Structure* structure = nullptr;
+            bool canDelete = false;
+            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_serverMatch->terrain()->height() ) {
+                structure = m_serverMatch->terrain()->getStructureAt( m_cursorX, m_cursorY );
+                if ( structure != nullptr ) {
+                    canDelete = structure->player()->id() == m_controllingPlayer->id();
+                }
+            }
+            if ( structure ) {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Structure Id: %n\n"
+                                          "Structure Owner: %s\n"
+                                          "Structure Type Id: %n\n"
+                                          "Structure Type Name: %s\n"
+                                          "Orientation: %n\n"
+                                          "X: %n\n"
+                                          "Y: %n\n"
+                                          "Can Delete: %s" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << structure->id()
+                                         << structure->type()->id()
+                                         << structure->type()->name()
+                                         << structure->orientation()
+                                         << structure->x()
+                                         << structure->y()
+                                         << (canDelete ? "yes" : "no") );
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "X: %n\n"
+                                          "Y: %n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+
+            break;
+        }
+
+        case PlaceUnit:
+            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_serverMatch->terrain()->height() ) {
+                if ( m_renderTerrain->isVisible( m_cursorX, m_cursorY ) ) {
+                    if ( m_renderTerrain->occupancy( m_cursorX, m_cursorY ) &
+                         isomap::common::occupancy::bitObstructed ) {
+                        m_text->setText( vl::Say( "FPS %n\n"
+                                                  "Mode: %s\n"
+                                                  "Player: %s\n"
+                                                  "Unit Type Id %n\n"
+                                                  "Unit Type Name %s\n"
+                                                  "Orientation %n\n"
+                                                  "X %n\n"
+                                                  "Y %n\n"
+                                                  "Cannot place, obstructed" )
+                                                 << fps()
+                                                 << getModeName()
+                                                 << m_controllingPlayer->name()
+                                                 << m_unitType
+                                                 << isomap::common::UnitType::get( m_unitType )->name()
+                                                 << m_structureOrientation
+                                                 << m_cursorX
+                                                 << m_cursorY );
+                    } else {
+                        m_text->setText( vl::Say( "FPS %n\n"
+                                                  "Mode: %s\n"
+                                                  "Player: %s\n"
+                                                  "Unit Type Id %n\n"
+                                                  "Unit Type Name %s\n"
+                                                  "Orientation %n\n"
+                                                  "X %n\n"
+                                                  "Y %n\n"
+                                                  "Can place" )
+                                                 << fps()
+                                                 << getModeName()
+                                                 << m_controllingPlayer->name()
+                                                 << m_unitType
+                                                 << isomap::common::UnitType::get( m_unitType )->name()
+                                                 << m_structureOrientation
+                                                 << m_cursorX
+                                                 << m_cursorY );
+                    }
+                } else {
+                    m_text->setText( vl::Say( "FPS %n\n"
+                                              "Mode: %s\n"
+                                              "Player: %s\n"
+                                              "Unit Type Id %n\n"
+                                              "Unit Type Name %s\n"
+                                              "Orientation %n\n"
+                                              "X %n\n"
+                                              "Y %n\n"
+                                              "Cannot place, fogged" )
+                                             << fps()
+                                             << getModeName()
+                                             << m_controllingPlayer->name()
+                                             << m_unitType
+                                             << isomap::common::UnitType::get( m_unitType )->name()
+                                             << m_structureOrientation
+                                             << m_cursorX
+                                             << m_cursorY );
+                }
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Unit Type Id %n\n"
+                                          "Unit Type Name %s\n"
+                                          "Orientation %n\n"
+                                          "X %n\n"
+                                          "Y %n\n"
+                                          "Cannot place, out of bounds" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_unitType
+                                         << isomap::common::UnitType::get( m_unitType )->name()
+                                         << m_structureOrientation
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+            break;
+
+        case DeleteUnit: {
+            // FIXME: shouldn't be using server unit here but client...
+            isomap::server::Unit* unit = nullptr;
+            bool canDelete = false;
+            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_serverMatch->terrain()->height() ) {
+                unit = m_serverMatch->terrain()->getUnitAt( m_cursorX, m_cursorY );
+                if ( unit != nullptr ) {
+                    canDelete = unit->player()->id() == m_controllingPlayer->id();
+                }
+            }
+            if ( unit != nullptr ) {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Unit Id: %n\n"
+                                          "Unit Owner: %s\n"
+                                          "Unit Type Id: %n\n"
+                                          "Unit Type Name: %s\n"
+                                          "Orientation: %n\n"
+                                          "X: %n.%n\n"
+                                          "Y: %n.%n\n"
+                                          "Z: %n.%n\n"
+                                          "Can Delete: %s" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << unit->id()
+                                         << unit->player()->name()
+                                         << unit->type()->id()
+                                         << unit->type()->name()
+                                         << unit->orientation()
+                                         << unit->tileX() << unit->subTileX()
+                                         << unit->tileY() << unit->subTileY()
+                                         << unit->tileZ() << unit->subTileZ()
+                                         << (canDelete ? "yes" : "no") );
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "X: %n\n"
+                                          "Y: %n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+            break;
+        }
+
+        case SelectUnit: {
+            // FIXME: shouldn't be using server unit here but client...
+            isomap::server::Unit* unit = nullptr;
+            bool canSelect = false;
+            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_serverMatch->terrain()->height() ) {
+                unit = m_serverMatch->terrain()->getUnitAt( m_cursorX, m_cursorY );
+                if ( unit != nullptr ) {
+                    canSelect = unit->player()->id() == m_controllingPlayer->id();
+                }
+            }
+            if ( unit != nullptr ) {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Unit Id: %n\n"
+                                          "Unit Owner: %s\n"
+                                          "Unit Type Id: %n\n"
+                                          "Unit Type Name: %s\n"
+                                          "Orientation: %n\n"
+                                          "X: %n.%n\n"
+                                          "Y: %n.%n\n"
+                                          "Z: %n.%n\n"
+                                          "Can Select: %s" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << unit->id()
+                                         << unit->player()->name()
+                                         << unit->type()->id()
+                                         << unit->type()->name()
+                                         << unit->orientation()
+                                         << unit->tileX() << unit->subTileX()
+                                         << unit->tileY() << unit->subTileY()
+                                         << unit->tileZ() << unit->subTileZ()
+                                         << (canSelect ? "yes" : "no") );
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "X: %n\n"
+                                          "Y: %n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+            break;
+        }
+
+        case MoveUnit:
+            if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
+                auto* unit = m_controllingPlayer->getUnit( m_selectedUnit );
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Unit Id: %n\n"
+                                          "Unit Owner: %s\n"
+                                          "Unit Type Id: %n\n"
+                                          "Unit Type Name: %s\n"
+                                          "Orientation: %n\n"
+                                          "X: %n.%n\n"
+                                          "Y: %n.%n\n"
+                                          "Z: %n.%n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << unit->id()
+                                         << unit->player()->name()
+                                         << unit->type()->id()
+                                         << unit->type()->name()
+                                         << unit->orientation()
+                                         << unit->tileX() << unit->subTileX()
+                                         << unit->tileY() << unit->subTileY()
+                                         << unit->tileZ() << unit->subTileZ() );
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "X: %n\n"
+                                          "Y: %n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+            break;
+    }
+/*
     m_text->setText( vl::Say( "FPS %n\n"
                               "Mode: %s\n"
                               "Seed %n\n"
@@ -927,7 +1317,7 @@ void MainWindow::updateText() {
                                                  << (1u << m_generator.cliffScale()) << m_generator.cliffNoise()
                                                  << m_generator.cliffThreshold()
                                                  << (1u << m_generator.oreScale()) << m_generator.oreNoise()
-                                                 << m_generator.oreThreshold() << m_generator.oreDensity() );
+                                                 << m_generator.oreThreshold() << m_generator.oreDensity() );*/
 }
 
 void MainWindow::sendMessages() {

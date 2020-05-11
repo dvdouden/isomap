@@ -178,5 +178,25 @@ namespace isomap {
         bool Player::canSee( Unit* unit ) const {
             return m_fogMap[unit->tileY() * m_terrain->width() + unit->tileX()] >= 1;
         }
+
+        void Player::destroyStructure( Structure* structure ) {
+            // FIXME: add sanity checks!
+            m_match->enqueueMessage( structure, common::PlayerServerMessage::structureDestroyedMsg( structure->id() ) );
+            m_terrain->removeStructure( structure );
+            m_structures.erase( structure->id() );
+            // FIXME: this will invalidate iterators, so can't be called from Match::update!
+            m_match->removeObject( structure );
+            delete structure;
+        }
+
+        void Player::destroyUnit( Unit* unit ) {
+            // FIXME: add sanity checks!
+            m_match->enqueueMessage( unit, common::PlayerServerMessage::unitDestroyedMsg( unit->id() ) );
+            m_terrain->removeUnit( unit );
+            m_units.erase( unit->id() );
+            // FIXME: this will invalidate iterators, so can't be called from Match::update!
+            m_match->removeObject( unit );
+            delete unit;
+        }
     }
 }

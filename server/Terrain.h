@@ -55,6 +55,8 @@ namespace isomap {
 
             void removeUnit( Unit* unit );
 
+            void updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY );
+
             common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
 
             common::TerrainMessage* uncoverAll() const;
@@ -68,6 +70,7 @@ namespace isomap {
             void vacate( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
 
         private:
+            void removeUnitFromChunk( Unit* unit, uint32_t chunk );
 
             uint32_t m_width;
             uint32_t m_height;

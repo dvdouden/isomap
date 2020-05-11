@@ -30,15 +30,28 @@ namespace isomap {
 
             void render();
 
-            void setVisible( bool visible );
+            void setVisible( const common::UnitData& data );
+
+            void setInvisible();
 
             bool visible() const {
                 return m_visible;
             }
 
+            common::UnitType* type() const {
+                return m_type;
+            }
+
+            Player* player() const {
+                return m_player;
+            }
 
             id_t id() const {
                 return m_data.id;
+            }
+
+            uint32_t orientation() const {
+                return m_data.orientation;
             }
 
             uint32_t x() const {

@@ -22,6 +22,12 @@ namespace isomap {
             const uint8_t bitDownOrRight = bitDown | bitRight;
         }
 
+        namespace occupancy {
+            const uint8_t bitObstructed = 0b0000'0001u;
+            const uint8_t bitConstructed = 0b0000'0010u;
+            const uint8_t bitReserved = 0b0000'0100u;
+        }
+
         // common data structure and methods
         struct TerrainData {
             uint32_t mapWidth = 0;

@@ -271,13 +271,22 @@ namespace isomap {
             m_transform->setLocalMatrix( matrix );
         }
 
-        void Unit::setVisible( bool visible ) {
-            if ( m_visible == visible ) {
-                return;
+        void Unit::setVisible( const common::UnitData& data ) {
+            m_data = data;
+            if ( !m_visible ) {
+                m_visible = true;
+                for ( auto* actor : m_actors ) {
+                    actor->setEnabled( true );
+                }
             }
-            m_visible = visible;
-            for ( auto* actor : m_actors ) {
-                actor->setEnabled( visible );
+        }
+
+        void Unit::setInvisible() {
+            if ( m_visible ) {
+                m_visible = false;
+                for ( auto* actor : m_actors ) {
+                    actor->setEnabled( false );
+                }
             }
         }
 

@@ -133,6 +133,10 @@ namespace isomap {
             m_objects[object->id()] = object;
         }
 
+        void Match::removeObject( Object* object ) {
+            m_objects.erase( object->id() );
+        }
+
         void Match::start() {
             m_started = true;
             m_time = 0;

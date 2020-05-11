@@ -26,6 +26,8 @@ namespace isomap {
 
             void addObject( Object* object );
 
+            void removeObject( Object* object );
+
             void start();
 
             void update();
@@ -50,6 +52,7 @@ namespace isomap {
             }
 
             Player* getPlayer( id_t id );
+
 
         private:
 

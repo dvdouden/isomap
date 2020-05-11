@@ -66,6 +66,7 @@ namespace isomap {
             if ( tileY() != oldTileY || tileX() != oldTileX ) {
                 player()->unFog( tileX(), tileY(), 10 );
                 player()->match()->updateSubscriptions( this );
+                terrain->updateUnit( this, oldTileX, oldTileY );
             }
 
             if ( m_data.motionState == common::Stopped ) {
@@ -129,6 +130,10 @@ namespace isomap {
                     m_y += speedY( m_speed, m_orientation );
                 }
             }*/
+        }
+
+        void Unit::destroy() {
+            player()->destroyUnit( this );
         }
 
         int32_t Unit::speedX( int32_t speed, int32_t orientation ) const {

@@ -84,6 +84,10 @@ namespace isomap {
                 return m_data.occupancyMap;
             }
 
+            uint8_t occupancy( uint32_t x, uint32_t y ) const {
+                return m_data.occupancyMap[y * m_data.mapWidth + x];
+            }
+
             uint8_t* pathMap() const {
                 return m_data.pathMap;
             }
@@ -115,6 +119,8 @@ namespace isomap {
             }
 
             void occupy( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
+
+            void vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 
             void reserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 

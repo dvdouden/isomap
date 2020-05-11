@@ -54,6 +54,10 @@ namespace isomap {
                 return m_match;
             }
 
+            void destroyStructure( Structure* structure );
+
+            void destroyUnit( Unit* unit );
+
         private:
             id_t m_id;
             std::string m_name;

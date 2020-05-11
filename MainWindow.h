@@ -95,8 +95,12 @@ protected:
 
     Mode m_mode = PlaceStructure;
 
-    int m_structureType = 1;
+    isomap::id_t m_structureType = 1;
+    isomap::id_t m_unitType = 1;
     int m_structureOrientation = 0;
+    isomap::id_t m_selectedUnit = 0;
+    int m_cursorX;
+    int m_cursorY;
 
     void updateText();
 

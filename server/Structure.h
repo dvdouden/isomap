@@ -24,10 +24,11 @@ namespace isomap {
 
             common::PlayerServerMessage* update( Terrain* world ) override;
 
-
             void processMessage( common::StructureCommandMessage* msg );
 
             common::StructureServerMessage* statusMessage();
+
+            void destroy();
 
             uint32_t x() const {
                 return m_data.x;

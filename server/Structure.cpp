@@ -1,3 +1,4 @@
+#include "Player.h"
 #include "Structure.h"
 #include "../common/PlayerMessage.h"
 #include "../common/StructureMessage.h"
@@ -44,6 +45,10 @@ namespace isomap {
                 return false; // structure above point
             }
             return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
+        }
+
+        void Structure::destroy() {
+            player()->destroyStructure( this );
         }
 
     }

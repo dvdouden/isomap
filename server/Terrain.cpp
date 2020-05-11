@@ -65,12 +65,15 @@ namespace isomap {
         }
 
         void Terrain::removeUnit( Unit* unit ) {
+            removeUnitFromChunk( unit, getChunk( unit->tileX(), unit->tileY() ) );
+        }
+
+        void Terrain::updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY ) {
+            uint32_t oldChunk = getChunk( oldX, oldY );
             uint32_t chunk = getChunk( unit->tileX(), unit->tileY() );
-            for ( auto it = m_units[chunk].begin(); it != m_units[chunk].end(); ++it ) {
-                if ( (*it) == unit ) {
-                    m_units[chunk].erase( it );
-                    break;
-                }
+            if ( oldChunk != chunk ) {
+                removeUnitFromChunk( unit, oldChunk );
+                addUnit( unit );
             }
         }
 
@@ -123,6 +126,15 @@ namespace isomap {
 
         void Terrain::vacate( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
             m_data.vacate( worldX, worldY, footPrint );
+        }
+
+        void Terrain::removeUnitFromChunk( Unit* unit, uint32_t chunk ) {
+            for ( auto it = m_units[chunk].begin(); it != m_units[chunk].end(); ++it ) {
+                if ( (*it) == unit ) {
+                    m_units[chunk].erase( it );
+                    break;
+                }
+            }
         }
 
     }

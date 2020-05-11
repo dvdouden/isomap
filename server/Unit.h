@@ -23,6 +23,8 @@ namespace isomap {
 
             common::PlayerServerMessage* update( Terrain* terrain ) override;
 
+            void destroy();
+
             common::UnitType* type() const {
                 return m_type;
             }
