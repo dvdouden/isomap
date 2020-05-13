@@ -19,6 +19,13 @@ namespace isomap {
             s_unitTypes[1] = new UnitType( 1, "harvester" );
         }
 
+        void UnitType::clear() {
+            for ( auto unitType : s_unitTypes ) {
+                delete unitType.second;
+            }
+            s_unitTypes.clear();
+        }
+
         UnitType::UnitType( isomap::id_t id, std::string name ) :
                 m_id( id ),
                 m_name( std::move( name ) ) {

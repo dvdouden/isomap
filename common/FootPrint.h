@@ -13,9 +13,7 @@ namespace isomap {
 
             FootPrint( uint32_t width, uint32_t height, std::initializer_list<uint8_t> map );
 
-            ~FootPrint() {
-                delete[] m_map;
-            }
+            ~FootPrint();
 
             FootPrint( const FootPrint& ) = delete;
 

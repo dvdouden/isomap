@@ -13,6 +13,9 @@ namespace isomap {
 
         Match::~Match() {
             delete m_terrain;
+            for ( auto player : m_players ) {
+                delete player.second;
+            }
             // TODO: clean up everything else
         }
 
@@ -52,6 +55,7 @@ namespace isomap {
                 case common::MatchServerMessage::InitTerrain: {
                     // TODO: add sanity checks
                     m_terrain = new Terrain( msg->terrainMsg()->width(), msg->terrainMsg()->height() );
+                    break;
                 }
 
                 case common::MatchServerMessage::MatchStarted: {

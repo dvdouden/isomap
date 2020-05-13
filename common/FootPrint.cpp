@@ -19,6 +19,10 @@ namespace isomap {
             std::copy( map.begin(), map.end(), m_map );
         }
 
+        FootPrint::~FootPrint() {
+            delete[] m_map;
+        }
+
         FootPrint* FootPrint::rotate() const {
             // create new footprint, rotated 90 degrees ccw
             FootPrint* f = new FootPrint( m_height, m_width );

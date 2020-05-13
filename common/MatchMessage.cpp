@@ -28,6 +28,10 @@ namespace isomap {
             return msg;
         }
 
+        MatchClientMessage::~MatchClientMessage() {
+            delete m_playerCommandMessage;
+        }
+
         MatchServerMessage*
         MatchServerMessage::playerAccepted( const std::string& name ) {
             auto* msg = new MatchServerMessage( PlayerAccepted );
@@ -106,6 +110,11 @@ namespace isomap {
             if ( m_terrainMessage != nullptr ) {
                 m_terrainMessage = new class TerrainMessage( *m_terrainMessage );
             }
+        }
+
+        MatchServerMessage::~MatchServerMessage() {
+            delete m_playerServerMessage;
+            delete m_terrainMessage;
         }
 
     }

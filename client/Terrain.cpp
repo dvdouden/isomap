@@ -23,6 +23,11 @@ namespace isomap {
             m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight]();
         }
 
+        Terrain::~Terrain() {
+            delete[] m_fogMap;
+            delete[] m_fogUpdateMap;
+        }
+
         void Terrain::processMessage( isomap::common::TerrainMessage* msg ) {
             if ( msg == nullptr ) {
                 return;

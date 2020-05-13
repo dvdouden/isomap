@@ -90,6 +90,15 @@ void MainWindow::initEvent() {
 
 }
 
+
+void MainWindow::destroyEvent() {
+    delete m_serverMatch;
+    delete m_clientPlayerMatch;
+    delete m_clientAIMatch;
+    isomap::common::UnitType::clear();
+    isomap::common::StructureType::clear();
+}
+
 void MainWindow::resizeEvent( int w, int h ) {
     rendering()->as<vl::Rendering>()->camera()->viewport()->set( 0, 0, w, h );
     updateProjection();

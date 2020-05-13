@@ -14,6 +14,8 @@ namespace isomap {
                 PlayerCommand,
             };
 
+            ~MatchClientMessage();
+
             static MatchClientMessage* registerPlayer( id_t id, const std::string& name );
 
             static MatchClientMessage* unregisterPlayer( id_t id );
@@ -64,6 +66,7 @@ namespace isomap {
                 TerrainMessage,
             };
 
+            ~MatchServerMessage();
 
             static MatchServerMessage* playerAccepted( const std::string& name );
 

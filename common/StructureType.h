@@ -9,7 +9,7 @@ namespace isomap {
     namespace common {
         class StructureType {
         public:
-            ~StructureType() = default;
+            ~StructureType();
 
             StructureType( const StructureType& ) = delete;
 
@@ -42,6 +42,8 @@ namespace isomap {
             static StructureType* get( id_t id );
 
             static void load();
+
+            static void clear();
 
         private:
             StructureType( id_t id, std::string name, FootPrint* footPrint );

@@ -25,6 +25,15 @@ namespace isomap {
                     (id & 0xFFu) / 255.0 );
         }
 
+        Player::~Player() {
+            for ( auto structure : m_structures ) {
+                delete structure.second;
+            }
+            for ( auto unit : m_units ) {
+                delete unit.second;
+            }
+        }
+
         void Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
                                      uint32_t orientation ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
@@ -250,8 +259,11 @@ namespace isomap {
 
         void Player::dumpActors() {
             for ( auto actor : m_sceneManager->tree()->actors()->vector() ) {
-                printf( "%s at %f %f %f\n", actor->objectName().c_str(), actor->transform()->worldMatrix().getT().x(),
-                        actor->transform()->worldMatrix().getT().y() );
+                printf( "%s at %f %f %f\n",
+                        actor->objectName().c_str(),
+                        actor->transform()->worldMatrix().getT().x(),
+                        actor->transform()->worldMatrix().getT().y(),
+                        actor->transform()->worldMatrix().getT().z() );
             }
         }
 

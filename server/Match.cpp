@@ -23,6 +23,12 @@ namespace isomap {
             for ( auto player : m_players ) {
                 delete player.second;
             }
+            // clean up undelivered messages
+            for ( auto msgs : m_messages ) {
+                for ( auto msg : msgs.second ) {
+                    delete msg;
+                }
+            }
         }
 
 

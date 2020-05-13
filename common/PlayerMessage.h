@@ -17,6 +17,8 @@ namespace isomap {
             explicit PlayerCommandMessage( Type type ) :
                     m_type( type ) { }
 
+            ~PlayerCommandMessage();
+
             Type type() const {
                 return m_type;
             }
@@ -88,7 +90,7 @@ namespace isomap {
 
             PlayerServerMessage( const PlayerServerMessage& rhs );
 
-            ~PlayerServerMessage() = default;
+            ~PlayerServerMessage();
 
             Type type() const {
                 return m_type;

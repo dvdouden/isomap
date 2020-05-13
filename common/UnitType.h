@@ -27,6 +27,8 @@ namespace isomap {
 
             static void load();
 
+            static void clear();
+
         private:
             UnitType( id_t id, std::string name );
 

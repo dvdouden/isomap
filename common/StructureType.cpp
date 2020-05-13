@@ -52,6 +52,13 @@ namespace isomap {
 
         }
 
+        void StructureType::clear() {
+            for ( auto structureType : s_structureTypes ) {
+                delete structureType.second;
+            }
+            s_structureTypes.clear();
+        }
+
         StructureType::StructureType( isomap::id_t id, std::string name, FootPrint* footPrint ) :
                 m_id( id ),
                 m_name( std::move( name ) ) {
@@ -59,6 +66,13 @@ namespace isomap {
             m_footPrint[1] = m_footPrint[0]->rotate();
             m_footPrint[2] = m_footPrint[1]->rotate();
             m_footPrint[3] = m_footPrint[2]->rotate();
+        }
+
+        StructureType::~StructureType() {
+            delete m_footPrint[0];
+            delete m_footPrint[1];
+            delete m_footPrint[2];
+            delete m_footPrint[3];
         }
     }
 }

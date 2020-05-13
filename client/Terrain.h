@@ -52,7 +52,7 @@ namespace isomap {
 
             Terrain( uint32_t width, uint32_t height );
 
-            ~Terrain() = default;
+            ~Terrain();
 
             Terrain( const Terrain& ) = delete;
 

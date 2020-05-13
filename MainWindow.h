@@ -13,6 +13,8 @@ public:
     // called once after the OpenGL window has been opened
     void initEvent() override;
 
+    void destroyEvent() override;
+
     void keyPressEvent( unsigned short, vl::EKey ) override;
 
     void keyReleaseEvent( unsigned short, vl::EKey ) override;

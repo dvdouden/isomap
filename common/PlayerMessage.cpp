@@ -35,6 +35,10 @@ namespace isomap {
             return msg;
         }
 
+        PlayerCommandMessage::~PlayerCommandMessage() {
+            delete m_unitCommandMessage;
+        }
+
 
         PlayerServerMessage* PlayerServerMessage::statusMsg() {
             auto* msg = new PlayerServerMessage( Status );
@@ -141,6 +145,13 @@ namespace isomap {
             auto* msg = new PlayerServerMessage( UnitDestroyed );
             msg->m_id = id;
             return msg;
+        }
+
+        PlayerServerMessage::~PlayerServerMessage() {
+            delete m_structureData;
+            delete m_unitData;
+            delete m_structureMessage;
+            delete m_unitMessage;
         }
 
     }

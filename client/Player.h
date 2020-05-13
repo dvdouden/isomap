@@ -14,7 +14,7 @@ namespace isomap {
         public:
             Player( Match* match, id_t id, std::string name );
 
-            ~Player() = default;
+            ~Player();
 
             Player( const Player& ) = delete;
 
@@ -93,7 +93,7 @@ namespace isomap {
             vl::fvec4 m_color;
             std::string m_name;
 
-            Terrain* m_terrain;
+            Terrain* m_terrain = nullptr;
 
             std::map<id_t, Structure*> m_structures;
             std::map<id_t, Unit*> m_units;
