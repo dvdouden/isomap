@@ -1,9 +1,12 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include "../common/types.h"
 #include "../common/PlayerMessage.h"
 #include "Match.h"
+#include "Structure.h"
+#include "Unit.h"
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 
@@ -14,7 +17,7 @@ namespace isomap {
         public:
             Player( Match* match, id_t id, std::string name );
 
-            ~Player();
+            ~Player() = default;
 
             Player( const Player& ) = delete;
 
@@ -95,8 +98,8 @@ namespace isomap {
 
             Terrain* m_terrain = nullptr;
 
-            std::map<id_t, Structure*> m_structures;
-            std::map<id_t, Unit*> m_units;
+            std::map<id_t, std::unique_ptr<Structure>> m_structures;
+            std::map<id_t, std::unique_ptr<Unit>> m_units;
 
             vl::RenderingAbstract* m_rendering = nullptr;
             vl::ref<vl::SceneManagerActorTree> m_sceneManager;

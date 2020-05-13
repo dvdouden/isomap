@@ -25,15 +25,6 @@ namespace isomap {
                     (id & 0xFFu) / 255.0 );
         }
 
-        Player::~Player() {
-            for ( auto structure : m_structures ) {
-                delete structure.second;
-            }
-            for ( auto unit : m_units ) {
-                delete unit.second;
-            }
-        }
-
         void Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
                                      uint32_t orientation ) {
             int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
@@ -60,7 +51,7 @@ namespace isomap {
                 case common::PlayerServerMessage::BuildStructureAccepted: {
                     auto* str = new Structure( this, *msg->structureData() );
                     // TODO: Make sure there's no structure with the given id
-                    m_structures[str->id()] = str;
+                    m_structures[str->id()].reset( str );
                     if ( m_rendering != nullptr ) {
                         str->initRender( m_rendering, m_sceneManager.get() );
                     }
@@ -80,7 +71,7 @@ namespace isomap {
                     auto* str = getStructure( msg->structureData()->id );
                     if ( str == nullptr ) {
                         str = new Structure( this, *msg->structureData() );
-                        m_structures[str->id()] = str;
+                        m_structures[str->id()].reset( str );
                         if ( m_rendering != nullptr ) {
                             str->initRender( m_rendering, m_sceneManager.get() );
                         }
@@ -112,7 +103,7 @@ namespace isomap {
                 case common::PlayerServerMessage::UnitCreated: {
                     auto* unit = new Unit( this, *msg->unitData() );
                     // TODO: Make sure there's no unit with the given id
-                    m_units[unit->id()] = unit;
+                    m_units[unit->id()].reset( unit );
                     if ( m_rendering != nullptr ) {
                         unit->initRender( m_rendering, m_sceneManager.get() );
                     }
@@ -123,7 +114,7 @@ namespace isomap {
                     auto* unit = getUnit( msg->unitData()->id );
                     if ( unit == nullptr ) {
                         unit = new Unit( this, *msg->unitData() );
-                        m_units[unit->id()] = unit;
+                        m_units[unit->id()].reset( unit );
                         if ( m_rendering != nullptr ) {
                             unit->initRender( m_rendering, m_sceneManager.get() );
                         }
@@ -184,7 +175,7 @@ namespace isomap {
         }
 
         void Player::update() {
-            for ( auto unit : m_units ) {
+            for ( auto& unit : m_units ) {
                 unit.second->update();
             }
         }
@@ -192,10 +183,10 @@ namespace isomap {
 
         void Player::render() {
             // TODO: This shouldn't be done per player
-            for ( auto it : m_structures ) {
+            for ( auto& it : m_structures ) {
                 it.second->render();
             }
-            for ( auto it : m_units ) {
+            for ( auto& it : m_units ) {
                 it.second->render();
             }
         }
@@ -246,7 +237,7 @@ namespace isomap {
             if ( str == m_structures.end() ) {
                 return nullptr;
             }
-            return str->second;
+            return str->second.get();
         }
 
         Unit* Player::getUnit( id_t id ) {
@@ -254,7 +245,7 @@ namespace isomap {
             if ( unit == m_units.end() ) {
                 return nullptr;
             }
-            return unit->second;
+            return unit->second.get();
         }
 
         void Player::dumpActors() {

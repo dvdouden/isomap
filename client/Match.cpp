@@ -1,4 +1,6 @@
 #include "Match.h"
+
+#include <memory>
 #include "Player.h"
 #include "Terrain.h"
 #include "../common/MatchMessage.h"
@@ -9,14 +11,6 @@ namespace isomap {
         Match::Match( id_t connectionID ) :
                 m_connectionId( connectionID ) {
 
-        }
-
-        Match::~Match() {
-            delete m_terrain;
-            for ( auto player : m_players ) {
-                delete player.second;
-            }
-            // TODO: clean up everything else
         }
 
         void Match::processMessage( common::MatchServerMessage* msg ) {
@@ -31,7 +25,7 @@ namespace isomap {
                     }
                     // FIXME: check that msg->id equals m_connectionId
                     m_player = new Player( this, m_connectionId, msg->name() );
-                    m_players[m_connectionId] = m_player;
+                    m_players[m_connectionId].reset( m_player );
                     break;
 
                 case common::MatchServerMessage::PlayerRejected:
@@ -40,8 +34,7 @@ namespace isomap {
 
                 case common::MatchServerMessage::PlayerJoined: {
                     // TODO: add sanity checks
-                    auto* player = new Player( this, msg->id(), msg->name() );
-                    m_players[msg->id()] = player;
+                    m_players[msg->id()] = std::make_unique<Player>( this, msg->id(), msg->name() );
                     break;
                 }
 
@@ -54,14 +47,14 @@ namespace isomap {
 
                 case common::MatchServerMessage::InitTerrain: {
                     // TODO: add sanity checks
-                    m_terrain = new Terrain( msg->terrainMsg()->width(), msg->terrainMsg()->height() );
+                    m_terrain = std::make_unique<Terrain>( msg->terrainMsg()->width(), msg->terrainMsg()->height() );
                     break;
                 }
 
                 case common::MatchServerMessage::MatchStarted: {
                     // TODO: add sanity checks
                     m_started = true;
-                    for ( auto player : m_players ) {
+                    for ( auto& player : m_players ) {
                         player.second->startMatch();
                     }
                     break;
@@ -91,7 +84,7 @@ namespace isomap {
         }
 
         void Match::update() {
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->update();
             }
         }
@@ -101,14 +94,14 @@ namespace isomap {
         }
 
         void Match::unregisterPlayer() {
-            if ( m_player != nullptr ) {
+            if ( m_player ) {
                 enqueueMessage( common::MatchClientMessage::unregisterPlayer( m_connectionId ) );
             }
             // TODO: add fat warning
         }
 
         void Match::startMatch() {
-            if ( m_player != nullptr ) {
+            if ( m_player ) {
                 enqueueMessage( common::MatchClientMessage::startMatch( m_connectionId ) );
             }
             // TODO: add fat warning
@@ -119,39 +112,39 @@ namespace isomap {
             if ( it == m_players.end() ) {
                 return nullptr;
             }
-            return it->second;
+            return it->second.get();
         }
 
         void Match::initRender( vl::RenderingAbstract* rendering ) {
             m_terrain->initRender( rendering );
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->initRender( rendering );
             }
         }
 
         void Match::render() {
             m_terrain->render();
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->render();
             }
         }
 
         void Match::disableRendering() {
             m_terrain->disableRendering();
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->disableRendering();
             }
         }
 
         void Match::enableRendering() {
             m_terrain->enableRendering();
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->enableRendering();
             }
         }
 
         void Match::dumpActors() {
-            for ( auto player : m_players ) {
+            for ( auto& player : m_players ) {
                 player.second->dumpActors();
             }
         }

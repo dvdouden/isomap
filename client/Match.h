@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 #include <vlGraphics/RenderingAbstract.hpp>
@@ -11,9 +12,9 @@ namespace isomap {
     namespace client {
         class Match {
         public:
-            Match( id_t connectionID );
+            explicit Match( id_t connectionID );
 
-            ~Match();
+            ~Match() = default;
 
             Match( const Match& ) = delete;
 
@@ -59,7 +60,7 @@ namespace isomap {
             }
 
             Terrain* terrain() {
-                return m_terrain;
+                return m_terrain.get();
             }
 
             void dumpActors();
@@ -71,8 +72,8 @@ namespace isomap {
             uint32_t m_time = 0;
             bool m_started = false;
             Player* m_player = nullptr;
-            std::map<id_t, Player*> m_players;
-            Terrain* m_terrain = nullptr;
+            std::map<id_t, std::unique_ptr<Player>> m_players;
+            std::unique_ptr<Terrain> m_terrain;
 
             std::vector<common::MatchClientMessage*> m_messages;
 

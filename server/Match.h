@@ -1,9 +1,14 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "../common/types.h"
+
+#include "Object.h"
+#include "Player.h"
+#include "Terrain.h"
 
 namespace isomap {
     namespace server {
@@ -33,7 +38,7 @@ namespace isomap {
             void update();
 
             Terrain* terrain() {
-                return m_terrain;
+                return m_terrain.get();
             }
 
             void enqueueMessage( id_t playerId, common::MatchServerMessage* msg ) {
@@ -57,9 +62,9 @@ namespace isomap {
         private:
 
             uint32_t m_time = 0;
-            Terrain* m_terrain = nullptr;
-            std::map<id_t, Object*> m_objects;
-            std::map<id_t, Player*> m_players;
+            std::unique_ptr<Terrain> m_terrain = nullptr;
+            std::map<id_t, std::unique_ptr<Object>> m_objects;
+            std::map<id_t, std::unique_ptr<Player>> m_players;
             uint32_t m_minPlayers = 2;
             uint32_t m_maxPlayers = 4;
             bool m_started = false;

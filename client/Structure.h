@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/Geometry.hpp>
+#include <vlGraphics/RenderingAbstract.hpp>
+#include <vlGraphics/SceneManagerActorTree.hpp>
+
 #include "../common/StructureData.h"
 #include "../common/StructureType.h"
 #include "../common/types.h"
