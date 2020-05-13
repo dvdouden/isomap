@@ -146,8 +146,17 @@ namespace isomap {
                        (uint8_t( m_data.slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
             }
 
+            void addStructure( Structure* structure );
+
+            void removeStructure( Structure* structure );
+
+            Structure* getStructureAt( uint32_t x, uint32_t y );
+
         private:
             uint8_t getCornerSafe( int x, int y, int c ) const;
+
+            std::vector<uint32_t> getChunks( Structure* structure );
+            uint32_t getChunk( uint32_t x, uint32_t y );
 
             uint32_t m_width = 0;
             uint32_t m_height = 0;
@@ -159,6 +168,11 @@ namespace isomap {
 
             uint8_t* m_fogMap = nullptr;
             uint8_t* m_fogUpdateMap = nullptr;
+
+            // FIXME: shared code with server!
+            uint32_t m_chunkSize = 16;
+            std::vector<Structure*>* m_structures;
+            std::vector<Unit*>* m_units;
 
             bool m_renderFog = false;
             bool m_renderHighlight = false;

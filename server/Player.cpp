@@ -186,7 +186,6 @@ namespace isomap {
             m_structures.erase( structure->id() );
             // FIXME: this will invalidate iterators, so can't be called from Match::update!
             m_match->removeObject( structure );
-            delete structure;
         }
 
         void Player::destroyUnit( Unit* unit ) {
@@ -196,7 +195,18 @@ namespace isomap {
             m_units.erase( unit->id() );
             // FIXME: this will invalidate iterators, so can't be called from Match::update!
             m_match->removeObject( unit );
-            delete unit;
+        }
+
+        void Player::dump() {
+            printf ( "Player %08X [%s]:\n", m_id, m_name.c_str() );
+            printf( "%d structures\n", m_structures.size() );
+            for ( auto& structure : m_structures ) {
+                structure.second->dump();
+            }
+            printf( "%d units\n", m_units.size() );
+            for ( auto& unit : m_units ) {
+                unit.second->dump();
+            }
         }
     }
 }

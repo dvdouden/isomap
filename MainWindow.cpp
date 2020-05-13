@@ -355,6 +355,10 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             m_renderMatch->dumpActors();
             break;
 
+        case vl::Key_F9:
+            m_serverMatch->dump();
+            break;
+
         case vl::Key_Z:
             if ( m_structureType > 1 ) {
                 m_structureType--;
@@ -786,8 +790,8 @@ void MainWindow::highlight( int x, int y ) {
 
         case DeleteStructure:
             // FIXME: shouldn't be using server structure here but client...
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* structure = m_serverMatch->terrain()->getStructureAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* structure = m_renderTerrain->getStructureAt( x, y );
                 if ( structure != nullptr ) {
                     m_renderTerrain->highLight(
                             isomap::client::Terrain::Area( structure->x(), structure->y(), structure->footPrint() ),
@@ -799,7 +803,7 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case PlaceUnit:
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+            if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
                 if ( m_renderTerrain->isVisible( x, y ) ) {
                     if ( m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed ) {
                         m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
@@ -812,7 +816,7 @@ void MainWindow::highlight( int x, int y ) {
 
         case DeleteUnit:
             // FIXME: shouldn't be using server unit here but client...
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
+            if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
                 auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
                 if ( unit != nullptr ) {
                     m_renderTerrain->addHighlight(
@@ -1030,11 +1034,11 @@ void MainWindow::updateText() {
             break;
 
         case DeleteStructure: {
-            isomap::server::Structure* structure = nullptr;
+            isomap::client::Structure* structure = nullptr;
             bool canDelete = false;
-            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
-                 m_cursorY < m_serverMatch->terrain()->height() ) {
-                structure = m_serverMatch->terrain()->getStructureAt( m_cursorX, m_cursorY );
+            if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
+                 m_cursorY <m_renderTerrain->height() ) {
+                structure = m_renderTerrain->getStructureAt( m_cursorX, m_cursorY );
                 if ( structure != nullptr ) {
                     canDelete = structure->player()->id() == m_controllingPlayer->id();
                 }
@@ -1055,6 +1059,7 @@ void MainWindow::updateText() {
                                          << getModeName()
                                          << m_controllingPlayer->name()
                                          << structure->id()
+                                         << structure->player()->name()
                                          << structure->type()->id()
                                          << structure->type()->name()
                                          << structure->orientation()

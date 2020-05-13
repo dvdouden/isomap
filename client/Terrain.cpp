@@ -6,6 +6,7 @@
 #include <vlGraphics/Geometry.hpp>
 #include <vlGraphics/Rendering.hpp>
 
+#include "Structure.h"
 #include "Terrain.h"
 #include "../common/TerrainMessage.h"
 
@@ -21,11 +22,13 @@ namespace isomap {
             m_fogUpdateMapWidth = (m_width + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
             m_fogUpdateMapHeight = (m_height + (m_fogUpdateMapScale - 1)) / m_fogUpdateMapScale;
             m_fogUpdateMap = new uint8_t[m_fogUpdateMapWidth * m_fogUpdateMapHeight]();
+            m_structures = new std::vector<Structure*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
         }
 
         Terrain::~Terrain() {
             delete[] m_fogMap;
             delete[] m_fogUpdateMap;
+            delete[] m_structures;
         }
 
         void Terrain::processMessage( isomap::common::TerrainMessage* msg ) {
@@ -412,6 +415,58 @@ namespace isomap {
 
         void Terrain::unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint ) {
             m_data.unreserve( worldX, worldY, footPrint );
+        }
+
+        void Terrain::addStructure( Structure* structure ) {
+            for ( uint32_t chunk : getChunks( structure ) ) {
+                m_structures[chunk].push_back( structure );
+            }
+            occupy( structure->x(), structure->y(), structure->footPrint() );
+        }
+
+        void Terrain::removeStructure( Structure* structure ) {
+            for ( uint32_t chunk : getChunks( structure ) ) {
+                for ( auto it = m_structures[chunk].begin(); it != m_structures[chunk].end(); ++it ) {
+                    if ( (*it) == structure ) {
+                        m_structures[chunk].erase( it );
+                        break;
+                    }
+                }
+            }
+            vacate( structure->x(), structure->y(), structure->footPrint() );
+        }
+
+        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
+            if ( (m_data.occupancyMap[y * m_width + x] & 0b0000'0001u) == 0 ) {
+                return nullptr;
+            }
+            uint32_t chunk = getChunk( x, y );
+            for ( Structure* structure : m_structures[chunk] ) {
+                if ( structure->occupies( x, y ) ) {
+                    return structure;
+                }
+            }
+            return nullptr;
+        }
+
+        std::vector<uint32_t> Terrain::getChunks( Structure* structure ) {
+            std::vector<uint32_t> chunks;
+            uint32_t x1 = structure->x() / m_chunkSize;
+            uint32_t y1 = structure->y() / m_chunkSize;
+            uint32_t x2 = (structure->x() + structure->footPrint()->width() - 1) / m_chunkSize;
+            uint32_t y2 = (structure->y() + structure->footPrint()->height() - 1) / m_chunkSize;
+            for ( uint32_t y = y1; y <= y2; ++y ) {
+                for ( uint32_t x = x1; x <= x2; ++x ) {
+                    chunks.push_back( y * (m_width / m_chunkSize) + x );
+                }
+            }
+            return std::move( chunks );
+        }
+
+        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) {
+            uint32_t chunkX = x / m_chunkSize;
+            uint32_t chunkY = y / m_chunkSize;
+            return chunkY * (m_width / m_chunkSize) + chunkX;
         }
     }
 

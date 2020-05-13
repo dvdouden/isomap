@@ -64,6 +64,8 @@ namespace isomap {
 
             bool occupies( uint32_t x, uint32_t y ) const;
 
+            void dump() override;
+
         private:
             common::StructureData m_data;
 

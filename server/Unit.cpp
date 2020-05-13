@@ -143,5 +143,9 @@ namespace isomap {
         int32_t Unit::speedY( int32_t speed, int32_t orientation ) const {
             return static_cast<int32_t>(speed * ::sinf( (orientation * math::fPi) / 65536.0f ) );
         }
+
+        void Unit::dump() {
+            printf( "Unit [%d] (%d:%s) at %d,%d,%d\n", id(), m_type->id(), m_type->name().c_str(), tileX(), tileY(), tileZ() );
+        }
     }
 }

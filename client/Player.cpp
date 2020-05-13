@@ -56,7 +56,7 @@ namespace isomap {
                         str->initRender( m_rendering, m_sceneManager.get() );
                     }
                     m_terrain->unreserve( str->x(), str->y(), str->footPrint() );
-                    m_terrain->occupy( str->x(), str->y(), str->footPrint() );
+                    m_terrain->addStructure( str );
                     break;
                 }
 
@@ -93,8 +93,7 @@ namespace isomap {
                 case common::PlayerServerMessage::StructureDestroyed: {
                     auto* str = getStructure( msg->id() );
                     if ( str != nullptr ) {
-                        m_terrain->vacate( str->x(), str->y(), str->footPrint() );
-                        delete str;
+                        m_terrain->removeStructure( str );
                         m_structures.erase( msg->id() );
                     }
                     break;
@@ -135,7 +134,6 @@ namespace isomap {
                 case common::PlayerServerMessage::UnitDestroyed: {
                     auto* unit = getUnit( msg->id() );
                     if ( unit != nullptr ) {
-                        delete unit;
                         m_units.erase( msg->id() );
                     }
                     break;

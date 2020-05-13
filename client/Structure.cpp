@@ -39,21 +39,14 @@ namespace isomap {
             m_transform = new vl::Transform;
             rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
 
-
             m_effect = new vl::Effect;
-            //m_effect->shader()->gocMaterial()->setColorMaterialEnabled( true );
             m_effect->shader()->setRenderState( new vl::Light, 0 );
             m_effect->shader()->gocMaterial()->setDiffuse( m_player->color() );
             m_effect->shader()->enable( vl::EN_DEPTH_TEST );
             m_effect->shader()->enable( vl::EN_LIGHTING );
             m_effect->lod( 0 )->push_back( new vl::Shader );
             m_effect->shader( 0, 1 )->enable( vl::EN_BLEND );
-            //m_effect->shader(0,1)->enable(vl::EN_LINE_SMOOTH);
             m_effect->shader( 0, 1 )->enable( vl::EN_DEPTH_TEST );
-            //m_effect->shader( 0, 1 )->enable( vl::EN_POLYGON_OFFSET_LINE );
-            //m_effect->shader( 0, 1 )->gocPolygonOffset()->set( -1.0f, -1.0f );
-            //m_effect->shader( 0, 1 )->gocPolygonMode()->set( vl::PM_LINE, vl::PM_LINE );
-            //m_effect->shader( 0, 1 )->gocColor()->setValue( vl::red );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
             m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
 
@@ -106,20 +99,20 @@ namespace isomap {
         }
 
 
-        bool Structure::occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const {
+        bool Structure::occupies( uint32_t x, uint32_t y ) const {
             if ( x >= m_data.x + m_type->width( m_data.orientation ) ) {
-                return false; // structure right of area
+                return false; // structure right of point
             }
-            if ( m_data.x >= x + width ) {
-                return false; // structure left of area
+            if ( x < m_data.x ) {
+                return false; // structure left of point
             }
             if ( y >= m_data.y + m_type->height( m_data.orientation ) ) {
-                return false; // structure below area
+                return false; // structure below point
             }
-            if ( m_data.y >= y + height ) {
-                return false; // structure above area
+            if ( y < m_data.y ) {
+                return false; // structure above point
             }
-            return true; // structure and area overlap
+            return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
         }
 
         void Structure::setVisible( bool visible ) {

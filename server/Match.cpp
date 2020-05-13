@@ -226,5 +226,12 @@ namespace isomap {
             }
         }
 
+        void Match::dump() {
+            printf( "Match at time %d\n", m_time );
+            for ( auto& player : m_players ) {
+                player.second->dump();
+            }
+        }
+
     }
 }

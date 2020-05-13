@@ -58,6 +58,8 @@ namespace isomap {
 
             void destroyUnit( Unit* unit );
 
+            void dump();
+
         private:
             id_t m_id;
             std::string m_name;

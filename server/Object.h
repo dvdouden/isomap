@@ -33,6 +33,8 @@ namespace isomap {
 
             void unsubscribe( Player* player );
 
+            virtual void dump() = 0;
+
         private:
             id_t m_id;
             Player* m_player;

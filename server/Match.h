@@ -58,6 +58,8 @@ namespace isomap {
 
             Player* getPlayer( id_t id );
 
+            void dump();
+
 
         private:
 

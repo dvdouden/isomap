@@ -88,8 +88,6 @@ namespace isomap {
                 enqueueMessage( common::PlayerCommandMessage::unitCommandMsg( id, msg ) );
             }
 
-            Structure* getStructureAt( int32_t x, int32_t y );
-
         private:
             Match* m_match;
             id_t m_id;

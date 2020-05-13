@@ -73,6 +73,8 @@ namespace isomap {
                 return m_data.orientation;
             }
 
+            void dump() override;
+
         private:
             int32_t speedX( int32_t speed, int32_t orientation ) const;
 

@@ -31,14 +31,18 @@ namespace isomap {
 
             void render();
 
-            bool occupies( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) const;
+            bool occupies( uint32_t x, uint32_t y ) const;
 
-            common::StructureType* type() {
+            common::StructureType* type() const {
                 return m_type;
             }
 
-            common::FootPrint* footPrint() {
+            common::FootPrint* footPrint() const {
                 return m_type->footPrint( m_data.orientation );
+            }
+
+            Player* player() const {
+                return m_player;
             }
 
             const common::StructureData& data() const {
@@ -65,6 +69,10 @@ namespace isomap {
 
             uint32_t z() const {
                 return m_data.z;
+            }
+
+            uint32_t orientation() const {
+                return m_data.orientation;
             }
 
 
