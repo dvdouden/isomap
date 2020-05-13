@@ -10,13 +10,8 @@ namespace isomap {
                 m_width( width ),
                 m_height( height ),
                 m_data( width, height ) {
-            m_structures = new std::vector<Structure*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
-            m_units = new std::vector<Unit*>[(m_width / m_chunkSize) * (m_height / m_chunkSize)];
-        }
-
-        Terrain::~Terrain() {
-            delete[] m_structures;
-            delete[] m_units;
+            m_structures.resize( (m_width / m_chunkSize) * (m_height / m_chunkSize) );
+            m_units.resize( (m_width / m_chunkSize) * (m_height / m_chunkSize) );
         }
 
         void Terrain::init() {

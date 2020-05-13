@@ -789,7 +789,6 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case DeleteStructure:
-            // FIXME: shouldn't be using server structure here but client...
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* structure = m_renderTerrain->getStructureAt( x, y );
                 if ( structure != nullptr ) {
@@ -815,9 +814,8 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case DeleteUnit:
-            // FIXME: shouldn't be using server unit here but client...
-            if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
-                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
                     m_renderTerrain->addHighlight(
                             isomap::client::Terrain::Area( x, y, 1, 1 ),
@@ -829,8 +827,8 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case SelectUnit:
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
                     m_renderTerrain->addHighlight(
                             isomap::client::Terrain::Area( x, y, 1, 1 ),
@@ -842,8 +840,8 @@ void MainWindow::highlight( int x, int y ) {
             break;
 
         case MoveUnit:
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
                     m_renderTerrain->addHighlight(
                             isomap::client::Terrain::Area( x, y, 1, 1 ),
@@ -956,8 +954,8 @@ void MainWindow::place( int x, int y ) {
             break;
 
         case SelectUnit:
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr && unit->player()->id() == m_controllingPlayer->id() ) {
                     m_selectedUnit = unit->id();
                     m_mode = MoveUnit;
@@ -966,8 +964,8 @@ void MainWindow::place( int x, int y ) {
             break;
 
         case MoveUnit:
-            if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* unit = m_serverMatch->terrain()->getUnitAt( x, y );
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
                     if ( unit->player()->id() == m_controllingPlayer->id() ) {
                         m_selectedUnit = unit->id();
@@ -1037,7 +1035,7 @@ void MainWindow::updateText() {
             isomap::client::Structure* structure = nullptr;
             bool canDelete = false;
             if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
-                 m_cursorY <m_renderTerrain->height() ) {
+                 m_cursorY < m_renderTerrain->height() ) {
                 structure = m_renderTerrain->getStructureAt( m_cursorX, m_cursorY );
                 if ( structure != nullptr ) {
                     canDelete = structure->player()->id() == m_controllingPlayer->id();
@@ -1165,12 +1163,11 @@ void MainWindow::updateText() {
             break;
 
         case DeleteUnit: {
-            // FIXME: shouldn't be using server unit here but client...
-            isomap::server::Unit* unit = nullptr;
+            isomap::client::Unit* unit = nullptr;
             bool canDelete = false;
-            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
-                 m_cursorY < m_serverMatch->terrain()->height() ) {
-                unit = m_serverMatch->terrain()->getUnitAt( m_cursorX, m_cursorY );
+            if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_renderTerrain->height() ) {
+                unit = m_renderTerrain->getUnitAt( m_cursorX, m_cursorY );
                 if ( unit != nullptr ) {
                     canDelete = unit->player()->id() == m_controllingPlayer->id();
                 }
@@ -1216,12 +1213,11 @@ void MainWindow::updateText() {
         }
 
         case SelectUnit: {
-            // FIXME: shouldn't be using server unit here but client...
-            isomap::server::Unit* unit = nullptr;
+            isomap::client::Unit* unit = nullptr;
             bool canSelect = false;
-            if ( m_cursorX >= 0 && m_cursorX < m_serverMatch->terrain()->width() && m_cursorY >= 0 &&
-                 m_cursorY < m_serverMatch->terrain()->height() ) {
-                unit = m_serverMatch->terrain()->getUnitAt( m_cursorX, m_cursorY );
+            if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_renderTerrain->height() ) {
+                unit = m_renderTerrain->getUnitAt( m_cursorX, m_cursorY );
                 if ( unit != nullptr ) {
                     canSelect = unit->player()->id() == m_controllingPlayer->id();
                 }

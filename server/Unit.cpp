@@ -145,7 +145,8 @@ namespace isomap {
         }
 
         void Unit::dump() {
-            printf( "Unit [%d] (%d:%s) at %d,%d,%d\n", id(), m_type->id(), m_type->name().c_str(), tileX(), tileY(), tileZ() );
+            printf( "Unit [%d] (%d:%s) at %d,%d,%d\n", id(), m_type->id(), m_type->name().c_str(), tileX(), tileY(),
+                    tileZ() );
         }
     }
 }

@@ -190,6 +190,9 @@ namespace isomap {
 
         void Unit::update() {
             if ( m_data.motionState == common::Moving ) {
+                int32_t oldTileX = tileX();
+                int32_t oldTileY = tileY();
+
                 m_data.updateMotion();
 
                 // FIXME: move out of bounds check to somewhere else
@@ -207,6 +210,10 @@ namespace isomap {
                 // FIXME: move height calculation to somewhere else
                 m_data.z = m_player->terrain()->heightMap()[tileY() * m_player->terrain()->width() + tileX()] *
                            math::fix::precision;
+
+                if ( tileX() != oldTileX || tileY() != oldTileY ) {
+                    m_player->terrain()->updateUnit( this, oldTileX, oldTileY );
+                }
             }
         }
 

@@ -106,6 +106,7 @@ namespace isomap {
                     if ( m_rendering != nullptr ) {
                         unit->initRender( m_rendering, m_sceneManager.get() );
                     }
+                    m_terrain->addUnit( unit );
                     break;
                 }
 
@@ -117,8 +118,12 @@ namespace isomap {
                         if ( m_rendering != nullptr ) {
                             unit->initRender( m_rendering, m_sceneManager.get() );
                         }
+                        m_terrain->addUnit( unit );
                     } else {
-                        unit->setVisible( *msg->unitData() );
+                        if ( !unit->visible() ) {
+                            unit->setVisible( *msg->unitData() );
+                            m_terrain->addUnit( unit );
+                        }
                     }
                     break;
                 }
@@ -126,7 +131,10 @@ namespace isomap {
                 case common::PlayerServerMessage::UnitInvisible: {
                     auto* unit = getUnit( msg->id() );
                     if ( unit != nullptr ) {
-                        unit->setInvisible();
+                        if ( unit->visible() ) {
+                            unit->setInvisible();
+                            m_terrain->removeUnit( unit );
+                        }
                     }
                     break;
                 }
@@ -134,6 +142,7 @@ namespace isomap {
                 case common::PlayerServerMessage::UnitDestroyed: {
                     auto* unit = getUnit( msg->id() );
                     if ( unit != nullptr ) {
+                        m_terrain->removeUnit( unit );
                         m_units.erase( msg->id() );
                     }
                     break;
@@ -182,10 +191,14 @@ namespace isomap {
         void Player::render() {
             // TODO: This shouldn't be done per player
             for ( auto& it : m_structures ) {
-                it.second->render();
+                if ( it.second->visible() ) {
+                    it.second->render();
+                }
             }
             for ( auto& it : m_units ) {
-                it.second->render();
+                if ( it.second->visible() ) {
+                    it.second->render();
+                }
             }
         }
 

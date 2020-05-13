@@ -52,7 +52,7 @@ namespace isomap {
 
             Terrain( uint32_t width, uint32_t height );
 
-            ~Terrain();
+            ~Terrain() = default;
 
             Terrain( const Terrain& ) = delete;
 
@@ -152,11 +152,22 @@ namespace isomap {
 
             Structure* getStructureAt( uint32_t x, uint32_t y );
 
+            void addUnit( Unit* unit );
+
+            void removeUnit( Unit* unit );
+
+            void updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY );
+
+            Unit* getUnitAt( uint32_t x, uint32_t y );
+
         private:
             uint8_t getCornerSafe( int x, int y, int c ) const;
 
             std::vector<uint32_t> getChunks( Structure* structure );
+
             uint32_t getChunk( uint32_t x, uint32_t y );
+
+            void removeUnitFromChunk( Unit* unit, uint32_t chunk );
 
             uint32_t m_width = 0;
             uint32_t m_height = 0;
@@ -166,13 +177,13 @@ namespace isomap {
 
             common::TerrainData m_data;
 
-            uint8_t* m_fogMap = nullptr;
-            uint8_t* m_fogUpdateMap = nullptr;
+            std::vector<uint8_t> m_fogMap;
+            std::vector<uint8_t> m_fogUpdateMap;
 
             // FIXME: shared code with server!
             uint32_t m_chunkSize = 16;
-            std::vector<Structure*>* m_structures;
-            std::vector<Unit*>* m_units;
+            std::vector<std::vector<Structure*>> m_structures;
+            std::vector<std::vector<Unit*>> m_units;
 
             bool m_renderFog = false;
             bool m_renderHighlight = false;

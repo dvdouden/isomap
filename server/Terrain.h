@@ -11,7 +11,7 @@ namespace isomap {
         public:
             Terrain( uint32_t width, uint32_t height );
 
-            ~Terrain();
+            ~Terrain() = default;
 
             Terrain( const Terrain& ) = delete;
 
@@ -78,8 +78,8 @@ namespace isomap {
             common::TerrainData m_data;
 
             uint32_t m_chunkSize = 16;
-            std::vector<Structure*>* m_structures;
-            std::vector<Unit*>* m_units;
+            std::vector<std::vector<Structure*>> m_structures;
+            std::vector<std::vector<Unit*>> m_units;
 
             std::vector<uint32_t> getChunks( Structure* pStructure );
 
