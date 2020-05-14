@@ -39,16 +39,20 @@ namespace isomap {
                 return m_footPrint[orientation % 4u]->get( x, y );
             }
 
+            UnitType* includedUnitType() const;
+
             static StructureType* get( id_t id );
 
             static void load();
 
             static void clear();
 
+
         private:
-            StructureType( id_t id, std::string name, FootPrint* footPrint );
+            StructureType( id_t id, std::string name, FootPrint* footPrint, id_t spawnUnitId = 0 );
 
             id_t m_id;
+            id_t m_spawnUnitId = 0;
             FootPrint* m_footPrint[4];
             std::string m_name;
         };

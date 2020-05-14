@@ -133,12 +133,7 @@ namespace isomap {
                 case common::PlayerCommandMessage::BuildUnit: {
                     auto* unit = new Unit( this, msg->x(), msg->y(), msg->z(),
                                            common::UnitType::get( msg->id() ), msg->orientation() );
-                    m_match->enqueueMessage( unit, common::PlayerServerMessage::unitCreatedMsg( unit->data() ) );
-                    unFog( unit->tileX(), unit->tileY(), 10 );
-                    m_match->addObject( unit );
-                    m_terrain->addUnit( unit );
-                    m_units[unit->id()] = unit;
-                    m_match->updateSubscriptions( unit );
+                    registerNewUnit( unit );
                     break;
                 }
 
@@ -223,6 +218,15 @@ namespace isomap {
                 return nullptr;
             }
             return unit->second;
+        }
+
+        void Player::registerNewUnit( Unit* unit ) {
+            m_match->enqueueMessage( unit, common::PlayerServerMessage::unitCreatedMsg( unit->data() ) );
+            unFog( unit->tileX(), unit->tileY(), 10 );
+            m_match->addObject( unit );
+            m_terrain->addUnit( unit );
+            m_units[unit->id()] = unit;
+            m_match->updateSubscriptions( unit );
         }
     }
 }

@@ -66,6 +66,8 @@ namespace isomap {
 
             Unit* getUnit( id_t id ) const;
 
+            void registerNewUnit( Unit* unit );
+
             void dump();
 
         private:

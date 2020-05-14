@@ -29,7 +29,8 @@ namespace isomap {
                 for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                     uint8_t footPrintBits = footPrint->get( x, y );
                     if ( footPrintBits != 0 ) {
-                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |= footPrintBits & 0b0000'0011u;
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |=
+                                uint8_t( footPrintBits & occupancy::maskStructureBits );
                     }
                 }
             }
@@ -41,7 +42,8 @@ namespace isomap {
             for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                 for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                     if ( footPrint->get( x, y ) != 0 ) {
-                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~0b0000'0011u;
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= uint8_t(
+                                ~occupancy::maskStructureBits );
                     }
                 }
             }
@@ -53,7 +55,7 @@ namespace isomap {
             for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                 for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                     if ( footPrint->get( x, y ) != 0 ) {
-                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |= 0b0000'0100u;
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] |= occupancy::bitReserved;
                     }
                 }
             }
@@ -64,7 +66,7 @@ namespace isomap {
             for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                 for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                     if ( footPrint->get( x, y ) != 0 ) {
-                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~0b0000'0100u;
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~occupancy::bitReserved;
                     }
                 }
             }
@@ -99,7 +101,8 @@ namespace isomap {
                     if ( tileY > 0 ) {
                         uint8_t hDown = tmpHeightMap[-stride];
                         uint8_t oDown = tmpOccupancyMap[-stride];
-                        if ( (hDown == h || hDown - h == 1 || h - hDown == 1) && (oDown & 0b0000'0001u) == 0 ) {
+                        if ( (hDown == h || hDown - h == 1 || h - hDown == 1) &&
+                             (oDown & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitDown;
                         }
                     }
@@ -108,7 +111,8 @@ namespace isomap {
                     if ( tileX < mapWidth - 1 ) {
                         uint8_t hRight = tmpHeightMap[1];
                         uint8_t oRight = tmpOccupancyMap[1];
-                        if ( (hRight == h || hRight - h == 1 || h - hRight == 1) && (oRight & 0b0000'0001u) == 0 ) {
+                        if ( (hRight == h || hRight - h == 1 || h - hRight == 1) &&
+                             (oRight & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitRight;
                         }
                     }
@@ -117,7 +121,8 @@ namespace isomap {
                     if ( tileY < mapHeight - 1 ) {
                         uint8_t hUp = tmpHeightMap[stride];
                         uint8_t oUp = tmpOccupancyMap[stride];
-                        if ( (hUp == h || hUp - h == 1 || h - hUp == 1) && (oUp & 0b0000'0001u) == 0 ) {
+                        if ( (hUp == h || hUp - h == 1 || h - hUp == 1) &&
+                             (oUp & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitUp;
                         }
                     }
@@ -126,7 +131,8 @@ namespace isomap {
                     if ( tileX > 0 ) {
                         uint8_t hLeft = tmpHeightMap[-1];
                         uint8_t oLeft = tmpOccupancyMap[-1];
-                        if ( (hLeft == h || hLeft - h == 1 || h - hLeft == 1) && (oLeft & 0b0000'0001u) == 0 ) {
+                        if ( (hLeft == h || hLeft - h == 1 || h - hLeft == 1) &&
+                             (oLeft & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitLeft;
                         }
                     }
@@ -136,7 +142,7 @@ namespace isomap {
                         uint8_t hDownLeft = tmpHeightMap[-stride - 1];
                         uint8_t oDownLeft = tmpOccupancyMap[-stride - 1];
                         if ( (hDownLeft == h || hDownLeft - h == 1 || h - hDownLeft == 1) &&
-                             (oDownLeft & 0b0000'0001u) == 0 ) {
+                             (oDownLeft & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitDownLeft;
                         }
                     }
@@ -147,7 +153,7 @@ namespace isomap {
                         uint8_t hDownRight = tmpHeightMap[-stride + 1];
                         uint8_t oDownRight = tmpOccupancyMap[-stride + 1];
                         if ( (hDownRight == h || hDownRight - h == 1 || h - hDownRight == 1) &&
-                             (oDownRight & 0b0000'0001u) == 0 ) {
+                             (oDownRight & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitDownRight;
                         }
                     }
@@ -158,7 +164,7 @@ namespace isomap {
                         uint8_t hUpRight = tmpHeightMap[stride + 1];
                         uint8_t oUpRight = tmpOccupancyMap[stride + 1];
                         if ( (hUpRight == h || hUpRight - h == 1 || h - hUpRight == 1) &&
-                             (oUpRight & 0b0000'0001u) == 0 ) {
+                             (oUpRight & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitUpRight;
                         }
                     }
@@ -168,7 +174,7 @@ namespace isomap {
                         uint8_t hUpLeft = tmpHeightMap[stride - 1];
                         uint8_t oUpLeft = tmpOccupancyMap[stride - 1];
                         if ( (hUpLeft == h || hUpLeft - h == 1 || h - hUpLeft == 1) &&
-                             (oUpLeft & 0b0000'0001u) == 0 ) {
+                             (oUpLeft & occupancy::bitObstructed) == 0 ) {
                             pathBits |= path::bitUpLeft;
                         }
                     }

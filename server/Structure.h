@@ -9,12 +9,13 @@ namespace isomap {
 
         class Structure : public Object {
         public:
-            Structure( Player* owner, uint32_t x, uint32_t y, uint32_t z, common::StructureType* structureType,
-                       uint32_t orientation ) :
-                    Object( owner ),
-                    m_data( {id(), structureType->id(), x, y, z, orientation, 0} ),
-                    m_type( structureType ) {
-            }
+            Structure(
+                    Player* owner,
+                    uint32_t x,
+                    uint32_t y,
+                    uint32_t z,
+                    common::StructureType* structureType,
+                    uint32_t orientation );
 
             ~Structure() override = default;
 
@@ -54,12 +55,7 @@ namespace isomap {
                 return m_data.constructionProgress == 100;
             }
 
-            void constructionTick() {
-                if ( m_data.constructionProgress < 100 ) {
-                    m_dirty = true;
-                    m_data.constructionProgress++;
-                }
-            }
+            void constructionTick();
 
             const common::StructureData& data() const {
                 return m_data;
@@ -76,6 +72,8 @@ namespace isomap {
             bool occupies( uint32_t x, uint32_t y ) const;
 
             bool isAdjacentTo( uint32_t x, uint32_t y ) const;
+
+            Unit* spawnUnit() const;
 
             void dump() override;
 

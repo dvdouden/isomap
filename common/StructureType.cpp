@@ -1,5 +1,8 @@
 #include <map>
+
 #include "StructureType.h"
+#include "TerrainData.h"
+#include "UnitType.h"
 
 namespace isomap {
     namespace common {
@@ -43,7 +46,8 @@ namespace isomap {
                                                                     {0, 3, 0,
                                                                      3, 3, 3,
                                                                      3, 3, 3,
-                                                                     2, 2, 2} ) );
+                                                                     2, occupancy::bitSpawnPoint | 2u, 2} ),
+                                                     2 );
 
             s_structureTypes[5] = new StructureType( 5,
                                                      "turret",
@@ -59,9 +63,10 @@ namespace isomap {
             s_structureTypes.clear();
         }
 
-        StructureType::StructureType( isomap::id_t id, std::string name, FootPrint* footPrint ) :
+        StructureType::StructureType( isomap::id_t id, std::string name, FootPrint* footPrint, id_t spawnUnitId ) :
                 m_id( id ),
-                m_name( std::move( name ) ) {
+                m_name( std::move( name ) ),
+                m_spawnUnitId( spawnUnitId ) {
             m_footPrint[0] = footPrint;
             m_footPrint[1] = m_footPrint[0]->rotate();
             m_footPrint[2] = m_footPrint[1]->rotate();
@@ -73,6 +78,10 @@ namespace isomap {
             delete m_footPrint[1];
             delete m_footPrint[2];
             delete m_footPrint[3];
+        }
+
+        UnitType* StructureType::includedUnitType() const {
+            return UnitType::get( m_spawnUnitId );
         }
     }
 }

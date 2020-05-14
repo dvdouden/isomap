@@ -87,8 +87,6 @@ void MainWindow::initEvent() {
 
     sendAndReceiveMessages();
     printf( "init done\n" );
-
-
 }
 
 

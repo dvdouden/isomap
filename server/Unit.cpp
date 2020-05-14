@@ -28,6 +28,11 @@ namespace isomap {
                     break;
 
                 case common::UnitCommandMessage::Construct: {
+                    if ( !m_type->canConstruct() ) {
+                        printf( "[%d] Received Construct command but unit has no construct abilities!\n", id() );
+                        // FIXME: should probably send a reject msg
+                        break;
+                    }
                     // FIXME: check if we're on a tile boundary
                     auto* structure = player()->getStructure( msg->id() );
                     if ( structure != nullptr && structure->isAdjacentTo( tileX(), tileY() ) ) {

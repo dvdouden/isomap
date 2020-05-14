@@ -26,6 +26,8 @@ namespace isomap {
             const uint8_t bitObstructed = 0b0000'0001u;
             const uint8_t bitConstructed = 0b0000'0010u;
             const uint8_t bitReserved = 0b0000'0100u;
+            const uint8_t bitSpawnPoint = 0b0000'1000u;
+            const uint8_t maskStructureBits = uint8_t( bitObstructed | bitConstructed ) | bitSpawnPoint;
         }
 
         // common data structure and methods
