@@ -39,7 +39,11 @@ namespace isomap {
                                         common::UnitServerMessage::constructMsg( m_data ) ) );
                     } else {
                         // FIXME: should probably send a message back
-                        printf( "Unit %d unable to construct structure %d\n", id(), msg->id() );
+                        if ( structure == nullptr ) {
+                            printf( "Unit %d unable to construct structure %d, doesn't exist\n", id(), msg->id() );
+                        } else {
+                            printf( "Unit %d unable to construct structure %d, not adjacent\n", id(), msg->id() );
+                        }
                     }
                     break;
                 }

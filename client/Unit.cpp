@@ -59,24 +59,29 @@ namespace isomap {
 
             // create a todo list for the algorithm
             std::priority_queue<node, std::vector<node>, std::greater<>> todo;
-            todo.push( {1, tileY() * width + tileX()} );
+
+            uint32_t targetIdx = command.y * width + command.x;
+            uint32_t startIdx = tileY() * width + tileX();
+
+            todo.push( {1, startIdx} );
+
             while ( !todo.empty() ) {
                 auto tile = todo.top();
                 todo.pop();
                 auto value = nodeMap[tile.from];
-                unsigned int tile_x = tile.from % width;
-                unsigned int tile_y = tile.from / width;
+                //unsigned int tile_x = tile.from % width;
+                //unsigned int tile_y = tile.from / width;
                 //printf( "Test %d %d\n", tile_x, tile_y);
-                if ( tile_x == command.x && tile_y == command.y ) {
+                if ( tile.from == targetIdx ) {
                     break;
                 }
-                uint8_t canReach = m_player->terrain()->pathMap()[tile_y * width + tile_x];
+                uint8_t canReach = m_player->terrain()->pathMap()[tile.from];
                 //printf( "[%2d,%2d] %02X\n", tile_x, tile_y, canReach );
 
                 // for now we're going to move in every direction, as long as we haven't traveled there yet.
                 if ( canReach & common::path::bitDownLeft ) {
                     //printf( "down left\n" );
-                    auto idx = (tile_y - 1) * width + tile_x - 1;
+                    auto idx = tile.from - width - 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 14;
                         nodeMap[idx].from = tile.from;
@@ -85,7 +90,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitDown ) {
                     //printf( "down\n" );
-                    auto idx = (tile_y - 1) * width + tile_x;
+                    auto idx = tile.from - width;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 10;
                         nodeMap[idx].from = tile.from;
@@ -94,7 +99,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitDownRight ) {
                     //printf( "down right\n" );
-                    auto idx = (tile_y - 1) * width + tile_x + 1;
+                    auto idx = tile.from - width + 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 14;
                         nodeMap[idx].from = tile.from;
@@ -103,7 +108,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitRight ) {
                     //printf( "right\n" );
-                    auto idx = (tile_y) * width + tile_x + 1;
+                    auto idx = tile.from + 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 10;
                         nodeMap[idx].from = tile.from;
@@ -112,7 +117,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitUpRight ) {
                     //printf( "right up\n" );
-                    auto idx = (tile_y + 1) * width + tile_x + 1;
+                    auto idx = tile.from + width + 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 14;
                         nodeMap[idx].from = tile.from;
@@ -121,7 +126,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitUp ) {
                     //printf( "up\n" );
-                    auto idx = (tile_y + 1) * width + tile_x;
+                    auto idx = tile.from + width;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 10;
                         nodeMap[idx].from = tile.from;
@@ -130,7 +135,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitUpLeft ) {
                     //printf( "up left\n" );
-                    auto idx = (tile_y + 1) * width + tile_x - 1;
+                    auto idx = tile.from + width - 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 14;
                         nodeMap[idx].from = tile.from;
@@ -139,7 +144,7 @@ namespace isomap {
                 }
                 if ( canReach & common::path::bitLeft ) {
                     //printf( "left\n" );
-                    auto idx = (tile_y) * width + tile_x - 1;
+                    auto idx = tile.from - 1;
                     if ( nodeMap[idx].value == 0 ) {
                         nodeMap[idx].value = value.value + 10;
                         nodeMap[idx].from = tile.from;
@@ -147,16 +152,14 @@ namespace isomap {
                     }
                 }
             }
-            uint32_t targetIdx = command.y * width + command.x;
-            uint32_t startIdx = tileY() * width + tileX();
             if ( nodeMap[targetIdx].value > 0 ) {
                 printf( "Found a route!\n" );
                 while ( targetIdx != startIdx ) {
                     int wayPointX = (int)(targetIdx % width);
                     int wayPointY = (int)(targetIdx / width);
                     targetIdx = nodeMap[targetIdx].from;
-                    int tile_x = (int)(targetIdx % width);
-                    int tile_y = (int)(targetIdx / width);
+                    //int tile_x = (int)(targetIdx % width);
+                    //int tile_y = (int)(targetIdx / width);
                     //unsigned char direction = getDirection( wayPointX - tile_x, wayPointY - tile_y );
                     //if ( wayPoints.empty() || direction != wayPoints.back().direction ) {
                     wayPoints.push_back( {wayPointX, wayPointY} );
