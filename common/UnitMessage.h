@@ -12,10 +12,13 @@ namespace isomap {
         public:
             enum Type {
                 Move,
+                Construct,
             };
 
             explicit UnitCommandMessage( Type type ) :
                     m_type( type ) { }
+
+            const char* typeName() const;
 
             Type type() const {
                 return m_type;
@@ -25,17 +28,24 @@ namespace isomap {
                 return m_wayPoints;
             }
 
+            id_t id() const {
+                return m_id;
+            }
+
             static UnitCommandMessage* moveMsg( std::vector<WayPoint>& wayPoints );
+
+            static UnitCommandMessage* constructMsg( id_t structureId );
 
         private:
             Type m_type;
             std::vector<WayPoint> m_wayPoints;
+            id_t m_id = 0;
         };
 
         class UnitServerMessage {
         public:
             enum Type {
-                Create,
+                Construct,
                 Status,
                 MoveTo,
                 Stop,
@@ -46,6 +56,8 @@ namespace isomap {
 
             UnitServerMessage( const UnitServerMessage& ) = default;
 
+            const char* typeName() const;
+
             Type type() const {
                 return m_type;
             }
@@ -53,6 +65,8 @@ namespace isomap {
             const UnitData& data() {
                 return m_data;
             }
+
+            static UnitServerMessage* constructMsg( const UnitData& data );
 
             static UnitServerMessage* statusMsg( const UnitData& data );
 
@@ -68,4 +82,5 @@ namespace isomap {
         };
     }
 }
+
 

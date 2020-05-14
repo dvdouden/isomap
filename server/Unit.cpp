@@ -1,5 +1,6 @@
 #include "Match.h"
 #include "Player.h"
+#include "Structure.h"
 #include "Terrain.h"
 #include "Unit.h"
 #include "UnitType.h"
@@ -13,17 +14,35 @@ namespace isomap {
         Unit::Unit( Player* owner, int32_t x, int32_t y, int32_t z, common::UnitType* unitType,
                     uint32_t orientation ) :
                 Object( owner ),
-                m_data( {id(), unitType->id(), x * math::fix::precision, y * math::fix::precision,
+                m_data( {id(), unitType->id(), 0, x * math::fix::precision, y * math::fix::precision,
                          z * math::fix::precision, orientation} ),
                 m_type( unitType ) {
         }
 
 
         void Unit::processMessage( common::UnitCommandMessage* msg ) {
+            //printf( "Server Unit %d process client msg of type %s\n", id(), msg->typeName() );
             switch ( msg->type() ) {
                 case common::UnitCommandMessage::Move:
                     m_wayPoints = msg->wayPoints();
                     break;
+
+                case common::UnitCommandMessage::Construct: {
+                    // FIXME: check if we're on a tile boundary
+                    auto* structure = player()->getStructure( msg->id() );
+                    if ( structure != nullptr && structure->isAdjacentTo( tileX(), tileY() ) ) {
+                        m_data.state = common::Constructing;
+                        m_data.structureId = msg->id();
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::constructMsg( m_data ) ) );
+                    } else {
+                        // FIXME: should probably send a message back
+                        printf( "Unit %d unable to construct structure %d\n", id(), msg->id() );
+                    }
+                    break;
+                }
 
                 default:
                     break;
@@ -31,13 +50,24 @@ namespace isomap {
         }
 
         common::PlayerServerMessage* Unit::update( Terrain* terrain ) {
-            if ( m_wayPoints.empty() && m_data.motionState == common::Stopped ) {
+            if ( m_wayPoints.empty() && m_data.state == common::Idle ) {
                 return nullptr;
             }
 
+            if ( m_data.state == common::Constructing ) {
+                auto* structure = player()->getStructure( m_data.structureId );
+                if ( structure == nullptr || structure->constructionCompleted() ) {
+                    m_data.state = common::Idle;
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::stopMsg( m_data ) );
+                } else {
+                    structure->constructionTick();
+                    return nullptr;
+                }
+            }
+
             common::PlayerServerMessage* msg = nullptr;
-            if ( m_data.motionState == common::Stopped ) {
-                m_data.motionState = common::Moving;
+            if ( m_data.state == common::Idle ) {
+                m_data.state = common::Moving;
                 m_data.wayPoint = m_wayPoints.back();
                 m_wayPoints.pop_back();
                 msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );
@@ -69,7 +99,7 @@ namespace isomap {
                 terrain->updateUnit( this, oldTileX, oldTileY );
             }
 
-            if ( m_data.motionState == common::Stopped ) {
+            if ( m_data.state == common::Idle ) {
                 // reached wayPoint
                 if ( m_wayPoints.empty() ) {
                     delete msg;

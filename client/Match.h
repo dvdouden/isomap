@@ -6,6 +6,7 @@
 #include <vector>
 #include <vlGraphics/RenderingAbstract.hpp>
 #include "../common/MatchMessage.h"
+#include "../common/PlayerMessage.h"
 #include "../common/types.h"
 
 namespace isomap {
@@ -47,10 +48,12 @@ namespace isomap {
             void enableRendering();
 
             void enqueueMessage( common::MatchClientMessage* msg ) {
+                //printf( "%08X enqueue match client message of type %s\n", m_connectionId, msg->typeName() );
                 m_messages.push_back( msg );
             }
 
             void enqueueMessage( common::PlayerCommandMessage* msg ) {
+                //printf( "%08X enqueue player command message of type %s\n", m_connectionId, msg->typeName() );
                 m_messages.push_back( common::MatchClientMessage::playerCommand( m_connectionId, msg ) );
             }
 

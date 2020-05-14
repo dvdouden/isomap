@@ -32,6 +32,20 @@ namespace isomap {
             delete m_playerCommandMessage;
         }
 
+        const char* MatchClientMessage::typeName() {
+            switch ( m_type ) {
+                case RegisterPlayer:
+                    return "RegisterPlayer";
+                case UnRegisterPlayer:
+                    return "UnregisterPlayer";
+                case StartMatch:
+                    return "StartMatch";
+                case PlayerCommand:
+                    return "PlayerCommand";
+            }
+            return "Invalid";
+        }
+
         MatchServerMessage*
         MatchServerMessage::playerAccepted( const std::string& name ) {
             auto* msg = new MatchServerMessage( PlayerAccepted );
@@ -115,6 +129,30 @@ namespace isomap {
         MatchServerMessage::~MatchServerMessage() {
             delete m_playerServerMessage;
             delete m_terrainMessage;
+        }
+
+        const char* MatchServerMessage::typeName() {
+            switch ( m_type ) {
+                case PlayerAccepted:
+                    return "PlayerAccepted";
+                case PlayerRejected:
+                    return "PlayerRejected";
+                case PlayerJoined:
+                    return "PlayerJoined";
+                case PlayerLeft:
+                    return "PlayerLeft";
+                case InitTerrain:
+                    return "InitTerrain";
+                case MatchStarted:
+                    return "MatchStarted";
+                case MatchUpdate:
+                    return "MatchUpdate";
+                case PlayerMessage:
+                    return "PlayerMessage";
+                case TerrainMessage:
+                    return "TerrainMessage";
+            }
+            return "Invalid";
         }
 
     }

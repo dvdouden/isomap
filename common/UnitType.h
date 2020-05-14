@@ -23,17 +23,28 @@ namespace isomap {
                 return m_name;
             }
 
+            bool canConstruct() const {
+                return m_canConstruct;
+            }
+
+            bool canHarvest() const {
+                return m_canHarvest;
+            }
+
             static UnitType* get( id_t id );
 
             static void load();
 
             static void clear();
 
+
         private:
-            UnitType( id_t id, std::string name );
+            UnitType( id_t id, std::string name, bool canConstruct, bool canHarvest );
 
             id_t m_id;
             std::string m_name;
+            bool m_canConstruct;
+            bool m_canHarvest;
 
         };
 

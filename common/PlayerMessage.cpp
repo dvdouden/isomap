@@ -39,6 +39,18 @@ namespace isomap {
             delete m_unitCommandMessage;
         }
 
+        const char* PlayerCommandMessage::typeName() {
+            switch ( m_type ) {
+                case BuildStructure:
+                    return "BuildStructure";
+                case BuildUnit:
+                    return "BuildUnit";
+                case UnitCommand:
+                    return "UnitCommand";
+            }
+            return "Invalid";
+        }
+
 
         PlayerServerMessage* PlayerServerMessage::statusMsg() {
             auto* msg = new PlayerServerMessage( Status );
@@ -152,6 +164,36 @@ namespace isomap {
             delete m_unitData;
             delete m_structureMessage;
             delete m_unitMessage;
+        }
+
+        const char* PlayerServerMessage::typeName() const {
+            switch ( m_type ) {
+                case Status:
+                    return "Status";
+                case BuildStructureAccepted:
+                    return "BuildStructureAccepted";
+                case BuildStructureRejected:
+                    return "BuildStructureRejected";
+                case StructureVisible:
+                    return "StructureVisible";
+                case StructureInvisible:
+                    return "StructureInvisible";
+                case StructureDestroyed:
+                    return "StructureDestroyed";
+                case StructureMessage:
+                    return "StructureMessage";
+                case UnitCreated:
+                    return "UnitCreated";
+                case UnitVisible:
+                    return "UnitVisible";
+                case UnitInvisible:
+                    return "UnitInvisible";
+                case UnitDestroyed:
+                    return "UnitDestroyed";
+                case UnitMessage:
+                    return "UnitMessage";
+            }
+            return "Invalid";
         }
 
     }

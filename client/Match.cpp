@@ -24,7 +24,7 @@ namespace isomap {
                         return;
                     }
                     // FIXME: check that msg->id equals m_connectionId
-                    m_player = new Player( this, m_connectionId, msg->name() );
+                    m_player = new Player( this, m_connectionId, msg->name(), true );
                     m_players[m_connectionId].reset( m_player );
                     break;
 

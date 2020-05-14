@@ -26,16 +26,19 @@ namespace isomap {
 
 
         void Match::processMessage( common::MatchClientMessage* msg ) {
-            //printf( "Server Match process client msg of type %d\n", msg->type() );
+            //printf( "Server Match process client msg of type %s\n", msg->typeName() );
             switch ( msg->type() ) {
                 case common::MatchClientMessage::RegisterPlayer: {
                     if ( m_players.size() >= m_maxPlayers ) {
+                        printf( "Too many players (%d/%d), reject player [%s]\n",
+                                m_players.size(), m_maxPlayers, msg->name().c_str() );
                         enqueueMessage( msg->id(), common::MatchServerMessage::playerRejected( msg->name() ) );
                         return;
                     }
                     for ( auto& player : m_players ) {
                         if ( player.second->name() == msg->name() || player.first == msg->id() ) {
                             // FIXME! We should never get a new connection with the same id as an existing one
+                            printf( "Player with name [%s] already registered\n", msg->name().c_str() );
                             enqueueMessage( msg->id(), common::MatchServerMessage::playerRejected( msg->name() ) );
                             return;
                         }

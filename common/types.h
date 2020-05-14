@@ -24,6 +24,8 @@ namespace isomap {
     }
 
     namespace client {
+        class AutonomousUnitsAI;
+
         class Match;
 
         class Player;
@@ -65,10 +67,11 @@ namespace isomap {
 
         struct UnitData;
 
-
-        enum UnitMotionState {
-            Stopped,
+        enum UnitState {
+            Idle,
             Moving,
+            Constructing,
+            Harvesting
         };
 
         struct WayPoint {

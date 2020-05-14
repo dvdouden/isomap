@@ -33,6 +33,8 @@ namespace isomap {
 
             bool occupies( uint32_t x, uint32_t y ) const;
 
+            bool isAdjacentTo( uint32_t x, uint32_t y ) const;
+
             common::StructureType* type() const {
                 return m_type;
             }

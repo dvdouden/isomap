@@ -50,6 +50,17 @@ namespace isomap {
                 return m_data.constructionProgress;
             }
 
+            bool constructionCompleted() const {
+                return m_data.constructionProgress == 100;
+            }
+
+            void constructionTick() {
+                if ( m_data.constructionProgress < 100 ) {
+                    m_dirty = true;
+                    m_data.constructionProgress++;
+                }
+            }
+
             const common::StructureData& data() const {
                 return m_data;
             }
@@ -64,12 +75,16 @@ namespace isomap {
 
             bool occupies( uint32_t x, uint32_t y ) const;
 
+            bool isAdjacentTo( uint32_t x, uint32_t y ) const;
+
             void dump() override;
 
         private:
             common::StructureData m_data;
 
             common::StructureType* m_type = nullptr;
+
+            bool m_dirty = false;
             // position
             // health
             // type

@@ -16,7 +16,8 @@ namespace isomap {
         }
 
         void UnitType::load() {
-            s_unitTypes[1] = new UnitType( 1, "harvester" );
+            s_unitTypes[1] = new UnitType( 1, "constructor", true, false );
+            s_unitTypes[2] = new UnitType( 2, "harvester", false, true );
         }
 
         void UnitType::clear() {
@@ -26,9 +27,11 @@ namespace isomap {
             s_unitTypes.clear();
         }
 
-        UnitType::UnitType( isomap::id_t id, std::string name ) :
+        UnitType::UnitType( isomap::id_t id, std::string name, bool canConstruct, bool canHarvest ) :
                 m_id( id ),
-                m_name( std::move( name ) ) {
+                m_name( std::move( name ) ),
+                m_canConstruct( canConstruct ),
+                m_canHarvest( canHarvest ) {
 
         }
     }

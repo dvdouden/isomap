@@ -50,13 +50,21 @@ namespace isomap {
 
             bool canSee( Unit* structure ) const;
 
-            Match* match() {
+            Match* match() const {
                 return m_match;
+            }
+
+            Terrain* terrain() const {
+                return m_terrain;
             }
 
             void destroyStructure( Structure* structure );
 
             void destroyUnit( Unit* unit );
+
+            Structure* getStructure( id_t id ) const;
+
+            Unit* getUnit( id_t id ) const;
 
             void dump();
 

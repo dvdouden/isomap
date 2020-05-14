@@ -14,10 +14,13 @@
 namespace isomap {
     namespace client {
 
-        Player::Player( Match* match, id_t id, std::string name ) :
+        Player::Player( Match* match, id_t id, std::string name, bool useAi ) :
                 m_match( match ),
                 m_id( id ),
                 m_name( std::move( name ) ) {
+            if ( useAi ) {
+                m_ai = std::make_unique<AutonomousUnitsAI>( this );
+            }
             m_color = vl::fvec4(
                     ((id >> 24u) & 0xFFu) / 255.0,
                     ((id >> 16u) & 0xFFu) / 255.0,
@@ -57,6 +60,9 @@ namespace isomap {
                     }
                     m_terrain->unreserve( str->x(), str->y(), str->footPrint() );
                     m_terrain->addStructure( str );
+                    if ( m_ai ) {
+                        m_ai->onBuildStructureAccepted( msg );
+                    }
                     break;
                 }
 
@@ -182,6 +188,9 @@ namespace isomap {
         }
 
         void Player::update() {
+            if ( m_ai ) {
+                m_ai->update();
+            }
             for ( auto& unit : m_units ) {
                 unit.second->update();
             }

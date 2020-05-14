@@ -792,11 +792,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* structure = m_renderTerrain->getStructureAt( x, y );
                 if ( structure != nullptr ) {
-                    m_renderTerrain->highLight(
-                            isomap::client::Terrain::Area( structure->x(), structure->y(), structure->footPrint() ),
-                            structure->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                    highlightStructure( structure, structure->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                    highlightTile( x, y, false );
                 }
             }
             break;
@@ -804,11 +802,10 @@ void MainWindow::highlight( int x, int y ) {
         case PlaceUnit:
             if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
                 if ( m_renderTerrain->isVisible( x, y ) ) {
-                    if ( m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed ) {
-                        m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
-                    } else {
-                        m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::green );
-                    }
+                    highlightTile(
+                            x,
+                            y,
+                            (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 );
                 }
             }
             break;
@@ -817,11 +814,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    m_renderTerrain->addHighlight(
-                            isomap::client::Terrain::Area( x, y, 1, 1 ),
-                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                    highlightTile( x, y, false );
                 }
             }
             break;
@@ -830,24 +825,26 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    m_renderTerrain->addHighlight(
-                            isomap::client::Terrain::Area( x, y, 1, 1 ),
-                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
+                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), vl::red );
+                    highlightTile( x, y, false );
                 }
             }
             break;
 
         case MoveUnit:
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
-                auto* unit = m_renderTerrain->getUnitAt( x, y );
-                if ( unit != nullptr ) {
-                    m_renderTerrain->addHighlight(
-                            isomap::client::Terrain::Area( x, y, 1, 1 ),
-                            unit->player()->id() == m_controllingPlayer->id() ? vl::green : vl::red );
-                } else if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
-                    renderPathMap( x, y );
+                auto* unitAtCursor = m_renderTerrain->getUnitAt( x, y );
+                auto* structureAtCursor = m_renderTerrain->getStructureAt( x, y );
+                auto* selectedUnit = m_controllingPlayer->getUnit( m_selectedUnit );
+                if ( unitAtCursor != nullptr ) {
+                    highlightTile( x, y, unitAtCursor->player()->id() == m_controllingPlayer->id() );
+                } else if ( selectedUnit != nullptr ) {
+                    if ( structureAtCursor != nullptr ) {
+                        highlightStructure( structureAtCursor, structureAtCursor->player() == m_controllingPlayer );
+                    } else {
+                        renderPathMap( x, y );
+                    }
                 } else {
                     m_mode = SelectUnit;
                 }
@@ -862,40 +859,28 @@ void MainWindow::renderPathMap( int x, int y ) {
     if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
         uint8_t pathBits = m_renderTerrain->pathMap()[y * m_renderTerrain->width() + x];
         if ( y < m_renderTerrain->height() - 1 ) {
-            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y + 1, 1, 1 ),
-                                           (pathBits & isomap::common::path::bitUp) != 0 ? vl::green : vl::red );
+            highlightTile( x, y + 1, (pathBits & isomap::common::path::bitUp) != 0 );
             if ( x > 0 ) {
-                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y + 1, 1, 1 ),
-                                               (pathBits & isomap::common::path::bitUpLeft) != 0 ? vl::green
-                                                                                                 : vl::red );
+                highlightTile( x - 1, y + 1, (pathBits & isomap::common::path::bitUpLeft) != 0 );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y + 1, 1, 1 ),
-                                               (pathBits & isomap::common::path::bitUpRight) != 0 ? vl::green
-                                                                                                  : vl::red );
+                highlightTile( x + 1, y + 1, (pathBits & isomap::common::path::bitUpRight) != 0 );
             }
         }
         if ( y > 0 ) {
-            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y - 1, 1, 1 ),
-                                           (pathBits & isomap::common::path::bitDown) != 0 ? vl::green : vl::red );
+            highlightTile( x, y - 1, (pathBits & isomap::common::path::bitDown) != 0 );
             if ( x > 0 ) {
-                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y - 1, 1, 1 ),
-                                               (pathBits & isomap::common::path::bitDownLeft) != 0 ? vl::green
-                                                                                                   : vl::red );
+                highlightTile( x - 1, y - 1, (pathBits & isomap::common::path::bitDownLeft) );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y - 1, 1, 1 ),
-                                               (pathBits & isomap::common::path::bitDownRight) != 0 ? vl::green
-                                                                                                    : vl::red );
+                highlightTile( x + 1, y - 1, (pathBits & isomap::common::path::bitDownRight) != 0 );
             }
         }
         if ( x > 0 ) {
-            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x - 1, y, 1, 1 ),
-                                           (pathBits & isomap::common::path::bitLeft) != 0 ? vl::green : vl::red );
+            highlightTile( x - 1, y, (pathBits & isomap::common::path::bitLeft) != 0 );
         }
         if ( x < m_renderTerrain->width() - 1 ) {
-            m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x + 1, y, 1, 1 ),
-                                           (pathBits & isomap::common::path::bitRight) != 0 ? vl::green : vl::red );
+            highlightTile( x + 1, y, (pathBits & isomap::common::path::bitRight) != 0 );
         }
     }
 
@@ -903,13 +888,22 @@ void MainWindow::renderPathMap( int x, int y ) {
 
 void MainWindow::renderStructurePlacement( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
-    if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-        m_renderTerrain->highLight(
-                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::green );
-    } else {
-        m_renderTerrain->highLight(
-                isomap::client::Terrain::Area( x, y, structureType->footPrint( m_structureOrientation ) ), vl::red );
-    }
+    highlightFootPrint( x, y,
+                        structureType->footPrint( m_structureOrientation ),
+                        m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) );
+}
+
+
+void MainWindow::highlightTile( int x, int y, bool green ) {
+    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), green ? vl::green : vl::red );
+}
+
+void MainWindow::highlightFootPrint( int x, int y, isomap::common::FootPrint* footPrint, bool green ) {
+    m_renderTerrain->highLight( isomap::client::Terrain::Area( x, y, footPrint ), green ? vl::green : vl::red );
+}
+
+void MainWindow::highlightStructure( isomap::client::Structure* structure, bool green ) {
+    highlightFootPrint( structure->x(), structure->y(), structure->footPrint(), green );
 }
 
 void MainWindow::place( int x, int y ) {
@@ -965,14 +959,22 @@ void MainWindow::place( int x, int y ) {
 
         case MoveUnit:
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
-                auto* unit = m_renderTerrain->getUnitAt( x, y );
-                if ( unit != nullptr ) {
-                    if ( unit->player()->id() == m_controllingPlayer->id() ) {
-                        m_selectedUnit = unit->id();
+                auto* unitAtCursor = m_renderTerrain->getUnitAt( x, y );
+                auto* structureAtCursor = m_renderTerrain->getStructureAt( x, y );
+                auto* selectedUnit = m_controllingPlayer->getUnit( m_selectedUnit );
+                if ( unitAtCursor != nullptr ) {
+                    if ( unitAtCursor->player()->id() == m_controllingPlayer->id() ) {
+                        m_selectedUnit = unitAtCursor->id();
                     }
                 } else {
-                    if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
-                        m_controllingPlayer->getUnit( m_selectedUnit )->moveTo( x, y );
+                    if ( selectedUnit != nullptr ) {
+                        if ( structureAtCursor != nullptr ) {
+                            if ( structureAtCursor->player() == m_controllingPlayer ) {
+                                selectedUnit->construct( structureAtCursor );
+                            }
+                        } else {
+                            selectedUnit->moveTo( x, y );
+                        }
                     }
                 }
             }
@@ -1275,7 +1277,8 @@ void MainWindow::updateText() {
                                           "Orientation: %n\n"
                                           "X: %n.%n\n"
                                           "Y: %n.%n\n"
-                                          "Z: %n.%n" )
+                                          "Z: %n.%n\n"
+                                          "State: %s" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
@@ -1286,7 +1289,8 @@ void MainWindow::updateText() {
                                          << unit->orientation()
                                          << unit->tileX() << unit->subTileX()
                                          << unit->tileY() << unit->subTileY()
-                                         << unit->tileZ() << unit->subTileZ() );
+                                         << unit->tileZ() << unit->subTileZ()
+                                         << getUnitStateName( unit->state() ) );
             } else {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
@@ -1339,7 +1343,7 @@ void MainWindow::sendMessages() {
         }
         //printf( "\tfor %08X\n", match->id() );
         for ( auto* msg : match->clientMessages() ) {
-            //printf( "\t\t type %d\n", msg->type() );
+            //printf( "\t\t type %s\n", msg->typeName() );
             m_serverMatch->processMessage( msg );
             delete msg;
         }
@@ -1356,7 +1360,7 @@ void MainWindow::receiveMessages() {
         }
         //printf( "\tfor %08X\n", match->id() );
         for ( auto* msg : m_serverMatch->serverMessages( match->id() ) ) {
-            //printf( "\t\t type %d\n", msg->type() );
+            //printf( "\t\t type %s\n", msg->typeName() );
             match->processMessage( msg );
             delete msg;
         }
@@ -1386,4 +1390,18 @@ const char* MainWindow::getModeName() const {
             return "Move Unit (M)";
     }
     return "Unknown";
+}
+
+const char* MainWindow::getUnitStateName( isomap::common::UnitState state ) const {
+    switch ( state ) {
+        case isomap::common::Idle:
+            return "idle";
+        case isomap::common::Moving:
+            return "moving";
+        case isomap::common::Constructing:
+            return "constructing";
+        case isomap::common::Harvesting:
+            return "harvesting";
+    }
+    return "unknown";
 }

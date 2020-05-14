@@ -9,11 +9,12 @@ namespace isomap {
         struct UnitData {
             id_t id = 0;
             id_t typeId = 0;
+            id_t structureId = 0;
             int32_t x = 0;
             int32_t y = 0;
             int32_t z = 0;
             uint32_t orientation = 0;
-            UnitMotionState motionState = UnitMotionState::Stopped;
+            UnitState state = UnitState::Idle;
             WayPoint wayPoint = {0, 0};
 
             uint32_t getOrientation( int32_t dX, int32_t dY );

@@ -20,18 +20,25 @@ namespace isomap {
                 m_player( player ),
                 m_data( data ),
                 m_type( common::UnitType::get( data.typeId ) ) {
+            //printf( "New unit for player [%s.%s], id [%d] %p\n", m_player->match()->player()->name().c_str(), m_player->name().c_str(), id(), this );
         }
 
 
         Unit::~Unit() {
+            //printf( "Delete unit for player [%s.%s], id [%d] %p\n", m_player->match()->player()->name().c_str(), m_player->name().c_str(), id(), this );
             for ( auto* actor : m_actors ) {
                 // this deletes the actor (reduces refcount and *poof*)
                 m_player->sceneManager()->tree()->eraseActor( actor );
             }
         }
 
-        void Unit::moveTo( int32_t targetX, int32_t targetY ) {
-            printf( "Move to %d %d\n", targetX, targetY );
+        void Unit::moveTo( uint32_t targetX, uint32_t targetY ) {
+            m_commands = {};
+            m_commands.push( {common::UnitCommandMessage::Move, targetX, targetY, 0} );
+        }
+
+        void Unit::doMove( Command& command ) {
+            printf( "Move to %d %d\n", command.x, command.y );
 
             auto width = m_player->terrain()->width();
             auto height = m_player->terrain()->height();
@@ -60,7 +67,7 @@ namespace isomap {
                 unsigned int tile_x = tile.from % width;
                 unsigned int tile_y = tile.from / width;
                 //printf( "Test %d %d\n", tile_x, tile_y);
-                if ( tile_x == targetX && tile_y == targetY ) {
+                if ( tile_x == command.x && tile_y == command.y ) {
                     break;
                 }
                 uint8_t canReach = m_player->terrain()->pathMap()[tile_y * width + tile_x];
@@ -140,7 +147,7 @@ namespace isomap {
                     }
                 }
             }
-            uint32_t targetIdx = targetY * width + targetX;
+            uint32_t targetIdx = command.y * width + command.x;
             uint32_t startIdx = tileY() * width + tileX();
             if ( nodeMap[targetIdx].value > 0 ) {
                 printf( "Found a route!\n" );
@@ -157,20 +164,39 @@ namespace isomap {
                     //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, tile_x, tile_y );
                 }
                 m_player->enqueueMessage( id(), common::UnitCommandMessage::moveMsg( wayPoints ) );
+                command.messageSent = true;
             } else {
                 printf( "No route!\n" );
             }
-
-
             delete[] nodeMap;
         }
 
+        void Unit::construct( Structure* structure ) {
+            //printf( "Unit %d construct %d\n", id(), structure->id() );
+            m_commands = {};
+            if ( !structure->isAdjacentTo( tileX(), tileY() ) ) {
+                // check some place adjacent to the structure
+                // FIXME!
+                m_commands.push(
+                        {common::UnitCommandMessage::Move, structure->x() - 1, structure->y(), structure->id()} );
+            }
+            m_commands.push( {common::UnitCommandMessage::Construct, 0, 0, structure->id()} );
+        }
+
+        void Unit::doConstruct( Command& command ) {
+            m_player->enqueueMessage( id(), common::UnitCommandMessage::constructMsg( command.id ) );
+            command.messageSent = true;
+        }
 
         void Unit::processMessage( common::UnitServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
             switch ( msg->type() ) {
+                case common::UnitServerMessage::Construct:
+                    m_data = msg->data();
+                    break;
+
                 case common::UnitServerMessage::Status:
                     m_data = msg->data();
                     break;
@@ -181,6 +207,15 @@ namespace isomap {
 
                 case common::UnitServerMessage::Stop:
                     m_data = msg->data();
+                    if ( !m_commands.empty() ) {
+                        if ( m_commands.front().type == common::UnitCommandMessage::Move &&
+                             m_commands.front().x == tileX() &&
+                             m_commands.front().y == tileY() ) {
+                            m_commands.pop();
+                        } else if ( m_commands.front().type == common::UnitCommandMessage::Construct ) {
+                            m_commands.pop();
+                        }
+                    }
                     break;
 
                 default:
@@ -189,31 +224,42 @@ namespace isomap {
         }
 
         void Unit::update() {
-            if ( m_data.motionState == common::Moving ) {
-                int32_t oldTileX = tileX();
-                int32_t oldTileY = tileY();
+            switch ( m_data.state ) {
+                case common::Moving: {
+                    int32_t oldTileX = tileX();
+                    int32_t oldTileY = tileY();
 
-                m_data.updateMotion();
+                    m_data.updateMotion();
 
-                // FIXME: move out of bounds check to somewhere else
-                if ( m_data.x < 0 ) {
-                    m_data.x = 0;
-                } else if ( m_data.x >= m_player->terrain()->width() * math::fix::precision ) {
-                    m_data.x = (m_player->terrain()->width() - 1) * math::fix::precision;
+                    // FIXME: move out of bounds check to somewhere else
+                    if ( m_data.x < 0 ) {
+                        m_data.x = 0;
+                    } else if ( m_data.x >= m_player->terrain()->width() * math::fix::precision ) {
+                        m_data.x = (m_player->terrain()->width() - 1) * math::fix::precision;
+                    }
+                    if ( m_data.y < 0 ) {
+                        m_data.y = 0;
+                    } else if ( m_data.y >= m_player->terrain()->height() * math::fix::precision ) {
+                        m_data.y = (m_player->terrain()->height() - 1) * math::fix::precision;
+                    }
+
+                    // FIXME: move height calculation to somewhere else
+                    m_data.z = m_player->terrain()->heightMap()[tileY() * m_player->terrain()->width() + tileX()] *
+                               math::fix::precision;
+
+                    if ( tileX() != oldTileX || tileY() != oldTileY ) {
+                        m_player->terrain()->updateUnit( this, oldTileX, oldTileY );
+                    }
+                    break;
                 }
-                if ( m_data.y < 0 ) {
-                    m_data.y = 0;
-                } else if ( m_data.y >= m_player->terrain()->height() * math::fix::precision ) {
-                    m_data.y = (m_player->terrain()->height() - 1) * math::fix::precision;
+
+                case common::Idle: {
+                    updateCommandQueue();
+                    break;
                 }
 
-                // FIXME: move height calculation to somewhere else
-                m_data.z = m_player->terrain()->heightMap()[tileY() * m_player->terrain()->width() + tileX()] *
-                           math::fix::precision;
-
-                if ( tileX() != oldTileX || tileY() != oldTileY ) {
-                    m_player->terrain()->updateUnit( this, oldTileX, oldTileY );
-                }
+                default:
+                    break;
             }
         }
 
@@ -293,6 +339,27 @@ namespace isomap {
                 m_visible = false;
                 for ( auto* actor : m_actors ) {
                     actor->setEnabled( false );
+                }
+            }
+        }
+
+        void Unit::updateCommandQueue() {
+            if ( m_commands.empty() ) {
+                return;
+            }
+
+            if ( !m_commands.empty() && !m_commands.front().messageSent ) {
+                switch ( m_commands.front().type ) {
+                    case common::UnitCommandMessage::Move:
+                        doMove( m_commands.front() );
+                        break;
+
+                    case common::UnitCommandMessage::Construct:
+                        doConstruct( m_commands.front() );
+                        break;
+                }
+                if ( !m_commands.front().messageSent ) {
+                    m_commands = {};
                 }
             }
         }

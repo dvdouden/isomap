@@ -114,7 +114,7 @@ namespace isomap {
         }
 
         void Player::processMessage( common::PlayerCommandMessage* msg ) {
-            //printf( "Server Player %s process client msg of type %d\n", m_name.c_str(), msg->type() );
+            //printf( "Server Player %s process client msg of type %s\n", m_name.c_str(), msg->typeName() );
             switch ( msg->type() ) {
                 case common::PlayerCommandMessage::BuildStructure: {
                     // TODO: validate parameters, send rejection on fail
@@ -207,6 +207,22 @@ namespace isomap {
             for ( auto& unit : m_units ) {
                 unit.second->dump();
             }
+        }
+
+        Structure* Player::getStructure( id_t id ) const {
+            auto structure = m_structures.find( id );
+            if ( structure == m_structures.end() ) {
+                return nullptr;
+            }
+            return structure->second;
+        }
+
+        Unit* Player::getUnit( id_t id ) const {
+            auto unit = m_units.find( id );
+            if ( unit == m_units.end() ) {
+                return nullptr;
+            }
+            return unit->second;
         }
     }
 }

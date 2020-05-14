@@ -1,5 +1,8 @@
 #pragma once
 
+#include <queue>
+#include <vector>
+
 #include <vlGraphics/Geometry.hpp>
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
@@ -8,6 +11,7 @@
 #include "../common/UnitType.h"
 #include "../common/types.h"
 #include "../util/math.h"
+#include "../common/UnitMessage.h"
 
 namespace isomap {
     namespace client {
@@ -26,7 +30,9 @@ namespace isomap {
 
             void update();
 
-            void moveTo( int32_t targetX, int32_t targetY );
+            void moveTo( uint32_t targetX, uint32_t targetY );
+
+            void construct( Structure* structure );
 
             void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
 
@@ -92,17 +98,38 @@ namespace isomap {
                 return m_data.z & math::fix::precisionMask;
             }
 
+            common::UnitState state() const {
+                return m_data.state;
+            }
+
         private:
+            struct Command {
+                common::UnitCommandMessage::Type type;
+                uint32_t x;
+                uint32_t y;
+                id_t id;
+                bool messageSent = false;
+            };
+
+            void doMove( Command& command );
+
+            void doConstruct( Command& command );
+
             Player* m_player;
             common::UnitData m_data;
             common::UnitType* m_type = nullptr;
             bool m_visible = true;
+
+
+            std::queue<Command> m_commands;
 
             // TODO: Separate render code from game logic
             // We don't need the AI data structures to be renderable
             vl::ref<vl::Transform> m_transform;
             vl::ref<vl::Effect> m_effect;
             std::vector<vl::Actor*> m_actors;
+
+            void updateCommandQueue();
         };
     }
 }

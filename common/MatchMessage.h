@@ -16,6 +16,8 @@ namespace isomap {
 
             ~MatchClientMessage();
 
+            const char* typeName();
+
             static MatchClientMessage* registerPlayer( id_t id, const std::string& name );
 
             static MatchClientMessage* unregisterPlayer( id_t id );
@@ -67,6 +69,8 @@ namespace isomap {
             };
 
             ~MatchServerMessage();
+
+            const char* typeName();
 
             static MatchServerMessage* playerAccepted( const std::string& name );
 

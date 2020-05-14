@@ -5,6 +5,7 @@
 
 #include "Player.h"
 #include "Structure.h"
+#include "Terrain.h"
 #include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
 #include "../util/math.h"
@@ -114,6 +115,16 @@ namespace isomap {
             }
             return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
         }
+
+
+        bool Structure::isAdjacentTo( uint32_t x, uint32_t y ) const {
+            return
+                    (x > 0 && occupies( x - 1, y )) ||
+                    (x < player()->terrain()->width() - 1 && occupies( x + 1, y )) ||
+                    (y > 0 && occupies( x, y - 1 )) ||
+                    (y < player()->terrain()->height() - 1 && occupies( x, y + 1 ));
+        }
+
 
         void Structure::setVisible( bool visible ) {
             if ( m_visible == visible ) {

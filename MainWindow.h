@@ -62,6 +62,12 @@ protected:
 
     void renderPathMap( int x, int y );
 
+    void highlightTile( int x, int y, bool green );
+
+    void highlightFootPrint( int x, int y, isomap::common::FootPrint* footPrint, bool green );
+
+    void highlightStructure( isomap::client::Structure* structure, bool green );
+
     void renderStructurePlacement( int x, int y );
 
     vl::real m_zoom;
@@ -116,6 +122,7 @@ protected:
 
     const char* getModeName() const;
 
+    const char* getUnitStateName( isomap::common::UnitState state ) const;
 
 };
 

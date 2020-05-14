@@ -4,7 +4,7 @@
 namespace isomap {
     namespace common {
         void UnitData::updateMotion() {
-            if ( motionState == Stopped ) {
+            if ( state == Idle ) {
                 return;
             }
             int32_t dX = wayPoint.x * math::fix::precision - x;
@@ -31,7 +31,7 @@ namespace isomap {
             // FIXME: fog!
             //player()->unFog( m_data.x/  math::fix::precision, m_data.y/  math::fix::precision, 20 );
             if ( x == wayPoint.x * math::fix::precision && y == wayPoint.y * math::fix::precision ) {
-                motionState = common::Stopped;
+                state = common::Idle;
             }
         }
 
