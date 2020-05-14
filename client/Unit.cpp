@@ -38,7 +38,19 @@ namespace isomap {
         }
 
         void Unit::doMove( Command& command ) {
-            printf( "Move to %d %d\n", command.x, command.y );
+            Structure* structure = nullptr;
+            if ( command.id != 0 ) {
+                printf( "Move to structure %d\n", command.id );
+                // FIXME: can only move to own structures?
+                structure = m_player->getStructure( command.id );
+                if ( structure == nullptr ) {
+                    printf( "Unknown structure!\n" );
+                    return;
+                }
+            } else {
+                printf( "Move to %d %d\n", command.x, command.y );
+            }
+
 
             auto width = m_player->terrain()->width();
             auto height = m_player->terrain()->height();
@@ -69,10 +81,18 @@ namespace isomap {
                 auto tile = todo.top();
                 todo.pop();
                 auto value = nodeMap[tile.from];
-                //unsigned int tile_x = tile.from % width;
-                //unsigned int tile_y = tile.from / width;
+                uint32_t tile_x = tile.from % width;
+                uint32_t tile_y = tile.from / width;
                 //printf( "Test %d %d\n", tile_x, tile_y);
-                if ( tile.from == targetIdx ) {
+                if ( structure != nullptr ) {
+                    if ( structure->isAdjacentTo( tile_x, tile_y ) ) {
+                        targetIdx = tile.from;
+                        // update the target position in the command, now that we have found a place to go
+                        command.x = targetIdx % width;
+                        command.y = targetIdx / width;
+                        break;
+                    }
+                } else if ( tile.from == targetIdx ) {
                     break;
                 }
                 uint8_t canReach = m_player->terrain()->pathMap()[tile.from];
@@ -181,7 +201,7 @@ namespace isomap {
                 // check some place adjacent to the structure
                 // FIXME!
                 m_commands.push(
-                        {common::UnitCommandMessage::Move, structure->x() - 1, structure->y(), structure->id()} );
+                        {common::UnitCommandMessage::Move, 0, 0, structure->id()} );
             }
             m_commands.push( {common::UnitCommandMessage::Construct, 0, 0, structure->id()} );
         }

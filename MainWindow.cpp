@@ -82,6 +82,7 @@ void MainWindow::initEvent() {
 
     m_clientPlayer->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ), m_structureOrientation );
+    m_clientAI->buildUnit( 28, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientAI->buildStructure( 30, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
 
     sendAndReceiveMessages();
