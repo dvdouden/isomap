@@ -136,5 +136,10 @@ namespace isomap {
             }
         }
 
+        void Structure::dump() const {
+            printf( "client Structure [%d] (%d:%s) at %d,%d\n", id(), m_type->id(), m_type->name().c_str(), m_data.x,
+                    m_data.y );
+        }
+
     }
 }

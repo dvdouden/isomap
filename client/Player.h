@@ -101,6 +101,8 @@ namespace isomap {
                 return m_ai.get();
             }
 
+            void dump() const;
+
         private:
             Match* m_match;
             id_t m_id;

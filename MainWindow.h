@@ -121,9 +121,6 @@ protected:
     bool isBelow( int dx, int dy, int x0, int y0, int x1, int y1 );
 
     const char* getModeName() const;
-
-    const char* getUnitStateName( isomap::common::UnitState state ) const;
-
 };
 
 

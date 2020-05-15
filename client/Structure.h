@@ -77,6 +77,8 @@ namespace isomap {
                 return m_data.orientation;
             }
 
+            void dump() const;
+
 
         private:
             Player* m_player;

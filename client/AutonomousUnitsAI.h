@@ -13,11 +13,13 @@ namespace isomap {
 
             void update();
 
-            void onBuildStructureAccepted( common::PlayerServerMessage* msg );
+            void onBuildStructureAccepted( id_t structureId );
 
             void onUnitIdle( Unit* unit );
 
             void onUnitActive( Unit* unit );
+
+            void onUnitStuck( Unit* unit );
 
         private:
             Player* m_player;
@@ -25,6 +27,7 @@ namespace isomap {
             std::queue<id_t> m_constructionQueue;
             std::set<id_t> m_idleConstructionUnits;
             std::set<id_t> m_idleHarvesters;
+            std::queue<id_t> m_stuckUnitsQueue;
         };
     }
 }

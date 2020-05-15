@@ -102,9 +102,15 @@ namespace isomap {
                 return m_data.state;
             }
 
+            const char* stateName() const {
+                return m_data.stateName();
+            }
+
             bool idle() const {
                 return m_commands.empty();
             }
+
+            void dump() const;
 
         private:
             struct Command {

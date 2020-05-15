@@ -61,7 +61,7 @@ namespace isomap {
                     m_terrain->unreserve( str->x(), str->y(), str->footPrint() );
                     m_terrain->addStructure( str );
                     if ( m_ai ) {
-                        m_ai->onBuildStructureAccepted( msg );
+                        m_ai->onBuildStructureAccepted( str->id() );
                     }
                     break;
                 }
@@ -283,6 +283,18 @@ namespace isomap {
 
         void Player::startMatch() {
             m_terrain = m_match->terrain();
+        }
+
+        void Player::dump() const {
+            printf( "client Player %08X [%s]:\n", m_id, m_name.c_str() );
+            printf( "%d structures\n", m_structures.size() );
+            for ( auto& structure : m_structures ) {
+                structure.second->dump();
+            }
+            printf( "%d units\n", m_units.size() );
+            for ( auto& unit : m_units ) {
+                unit.second->dump();
+            }
         }
     }
 

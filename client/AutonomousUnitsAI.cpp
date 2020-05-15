@@ -32,10 +32,21 @@ namespace isomap {
                     break;
                 }
             }
+            if ( !m_stuckUnitsQueue.empty() ) {
+                Unit* unit = m_player->getUnit( m_stuckUnitsQueue.front() );
+                m_stuckUnitsQueue.pop();
+                if ( unit != nullptr ) {
+                    if ( unit->idle() ) {
+                        onUnitIdle( unit );
+                    } else {
+                        onUnitActive( unit );
+                    }
+                }
+            }
         }
 
-        void AutonomousUnitsAI::onBuildStructureAccepted( common::PlayerServerMessage* msg ) {
-            m_constructionQueue.push( msg->structureData()->id );
+        void AutonomousUnitsAI::onBuildStructureAccepted( id_t structureId ) {
+            m_constructionQueue.push( structureId );
         }
 
         void AutonomousUnitsAI::onUnitIdle( Unit* unit ) {
@@ -56,6 +67,10 @@ namespace isomap {
             if ( unit->type()->canHarvest() ) {
                 m_idleHarvesters.erase( unit->id() );
             }
+        }
+
+        void AutonomousUnitsAI::onUnitStuck( Unit* unit ) {
+            m_stuckUnitsQueue.push( unit->id() );
         }
     }
 }

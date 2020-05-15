@@ -193,7 +193,7 @@ namespace isomap {
         }
 
         void Player::dump() {
-            printf( "Player %08X [%s]:\n", m_id, m_name.c_str() );
+            printf( "server Player %08X [%s]:\n", m_id, m_name.c_str() );
             printf( "%d structures\n", m_structures.size() );
             for ( auto& structure : m_structures ) {
                 structure.second->dump();

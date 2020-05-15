@@ -355,7 +355,8 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_F9:
-            m_serverMatch->dump();
+            //m_serverMatch->dump();
+            m_controllingPlayer->dump();
             break;
 
         case vl::Key_Z:
@@ -1289,7 +1290,7 @@ void MainWindow::updateText() {
                                          << unit->tileX() << unit->subTileX()
                                          << unit->tileY() << unit->subTileY()
                                          << unit->tileZ() << unit->subTileZ()
-                                         << getUnitStateName( unit->state() ) );
+                                         << unit->stateName() );
             } else {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
@@ -1389,18 +1390,4 @@ const char* MainWindow::getModeName() const {
             return "Move Unit (M)";
     }
     return "Unknown";
-}
-
-const char* MainWindow::getUnitStateName( isomap::common::UnitState state ) const {
-    switch ( state ) {
-        case isomap::common::Idle:
-            return "idle";
-        case isomap::common::Moving:
-            return "moving";
-        case isomap::common::Constructing:
-            return "constructing";
-        case isomap::common::Harvesting:
-            return "harvesting";
-    }
-    return "unknown";
 }

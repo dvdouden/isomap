@@ -103,5 +103,19 @@ namespace isomap {
                     break;
             }
         }
+
+        const char* UnitData::stateName() const {
+            switch ( state ) {
+                case isomap::common::Idle:
+                    return "idle";
+                case isomap::common::Moving:
+                    return "moving";
+                case isomap::common::Constructing:
+                    return "constructing";
+                case isomap::common::Harvesting:
+                    return "harvesting";
+            }
+            return "unknown";
+        }
     }
 }

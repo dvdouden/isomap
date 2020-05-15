@@ -79,7 +79,7 @@ namespace isomap {
             uint32_t startIdx = tileY() * width + tileX();
 
             todo.push( {1, startIdx} );
-
+            bool found = false;
             while ( !todo.empty() ) {
                 auto tile = todo.top();
                 todo.pop();
@@ -93,9 +93,12 @@ namespace isomap {
                         // update the target position in the command, now that we have found a place to go
                         command.x = targetIdx % width;
                         command.y = targetIdx / width;
+                        printf( "Found tile %d %d to be adjacent to structure\n", command.x, command.y );
+                        found = true;
                         break;
                     }
                 } else if ( tile.from == targetIdx ) {
+                    found = true;
                     break;
                 }
                 uint8_t canReach = m_player->terrain()->pathMap()[tile.from];
@@ -175,7 +178,7 @@ namespace isomap {
                     }
                 }
             }
-            if ( nodeMap[targetIdx].value > 0 ) {
+            if ( found ) {
                 printf( "Found a route!\n" );
                 while ( targetIdx != startIdx ) {
                     int wayPointX = (int)(targetIdx % width);
@@ -394,9 +397,35 @@ namespace isomap {
                         break;
                 }
                 if ( !m_commands.front().messageSent ) {
-                    m_commands = {};
+                    printf( "Unit [%d] failed to execute command %d\n", id(), m_commands.front().type );
+                    while ( !m_commands.empty() ) {
+                        // cancel commands
+                        auto& command = m_commands.front();
+                        if ( command.type == common::UnitCommandMessage::Construct ) {
+                            if ( m_player->ai() ) {
+                                m_player->ai()->onBuildStructureAccepted( command.id );
+                            }
+                        }
+                        m_commands.pop();
+                    }
+                    if ( m_player->ai() ) {
+                        m_player->ai()->onUnitStuck( this );
+                    }
                 }
             }
+        }
+
+        void Unit::dump() const {
+            printf( "client Unit [%d] (%d:%s) at %d,%d,%d (%s) (%d commands queued)\n",
+                    id(),
+                    m_type->id(),
+                    m_type->name().c_str(),
+                    tileX(),
+                    tileY(),
+                    tileZ(),
+                    stateName(),
+                    m_commands.size()
+            );
         }
 
     }
