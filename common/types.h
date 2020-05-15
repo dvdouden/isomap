@@ -36,9 +36,36 @@ namespace isomap {
 
         class Unit;
 
+        namespace match {
+            class Renderer;
+        }
+
+        namespace player {
+            class Controller;
+
+            class Renderer;
+        }
+
+        namespace structure {
+            class Renderer;
+        }
+
+        namespace terrain {
+            class Renderer;
+        }
+
+        namespace unit {
+            class Controller;
+
+            class ConstructorController;
+
+            class Renderer;
+        }
     }
 
     namespace common {
+        class Area;
+
         class FootPrint;
 
         class MatchClientMessage;

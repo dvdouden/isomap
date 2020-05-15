@@ -3,17 +3,20 @@
 #include <set>
 #include <queue>
 
-#include "../common/types.h"
+#include "../../common/types.h"
+#include "Controller.h"
 
 namespace isomap {
     namespace client {
-        class AutonomousUnitsAI {
+        class AutonomousUnitsAI : public player::Controller {
         public:
             explicit AutonomousUnitsAI( Player* player );
 
-            void update();
+            void update() override;
 
-            void onBuildStructureAccepted( id_t structureId );
+            void onUnitCreated( Unit* unit ) override;
+
+            void onStructureCreated( Structure* structure ) override;
 
             void onUnitIdle( Unit* unit );
 
@@ -22,8 +25,6 @@ namespace isomap {
             void onUnitStuck( Unit* unit );
 
         private:
-            Player* m_player;
-
             std::queue<id_t> m_constructionQueue;
             std::set<id_t> m_idleConstructionUnits;
             std::set<id_t> m_idleHarvesters;

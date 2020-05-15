@@ -1,5 +1,5 @@
-#include <vlGraphics/Rendering.hpp>
 
+#include "player/AutonomousUnitsAI.h"
 #include "Match.h"
 #include "Player.h"
 #include "Structure.h"
@@ -19,13 +19,8 @@ namespace isomap {
                 m_id( id ),
                 m_name( std::move( name ) ) {
             if ( useAi ) {
-                m_ai = std::make_unique<AutonomousUnitsAI>( this );
+                m_controller.reset( new AutonomousUnitsAI( this ) );
             }
-            m_color = vl::fvec4(
-                    ((id >> 24u) & 0xFFu) / 255.0,
-                    ((id >> 16u) & 0xFFu) / 255.0,
-                    ((id >> 8u) & 0xFFu) / 255.0,
-                    (id & 0xFFu) / 255.0 );
         }
 
         void Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
@@ -55,13 +50,13 @@ namespace isomap {
                     auto* str = new Structure( this, *msg->structureData() );
                     // TODO: Make sure there's no structure with the given id
                     m_structures[str->id()].reset( str );
-                    if ( m_rendering != nullptr ) {
-                        str->initRender( m_rendering, m_sceneManager.get() );
+                    if ( m_renderer ) {
+                        m_renderer->addStructure( str );
                     }
                     m_terrain->unreserve( str->x(), str->y(), str->footPrint() );
                     m_terrain->addStructure( str );
-                    if ( m_ai ) {
-                        m_ai->onBuildStructureAccepted( str->id() );
+                    if ( m_controller ) {
+                        m_controller->onStructureCreated( str );
                     }
                     break;
                 }
@@ -78,8 +73,8 @@ namespace isomap {
                     if ( str == nullptr ) {
                         str = new Structure( this, *msg->structureData() );
                         m_structures[str->id()].reset( str );
-                        if ( m_rendering != nullptr ) {
-                            str->initRender( m_rendering, m_sceneManager.get() );
+                        if ( m_renderer ) {
+                            m_renderer->addStructure( str );
                         }
                         m_terrain->occupy( str->x(), str->y(), str->footPrint() );
                     } else {
@@ -109,12 +104,12 @@ namespace isomap {
                     auto* unit = new Unit( this, *msg->unitData() );
                     // TODO: Make sure there's no unit with the given id
                     m_units[unit->id()].reset( unit );
-                    if ( m_rendering != nullptr ) {
-                        unit->initRender( m_rendering, m_sceneManager.get() );
+                    if ( m_renderer ) {
+                        m_renderer->addUnit( unit );
                     }
                     m_terrain->addUnit( unit );
-                    if ( m_ai ) {
-                        m_ai->onUnitIdle( unit );
+                    if ( m_controller ) {
+                        m_controller->onUnitCreated( unit );
                     }
                     break;
                 }
@@ -124,8 +119,8 @@ namespace isomap {
                     if ( unit == nullptr ) {
                         unit = new Unit( this, *msg->unitData() );
                         m_units[unit->id()].reset( unit );
-                        if ( m_rendering != nullptr ) {
-                            unit->initRender( m_rendering, m_sceneManager.get() );
+                        if ( m_renderer ) {
+                            m_renderer->addUnit( unit );
                         }
                         m_terrain->addUnit( unit );
                     } else {
@@ -191,26 +186,11 @@ namespace isomap {
         }
 
         void Player::update() {
-            if ( m_ai ) {
-                m_ai->update();
+            if ( m_controller ) {
+                m_controller->update();
             }
             for ( auto& unit : m_units ) {
                 unit.second->update();
-            }
-        }
-
-
-        void Player::render() {
-            // TODO: This shouldn't be done per player
-            for ( auto& it : m_structures ) {
-                if ( it.second->visible() ) {
-                    it.second->render();
-                }
-            }
-            for ( auto& it : m_units ) {
-                if ( it.second->visible() ) {
-                    it.second->render();
-                }
             }
         }
 
@@ -236,25 +216,6 @@ namespace isomap {
             return true;
         }
 
-        void Player::initRender( vl::RenderingAbstract* rendering ) {
-            m_sceneManager = new vl::SceneManagerActorTree;
-            m_sceneManager->setCullingEnabled( false );
-            rendering->as<vl::Rendering>()->sceneManagers()->push_back( m_sceneManager.get() );
-            m_rendering = rendering;
-        }
-
-        void Player::disableRendering() {
-            if ( m_sceneManager ) {
-                m_sceneManager->setEnableMask( 0 );
-            }
-        }
-
-        void Player::enableRendering() {
-            if ( m_sceneManager ) {
-                m_sceneManager->setEnableMask( 0xFFFFFFFF );
-            }
-        }
-
         Structure* Player::getStructure( id_t id ) {
             auto str = m_structures.find( id );
             if ( str == m_structures.end() ) {
@@ -269,16 +230,6 @@ namespace isomap {
                 return nullptr;
             }
             return unit->second.get();
-        }
-
-        void Player::dumpActors() {
-            for ( auto actor : m_sceneManager->tree()->actors()->vector() ) {
-                printf( "%s at %f %f %f\n",
-                        actor->objectName().c_str(),
-                        actor->transform()->worldMatrix().getT().x(),
-                        actor->transform()->worldMatrix().getT().y(),
-                        actor->transform()->worldMatrix().getT().z() );
-            }
         }
 
         void Player::startMatch() {

@@ -4,10 +4,11 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <vlGraphics/RenderingAbstract.hpp>
+
 #include "../common/MatchMessage.h"
 #include "../common/PlayerMessage.h"
 #include "../common/types.h"
+#include "match/Renderer.h"
 
 namespace isomap {
     namespace client {
@@ -20,6 +21,14 @@ namespace isomap {
             Match( const Match& ) = delete;
 
             const Match& operator=( const Match& ) = delete;
+
+            void setRenderer( match::Renderer* renderer ) {
+                m_renderer.reset( renderer );
+            }
+
+            match::Renderer* renderer() const {
+                return m_renderer.get();
+            }
 
             void processMessage( common::MatchServerMessage* msg );
 
@@ -38,14 +47,6 @@ namespace isomap {
             id_t id() const {
                 return m_connectionId;
             }
-
-            void initRender( vl::RenderingAbstract* rendering );
-
-            void render();
-
-            void disableRendering();
-
-            void enableRendering();
 
             void enqueueMessage( common::MatchClientMessage* msg ) {
                 //printf( "%08X enqueue match client message of type %s\n", m_connectionId, msg->typeName() );
@@ -66,7 +67,9 @@ namespace isomap {
                 return m_terrain.get();
             }
 
-            void dumpActors();
+            std::map<id_t, std::unique_ptr<Player>>& players() {
+                return m_players;
+            }
 
         private:
             Player* getPlayer( id_t id );
@@ -80,6 +83,7 @@ namespace isomap {
 
             std::vector<common::MatchClientMessage*> m_messages;
 
+            std::unique_ptr<match::Renderer> m_renderer;
         };
     }
 }

@@ -1,17 +1,17 @@
 #include "AutonomousUnitsAI.h"
-#include "Player.h"
-#include "../common/PlayerMessage.h"
+#include "../unit/ConstructorController.h"
+#include "../Player.h"
 
 namespace isomap {
     namespace client {
         AutonomousUnitsAI::AutonomousUnitsAI( isomap::client::Player* player )
-                : m_player( player ) {
+                : Controller( player ) {
 
         }
 
         void AutonomousUnitsAI::update() {
             while ( !m_constructionQueue.empty() && !m_idleConstructionUnits.empty() ) {
-                auto* structure = m_player->getStructure( m_constructionQueue.front() );
+                auto* structure = player()->getStructure( m_constructionQueue.front() );
                 if ( structure == nullptr ) {
                     // structure no longer exists, could be removed or destroyed
                     m_constructionQueue.pop();
@@ -20,7 +20,7 @@ namespace isomap {
 
                 // FIXME: needs a bit more intelligence (get unit closest to structure)
                 for ( id_t unitId : m_idleConstructionUnits ) {
-                    auto* unit = m_player->getUnit( unitId );
+                    auto* unit = player()->getUnit( unitId );
                     if ( unit == nullptr ) {
                         // shouldn't happen, but who knows...
                         m_idleConstructionUnits.erase( unitId );
@@ -33,7 +33,7 @@ namespace isomap {
                 }
             }
             if ( !m_stuckUnitsQueue.empty() ) {
-                Unit* unit = m_player->getUnit( m_stuckUnitsQueue.front() );
+                Unit* unit = player()->getUnit( m_stuckUnitsQueue.front() );
                 m_stuckUnitsQueue.pop();
                 if ( unit != nullptr ) {
                     if ( unit->idle() ) {
@@ -45,8 +45,8 @@ namespace isomap {
             }
         }
 
-        void AutonomousUnitsAI::onBuildStructureAccepted( id_t structureId ) {
-            m_constructionQueue.push( structureId );
+        void AutonomousUnitsAI::onStructureCreated( Structure* structure ) {
+            m_constructionQueue.push( structure->id() );
         }
 
         void AutonomousUnitsAI::onUnitIdle( Unit* unit ) {
@@ -71,6 +71,12 @@ namespace isomap {
 
         void AutonomousUnitsAI::onUnitStuck( Unit* unit ) {
             m_stuckUnitsQueue.push( unit->id() );
+        }
+
+        void AutonomousUnitsAI::onUnitCreated( Unit* unit ) {
+            if ( unit->type()->canConstruct() ) {
+                unit->setController( new unit::ConstructorController( unit, this ) );
+            }
         }
     }
 }

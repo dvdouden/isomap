@@ -48,12 +48,16 @@ void MainWindow::initEvent() {
     regenerateMap();
 
     m_clientPlayerMatch = new isomap::client::Match( 0x12345678 );
+    m_clientPlayerMatch->setRenderer( new isomap::client::match::Renderer( m_clientPlayerMatch ) );
+    m_clientPlayerMatch->renderer()->init( rendering() );
     m_clientPlayerMatch->registerPlayer( "Player1" );
     sendAndReceiveMessages();
     m_clientPlayerMatch->startMatch();
     sendAndReceiveMessages();
 
     m_clientAIMatch = new isomap::client::Match( 0xA1A1A1A1 );
+    m_clientAIMatch->setRenderer( new isomap::client::match::Renderer( m_clientAIMatch ) );
+    m_clientAIMatch->renderer()->init( rendering() );
     m_clientAIMatch->registerPlayer( "AI" );
     sendAndReceiveMessages();
     m_clientAIMatch->startMatch();
@@ -63,15 +67,12 @@ void MainWindow::initEvent() {
     m_clientPlayer = m_clientPlayerMatch->player();
     m_clientAI = m_clientAIMatch->player();
 
+    m_clientPlayerMatch->renderer()->disable();
+    m_clientAIMatch->renderer()->disable();
     m_renderMatch = m_clientPlayerMatch;
+    m_renderMatch->renderer()->enable();
     m_renderTerrain = m_renderMatch->terrain();
     m_controllingPlayer = m_renderMatch->player();
-
-    m_clientAIMatch->initRender( rendering() );
-    m_clientPlayerMatch->initRender( rendering() );
-    m_clientPlayerMatch->disableRendering();
-    m_clientAIMatch->disableRendering();
-    m_renderMatch->enableRendering();
 
     // we need to uncover this bit of terrain, otherwise construction will end up underground...
     m_serverMatch->getPlayer( m_clientPlayer->id() )->unFog( 10, 10, 10 );
@@ -323,7 +324,7 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_BackSlash:
-            m_renderTerrain->toggleRenderFog();
+            m_renderTerrain->renderer()->toggleRenderFog();
             break;
 
         case vl::Key_F2:
@@ -331,27 +332,27 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_F3:
-            m_renderTerrain->toggleRenderOccupancy();
+            m_renderTerrain->renderer()->toggleRenderOccupancy();
             break;
 
         case vl::Key_F6:
-            m_renderMatch->disableRendering();
+            m_renderMatch->renderer()->disable();
             m_renderMatch = m_clientPlayerMatch;
-            m_renderMatch->enableRendering();
+            m_renderMatch->renderer()->enable();
             m_renderTerrain = m_renderMatch->terrain();
             m_controllingPlayer = m_renderMatch->player();
             break;
 
         case vl::Key_F7:
-            m_renderMatch->disableRendering();
+            m_renderMatch->renderer()->disable();
             m_renderMatch = m_clientAIMatch;
-            m_renderMatch->enableRendering();
+            m_renderMatch->renderer()->enable();
             m_renderTerrain = m_renderMatch->terrain();
             m_controllingPlayer = m_renderMatch->player();
             break;
 
         case vl::Key_F8:
-            m_renderMatch->dumpActors();
+            m_renderMatch->renderer()->dumpActors();
             break;
 
         case vl::Key_F9:
@@ -557,7 +558,7 @@ void MainWindow::updateScene() {
     }
 
     m_renderTerrain->updateFog();
-    m_renderMatch->render();
+    m_renderMatch->renderer()->render();
 }
 
 void MainWindow::zoomIn() {
@@ -589,7 +590,7 @@ void MainWindow::rotateRight() {
 }
 
 void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
-    m_renderTerrain->clearHighlight();
+    m_renderTerrain->renderer()->clearHighlight();
 
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
@@ -701,7 +702,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
                 color = vl::red;
             }
             if ( m_renderColumn ) {
-                m_renderTerrain->addHighlight( isomap::client::Terrain::Area( temp_x, temp_y, 1, 1 ), color );
+                m_renderTerrain->renderer()->addHighlight( isomap::common::Area( temp_x, temp_y, 1, 1 ), color );
             }
         }
 
@@ -895,11 +896,11 @@ void MainWindow::renderStructurePlacement( int x, int y ) {
 
 
 void MainWindow::highlightTile( int x, int y, bool green ) {
-    m_renderTerrain->addHighlight( isomap::client::Terrain::Area( x, y, 1, 1 ), green ? vl::green : vl::red );
+    m_renderTerrain->renderer()->addHighlight( isomap::common::Area( x, y, 1, 1 ), green ? vl::green : vl::red );
 }
 
 void MainWindow::highlightFootPrint( int x, int y, isomap::common::FootPrint* footPrint, bool green ) {
-    m_renderTerrain->highLight( isomap::client::Terrain::Area( x, y, footPrint ), green ? vl::green : vl::red );
+    m_renderTerrain->renderer()->highLight( isomap::common::Area( x, y, footPrint ), green ? vl::green : vl::red );
 }
 
 void MainWindow::highlightStructure( isomap::client::Structure* structure, bool green ) {

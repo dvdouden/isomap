@@ -1,17 +1,18 @@
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <vector>
 
-#include <vlGraphics/Geometry.hpp>
-#include <vlGraphics/RenderingAbstract.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
 
 #include "../common/UnitData.h"
 #include "../common/UnitType.h"
 #include "../common/types.h"
 #include "../util/math.h"
 #include "../common/UnitMessage.h"
+
+#include "unit/Controller.h"
+#include "unit/Renderer.h"
 
 namespace isomap {
     namespace client {
@@ -26,6 +27,22 @@ namespace isomap {
 
             const Unit& operator=( const Unit& ) = delete;
 
+            void setController( unit::Controller* controller ) {
+                m_controller.reset( controller );
+            }
+
+            void setRenderer( unit::Renderer* renderer ) {
+                m_renderer.reset( renderer );
+            }
+
+            unit::Controller* controller() const {
+                return m_controller.get();
+            }
+
+            unit::Renderer* renderer() const {
+                return m_renderer.get();
+            }
+
             void processMessage( common::UnitServerMessage* msg );
 
             void update();
@@ -33,10 +50,6 @@ namespace isomap {
             void moveTo( uint32_t targetX, uint32_t targetY );
 
             void construct( Structure* structure );
-
-            void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
-
-            void render();
 
             void setVisible( const common::UnitData& data );
 
@@ -130,14 +143,9 @@ namespace isomap {
             common::UnitType* m_type = nullptr;
             bool m_visible = true;
 
-
             std::queue<Command> m_commands;
-
-            // TODO: Separate render code from game logic
-            // We don't need the AI data structures to be renderable
-            vl::ref<vl::Transform> m_transform;
-            vl::ref<vl::Effect> m_effect;
-            std::vector<vl::Actor*> m_actors;
+            std::unique_ptr<unit::Controller> m_controller;
+            std::unique_ptr<unit::Renderer> m_renderer;
 
             void updateCommandQueue();
         };

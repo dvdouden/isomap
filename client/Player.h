@@ -4,12 +4,11 @@
 #include <memory>
 #include "../common/types.h"
 #include "../common/PlayerMessage.h"
-#include "AutonomousUnitsAI.h"
 #include "Match.h"
 #include "Structure.h"
 #include "Unit.h"
-#include <vlGraphics/RenderingAbstract.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
+#include "player/Controller.h"
+#include "player/Renderer.h"
 
 
 namespace isomap {
@@ -32,6 +31,18 @@ namespace isomap {
                 return m_name;
             }
 
+            player::Controller* controller() const {
+                return m_controller.get();
+            }
+
+            void setRenderer( player::Renderer* renderer ) {
+                m_renderer.reset( renderer );
+            }
+
+            player::Renderer* renderer() const {
+                return m_renderer.get();
+            }
+
             void startMatch();
 
             void processMessage( common::PlayerServerMessage* msg );
@@ -47,28 +58,13 @@ namespace isomap {
 
             void buildUnit( int32_t tileX, int32_t tileY, common::UnitType* unitType, uint32_t orientation );
 
-            void initRender( vl::RenderingAbstract* rendering );
-
-            void disableRendering();
-
-            void enableRendering();
-
             bool
             canPlace( int32_t worldX, int32_t worldY, common::StructureType* structureType, uint32_t rotation ) const;
 
-            void render();
-
-            const vl::fvec4& color() const {
-                return m_color;
-            }
 
             Structure* getStructure( id_t id );
 
             Unit* getUnit( id_t id );
-
-            vl::SceneManagerActorTree* sceneManager() {
-                return m_sceneManager.get();
-            }
 
             Match* match() {
                 return m_match;
@@ -77,9 +73,6 @@ namespace isomap {
             Terrain* terrain() {
                 return m_terrain;
             }
-
-            void dumpActors();
-
 
             void enqueueMessage( common::PlayerCommandMessage* msg ) {
                 m_match->enqueueMessage( msg );
@@ -97,26 +90,23 @@ namespace isomap {
                 return m_units;
             }
 
-            AutonomousUnitsAI* ai() const {
-                return m_ai.get();
-            }
-
             void dump() const;
 
         private:
             Match* m_match;
             id_t m_id;
-            vl::fvec4 m_color;
             std::string m_name;
 
             Terrain* m_terrain = nullptr;
+            // renderer needs to be on on top
+            // since the destructor works from the bottom up
+            // so units and structures get deleted before the renderer
+            // and they will need access to the renderer when they are deleted.
+            std::unique_ptr<player::Renderer> m_renderer;
+            std::unique_ptr<player::Controller> m_controller;
 
             std::map<id_t, std::unique_ptr<Structure>> m_structures;
             std::map<id_t, std::unique_ptr<Unit>> m_units;
-
-            vl::RenderingAbstract* m_rendering = nullptr;
-            vl::ref<vl::SceneManagerActorTree> m_sceneManager;
-            std::unique_ptr<AutonomousUnitsAI> m_ai;
         };
     }
 }

@@ -1,17 +1,12 @@
 #include <queue>
 
-#include <vlGraphics/GeometryPrimitives.hpp>
-#include <vlGraphics/Rendering.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
-#include <vlCore/ResourceDatabase.hpp>
-
 #include "Match.h"
 #include "Player.h"
 #include "Terrain.h"
 #include "Unit.h"
 #include "../common/UnitMessage.h"
 #include "../util/math.h"
-#include "ModelCache.h"
+
 
 namespace isomap {
     namespace client {
@@ -26,17 +21,14 @@ namespace isomap {
 
         Unit::~Unit() {
             //printf( "Delete unit for player [%s.%s], id [%d] %p\n", m_player->match()->player()->name().c_str(), m_player->name().c_str(), id(), this );
-            for ( auto* actor : m_actors ) {
-                // this deletes the actor (reduces refcount and *poof*)
-                m_player->sceneManager()->tree()->eraseActor( actor );
-            }
+
         }
 
         void Unit::moveTo( uint32_t targetX, uint32_t targetY ) {
             m_commands = {};
             m_commands.push( {common::UnitCommandMessage::Move, targetX, targetY, 0} );
-            if ( m_player->ai() != nullptr ) {
-                m_player->ai()->onUnitActive( this );
+            if ( m_controller ) {
+                m_controller->onActive();
             }
         }
 
@@ -212,8 +204,8 @@ namespace isomap {
                         {common::UnitCommandMessage::Move, 0, 0, structure->id()} );
             }
             m_commands.push( {common::UnitCommandMessage::Construct, 0, 0, structure->id()} );
-            if ( m_player->ai() != nullptr ) {
-                m_player->ai()->onUnitActive( this );
+            if ( m_controller ) {
+                m_controller->onActive();
             }
         }
 
@@ -250,8 +242,8 @@ namespace isomap {
                             m_commands.pop();
                         }
 
-                        if ( m_commands.empty() && player()->ai() != nullptr ) {
-                            player()->ai()->onUnitIdle( this );
+                        if ( m_commands.empty() && m_controller ) {
+                            m_controller->onIdle();
                         }
                     }
                     break;
@@ -301,73 +293,12 @@ namespace isomap {
             }
         }
 
-        void Unit::initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager ) {
-            m_transform = new vl::Transform;
-            rendering->as<vl::Rendering>()->transform()->addChild( m_transform.get() );
-
-            m_effect = new vl::Effect;
-            m_effect->shader()->setRenderState( new vl::Light, 0 );
-            m_effect->shader()->gocMaterial()->setDiffuse( m_player->color() );
-            m_effect->shader()->enable( vl::EN_DEPTH_TEST );
-            m_effect->shader()->enable( vl::EN_LIGHTING );
-            m_effect->lod( 0 )->push_back( new vl::Shader );
-            m_effect->shader( 0, 1 )->enable( vl::EN_BLEND );
-            m_effect->shader( 0, 1 )->enable( vl::EN_DEPTH_TEST );
-            m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getMaterial() );
-            m_effect->shader( 0, 1 )->setRenderState( m_effect->shader()->getLight( 0 ), 0 );
-
-            vl::ResourceDatabase* resource_db = ModelCache::get( m_type->name() );
-
-            for ( auto& ires : resource_db->resources() ) {
-                auto* act = ires->as<vl::Actor>();
-
-                if ( !act )
-                    continue;
-
-                auto* geom = act->lod( 0 )->as<vl::Geometry>();
-
-                vl::Actor* actor = sceneManager->tree()->addActor( geom, m_effect.get(), m_transform.get() );
-                actor->setObjectName( m_player->name() + " unit " + std::to_string( m_data.id ) + "-" +
-                                      std::to_string( m_actors.size() ) );
-                m_actors.push_back( actor );
-
-                if ( geom && geom->normalArray() ) {
-                    actor->effect()->shader()->enable( vl::EN_LIGHTING );
-                    actor->effect()->shader()->gocLightModel()->setTwoSide( true );
-                }
-
-                if ( geom && !geom->normalArray() ) {
-                    actor->effect()->shader()->disable( vl::EN_LIGHTING );
-                }
-            }
-        }
-
-        void Unit::render() {
-            // remember, operations are done in reverse order here
-
-            // 4. translate to actual position
-            vl::mat4 matrix = vl::mat4::getTranslation(
-                    vl::real( m_data.x ) / math::fix::fPrecision,
-                    vl::real( m_data.y ) / math::fix::fPrecision,
-                    vl::real( m_data.z ) / math::fix::fPrecision * ::sqrt( 2.0 / 3.0 ) / 2.0 );
-            // 3. move model back to 0,0 make sure to use new orientation
-            matrix *= vl::mat4::getTranslation( 1.0 / 2.0,
-                                                1.0 / 2.0, 0 );
-            // 2. rotate to correct orientation
-            matrix *= vl::mat4::getRotation( m_data.orientation * -45.0, 0, 0, 1 );
-
-            // 1. move model to center of model, use default orientation
-            matrix *= vl::mat4::getTranslation( 1.0 / -2.0,
-                                                1.0 / -2.0, 0 );
-            m_transform->setLocalMatrix( matrix );
-        }
-
         void Unit::setVisible( const common::UnitData& data ) {
             m_data = data;
             if ( !m_visible ) {
                 m_visible = true;
-                for ( auto* actor : m_actors ) {
-                    actor->setEnabled( true );
+                if ( m_renderer ) {
+                    m_renderer->setVisible();
                 }
             }
         }
@@ -375,8 +306,8 @@ namespace isomap {
         void Unit::setInvisible() {
             if ( m_visible ) {
                 m_visible = false;
-                for ( auto* actor : m_actors ) {
-                    actor->setEnabled( false );
+                if ( m_renderer ) {
+                    m_renderer->setInvisible();
                 }
             }
         }
@@ -402,14 +333,15 @@ namespace isomap {
                         // cancel commands
                         auto& command = m_commands.front();
                         if ( command.type == common::UnitCommandMessage::Construct ) {
-                            if ( m_player->ai() ) {
-                                m_player->ai()->onBuildStructureAccepted( command.id );
+                            if ( m_player->controller() ) {
+                                // FIXME: how we do this now?
+                                //m_player->controller()->onBuildStructureAccepted( command.id );
                             }
                         }
                         m_commands.pop();
                     }
-                    if ( m_player->ai() ) {
-                        m_player->ai()->onUnitStuck( this );
+                    if ( m_controller ) {
+                        m_controller->onStuck();
                     }
                 }
             }

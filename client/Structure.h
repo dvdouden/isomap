@@ -1,12 +1,9 @@
 #pragma once
 
-#include <vlGraphics/Geometry.hpp>
-#include <vlGraphics/RenderingAbstract.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
-
 #include "../common/StructureData.h"
 #include "../common/StructureType.h"
 #include "../common/types.h"
+#include "structure/Renderer.h"
 
 
 namespace isomap {
@@ -25,11 +22,15 @@ namespace isomap {
 
             const Structure& operator=( const Structure& ) = delete;
 
+            void setRenderer( structure::Renderer* renderer ) {
+                m_renderer.reset( renderer );
+            }
+
+            structure::Renderer* renderer() const {
+                return m_renderer.get();
+            }
+
             void processMessage( common::StructureServerMessage* msg );
-
-            void initRender( vl::RenderingAbstract* rendering, vl::SceneManagerActorTree* sceneManager );
-
-            void render();
 
             bool occupies( uint32_t x, uint32_t y ) const;
 
@@ -86,11 +87,7 @@ namespace isomap {
             common::StructureType* m_type = nullptr;
             bool m_visible = true;
 
-            // TODO: Separate render code from game logic
-            // We don't need the AI data structures to be renderable
-            vl::ref<vl::Transform> m_transform;
-            vl::ref<vl::Effect> m_effect;
-            std::vector<vl::Actor*> m_actors;
+            std::unique_ptr<structure::Renderer> m_renderer;
         };
     }
 }
