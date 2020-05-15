@@ -35,6 +35,9 @@ namespace isomap {
         void Unit::moveTo( uint32_t targetX, uint32_t targetY ) {
             m_commands = {};
             m_commands.push( {common::UnitCommandMessage::Move, targetX, targetY, 0} );
+            if ( m_player->ai() != nullptr ) {
+                m_player->ai()->onUnitActive( this );
+            }
         }
 
         void Unit::doMove( Command& command ) {
@@ -196,14 +199,19 @@ namespace isomap {
 
         void Unit::construct( Structure* structure ) {
             //printf( "Unit %d construct %d\n", id(), structure->id() );
+            if ( !m_type->canConstruct() ) {
+                printf( "[%d] Construct command given to unit without construction abilities!\n", id() );
+                return;
+            }
             m_commands = {};
             if ( !structure->isAdjacentTo( tileX(), tileY() ) ) {
-                // check some place adjacent to the structure
-                // FIXME!
                 m_commands.push(
                         {common::UnitCommandMessage::Move, 0, 0, structure->id()} );
             }
             m_commands.push( {common::UnitCommandMessage::Construct, 0, 0, structure->id()} );
+            if ( m_player->ai() != nullptr ) {
+                m_player->ai()->onUnitActive( this );
+            }
         }
 
         void Unit::doConstruct( Command& command ) {
@@ -237,6 +245,10 @@ namespace isomap {
                             m_commands.pop();
                         } else if ( m_commands.front().type == common::UnitCommandMessage::Construct ) {
                             m_commands.pop();
+                        }
+
+                        if ( m_commands.empty() && player()->ai() != nullptr ) {
+                            player()->ai()->onUnitIdle( this );
                         }
                     }
                     break;

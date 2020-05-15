@@ -97,6 +97,10 @@ namespace isomap {
                 return m_units;
             }
 
+            AutonomousUnitsAI* ai() const {
+                return m_ai.get();
+            }
+
         private:
             Match* m_match;
             id_t m_id;

@@ -102,6 +102,10 @@ namespace isomap {
                 return m_data.state;
             }
 
+            bool idle() const {
+                return m_commands.empty();
+            }
+
         private:
             struct Command {
                 common::UnitCommandMessage::Type type;

@@ -113,6 +113,9 @@ namespace isomap {
                         unit->initRender( m_rendering, m_sceneManager.get() );
                     }
                     m_terrain->addUnit( unit );
+                    if ( m_ai ) {
+                        m_ai->onUnitIdle( unit );
+                    }
                     break;
                 }
 
