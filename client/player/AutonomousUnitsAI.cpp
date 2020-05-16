@@ -27,7 +27,7 @@ namespace isomap {
                         // also, this invalidates the iterator, so exit the loop and retry
                         break;
                     }
-                    unit->construct( structure );
+                    unit->controller()->construct( structure );
                     m_constructionQueue.pop();
                     break;
                 }
@@ -36,11 +36,11 @@ namespace isomap {
                 Unit* unit = player()->getUnit( m_stuckUnitsQueue.front() );
                 m_stuckUnitsQueue.pop();
                 if ( unit != nullptr ) {
-                    if ( unit->idle() ) {
-                        onUnitIdle( unit );
-                    } else {
+                    //if ( unit->controller->idle() ) {
+                    onUnitIdle( unit );
+                    /*} else {
                         onUnitActive( unit );
-                    }
+                    }*/
                 }
             }
         }
@@ -75,7 +75,7 @@ namespace isomap {
 
         void AutonomousUnitsAI::onUnitCreated( Unit* unit ) {
             if ( unit->type()->canConstruct() ) {
-                unit->setController( new unit::ConstructorController( unit, this ) );
+                unit->setController( new unit::ConstructorController( unit ) );
             }
         }
     }

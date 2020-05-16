@@ -9,21 +9,13 @@ namespace isomap {
 
             class ConstructorController : public Controller {
             public:
-                ConstructorController( Unit* unit, player::Controller* playerAI );
+                ConstructorController( Unit* unit );
 
                 ~ConstructorController() override;
 
                 ConstructorController( const ConstructorController& ) = delete;
 
                 ConstructorController& operator=( const ConstructorController& ) = delete;
-
-                void update() override;
-
-                void onIdle() override;
-
-                void onActive() override;
-
-                void onStuck() override;
 
             private:
 

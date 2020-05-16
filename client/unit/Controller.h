@@ -1,8 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include "../../common/types.h"
 #include "../Unit.h"
-#include "../player/Controller.h"
 
 namespace isomap {
     namespace client {
@@ -10,7 +11,7 @@ namespace isomap {
 
             class Controller {
             public:
-                Controller( Unit* unit, player::Controller* playerController );
+                Controller( Unit* unit );
 
                 virtual ~Controller();
 
@@ -18,17 +19,23 @@ namespace isomap {
 
                 Controller& operator=( const Controller& ) = delete;
 
-                virtual void update() = 0;
+                bool moveTo( uint32_t x, uint32_t y );
 
-                virtual void onIdle() = 0;
+                bool moveTo( Structure* structure );
 
-                virtual void onActive() = 0;
+                bool construct( Structure* structure );
 
-                virtual void onStuck() = 0;
+                virtual void update();
+
+                virtual void onMessage( common::UnitServerMessage::Type msgType );
+
+                virtual void dump();
 
             private:
+                bool moveTo( uint32_t x, uint32_t y, Structure* structure );
+
                 Unit* m_unit;
-                player::Controller* m_playerController;
+                std::vector<common::WayPoint> m_wayPoints;
             };
         }
 

@@ -32,7 +32,7 @@ namespace isomap {
                 return m_id;
             }
 
-            static UnitCommandMessage* moveMsg( std::vector<WayPoint>& wayPoints );
+            static UnitCommandMessage* moveMsg( const std::vector<WayPoint>& wayPoints );
 
             static UnitCommandMessage* constructMsg( id_t structureId );
 

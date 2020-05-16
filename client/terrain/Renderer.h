@@ -68,8 +68,6 @@ namespace isomap {
 
                 std::vector<std::pair<common::Area, vl::fvec4>> m_highLightAreas;
 
-                // TODO: Separate render code from game logic
-                // We don't need the AI data structures to be renderable
                 vl::ref<vl::SceneManagerActorTree> m_sceneManager;
             };
         }

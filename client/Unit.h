@@ -47,10 +47,6 @@ namespace isomap {
 
             void update();
 
-            void moveTo( uint32_t targetX, uint32_t targetY );
-
-            void construct( Structure* structure );
-
             void setVisible( const common::UnitData& data );
 
             void setInvisible();
@@ -119,35 +115,17 @@ namespace isomap {
                 return m_data.stateName();
             }
 
-            bool idle() const {
-                return m_commands.empty();
-            }
-
             void dump() const;
 
         private:
-            struct Command {
-                common::UnitCommandMessage::Type type;
-                uint32_t x;
-                uint32_t y;
-                id_t id;
-                bool messageSent = false;
-            };
-
-            void doMove( Command& command );
-
-            void doConstruct( Command& command );
 
             Player* m_player;
             common::UnitData m_data;
             common::UnitType* m_type = nullptr;
             bool m_visible = true;
-
-            std::queue<Command> m_commands;
             std::unique_ptr<unit::Controller> m_controller;
             std::unique_ptr<unit::Renderer> m_renderer;
 
-            void updateCommandQueue();
         };
     }
 }

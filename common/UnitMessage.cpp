@@ -3,9 +3,9 @@
 namespace isomap {
     namespace common {
 
-        UnitCommandMessage* UnitCommandMessage::moveMsg( std::vector<WayPoint>& wayPoints ) {
+        UnitCommandMessage* UnitCommandMessage::moveMsg( const std::vector<WayPoint>& wayPoints ) {
             auto* msg = new UnitCommandMessage( Move );
-            msg->m_wayPoints = std::move( wayPoints );
+            msg->m_wayPoints = wayPoints;
             return msg;
         }
 

@@ -85,22 +85,6 @@ namespace isomap {
 
             int32_t m_speed = 0;
 
-
-/*            enum MotionState {
-                Accelerating,
-                Constant,
-                Decelerating,
-                Stopped
-            };
-            MotionState m_motion;
-
-            // motion related
-            struct WayPoint {
-                int32_t x;
-                int32_t y;
-                int32_t orientation;
-            };
-*/
             std::vector<common::WayPoint> m_wayPoints;
 
         };

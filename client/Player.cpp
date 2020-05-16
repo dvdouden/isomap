@@ -2,6 +2,8 @@
 #include "player/AutonomousUnitsAI.h"
 #include "Match.h"
 #include "Player.h"
+
+#include <memory>
 #include "Structure.h"
 #include "Terrain.h"
 #include "Unit.h"
@@ -19,7 +21,7 @@ namespace isomap {
                 m_id( id ),
                 m_name( std::move( name ) ) {
             if ( useAi ) {
-                m_controller.reset( new AutonomousUnitsAI( this ) );
+                m_controller = std::make_unique<AutonomousUnitsAI>( this );
             }
         }
 
@@ -76,7 +78,7 @@ namespace isomap {
                         if ( m_renderer ) {
                             m_renderer->addStructure( str );
                         }
-                        m_terrain->occupy( str->x(), str->y(), str->footPrint() );
+                        m_terrain->addStructure( str );
                     } else {
                         str->setVisible( true );
                     }

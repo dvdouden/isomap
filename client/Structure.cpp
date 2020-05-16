@@ -1,15 +1,9 @@
-#include <vlGraphics/GeometryPrimitives.hpp>
-#include <vlGraphics/Rendering.hpp>
-#include <vlGraphics/SceneManagerActorTree.hpp>
-#include <vlCore/ResourceDatabase.hpp>
-
 #include "Player.h"
 #include "Structure.h"
 #include "Terrain.h"
 #include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
 #include "../util/math.h"
-#include "ModelCache.h"
 
 namespace isomap {
     namespace client {
