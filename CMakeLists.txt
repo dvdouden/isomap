@@ -40,10 +40,84 @@ elseif (USE_GLUT)
     set(PLATFORM_ENTRY glut_main.cpp)
 elseif (USE_SDL)
     include_directories(${SDL_INCLUDE_DIR})
-    set(PLATFORM_ENTRY sdl_main.cpp common/TerrainMessage.cpp common/TerrainMessage.h)
+    set(PLATFORM_ENTRY sdl_main.cpp)
 endif ()
 
-add_executable(IsoMap ${PLATFORM_ENTRY} util/math.h util/math.cpp MouseListener.cpp MouseListener.h MainWindow.cpp MainWindow.h server/Unit.cpp server/Unit.h server/UnitType.cpp server/UnitType.h server/Structure.cpp server/Structure.h server/Object.cpp server/Object.h server/Terrain.cpp server/Terrain.h server/Match.cpp server/Match.h common/types.h server/Player.cpp server/Player.h server/TerrainGenerator.cpp server/TerrainGenerator.h client/Terrain.cpp client/Terrain.h common/TerrainMessage.cpp common/TerrainMessage.h common/UnitMessage.cpp common/UnitMessage.h client/Unit.cpp client/Unit.h client/Structure.cpp client/Structure.h common/StructureMessage.cpp common/StructureMessage.h common/PlayerMessage.cpp common/PlayerMessage.h client/Player.cpp client/Player.h common/UnitType.cpp common/UnitType.h common/StructureType.cpp common/StructureType.h common/FootPrint.cpp common/FootPrint.h common/StructureData.h client/Match.cpp client/Match.h common/MatchMessage.cpp common/MatchMessage.h client/ModelCache.cpp client/ModelCache.h common/UnitData.h common/UnitData.cpp common/TerrainData.cpp common/TerrainData.h client/player/AutonomousUnitsAI.cpp client/player/AutonomousUnitsAI.h client/unit/Controller.h client/player/Controller.h client/unit/ConstructorController.cpp client/unit/ConstructorController.h client/unit/Controller.cpp client/unit/Renderer.cpp client/unit/Renderer.h client/player/Renderer.cpp client/player/Renderer.h client/structure/Renderer.cpp client/structure/Renderer.h client/match/Renderer.cpp client/match/Renderer.h client/terrain/Renderer.cpp client/terrain/Renderer.h)
+add_executable(
+        IsoMap
+        ${PLATFORM_ENTRY}
+        MainWindow.cpp
+        MainWindow.h
+        MouseListener.cpp
+        MouseListener.h
+        client/Match.cpp
+        client/Match.h
+        client/ModelCache.cpp
+        client/ModelCache.h
+        client/Player.cpp
+        client/Player.h
+        client/Structure.cpp
+        client/Structure.h
+        client/Terrain.cpp
+        client/Terrain.h
+        client/Unit.cpp
+        client/Unit.h
+        client/match/Renderer.cpp
+        client/match/Renderer.h
+        client/player/AutonomousUnitsAI.cpp
+        client/player/AutonomousUnitsAI.h
+        client/player/Controller.h
+        client/player/Renderer.cpp
+        client/player/Renderer.h
+        client/structure/Renderer.cpp
+        client/structure/Renderer.h
+        client/terrain/Renderer.cpp
+        client/terrain/Renderer.h
+        client/unit/ConstructorController.cpp
+        client/unit/ConstructorController.h
+        client/unit/Controller.h
+        client/unit/Controller.cpp
+        client/unit/Renderer.cpp
+        client/unit/Renderer.h
+        common/types.h
+        common/FootPrint.cpp
+        common/FootPrint.h
+        common/MatchMessage.cpp
+        common/MatchMessage.h
+        common/PlayerMessage.cpp
+        common/PlayerMessage.h
+        common/StructureData.h
+        common/StructureMessage.cpp
+        common/StructureMessage.h
+        common/StructureType.cpp
+        common/StructureType.h
+        common/TerrainData.cpp
+        common/TerrainData.h
+        common/TerrainMessage.cpp
+        common/TerrainMessage.h
+        common/UnitData.h
+        common/UnitData.cpp
+        common/UnitMessage.cpp
+        common/UnitMessage.h
+        common/UnitType.cpp
+        common/UnitType.h
+        server/Match.cpp
+        server/Match.h
+        server/Object.cpp
+        server/Object.h
+        server/Player.cpp
+        server/Player.h
+        server/Structure.cpp
+        server/Structure.h
+        server/Terrain.cpp
+        server/Terrain.h
+        server/TerrainGenerator.cpp
+        server/TerrainGenerator.h
+        server/Unit.cpp
+        server/Unit.h
+        util/math.h
+        util/math.cpp
+)
 
 if (MINGW)
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static)

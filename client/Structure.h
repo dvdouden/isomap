@@ -78,6 +78,14 @@ namespace isomap {
                 return m_data.orientation;
             }
 
+            uint32_t constructionProcess() const {
+                return m_data.constructionProgress;
+            }
+
+            bool constructionCompleted() const {
+                return m_data.constructionProgress == 100;
+            }
+
             void dump() const;
 
 

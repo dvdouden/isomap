@@ -23,13 +23,17 @@ namespace isomap {
 
                 bool moveTo( Structure* structure );
 
-                bool construct( Structure* structure );
+                virtual bool construct( Structure* structure );
 
                 virtual void update();
 
                 virtual void onMessage( common::UnitServerMessage::Type msgType );
 
                 virtual void dump();
+
+                Unit* unit() const {
+                    return m_unit;
+                }
 
             private:
                 bool moveTo( uint32_t x, uint32_t y, Structure* structure );

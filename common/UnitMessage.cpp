@@ -49,6 +49,18 @@ namespace isomap {
             return msg;
         }
 
+        UnitServerMessage* UnitServerMessage::doneMsg( const UnitData& data ) {
+            auto* msg = new UnitServerMessage( Done );
+            msg->m_data = data;
+            return msg;
+        }
+
+        UnitServerMessage* UnitServerMessage::abortMsg( const UnitData& data ) {
+            auto* msg = new UnitServerMessage( Abort );
+            msg->m_data = data;
+            return msg;
+        }
+
         const char* UnitServerMessage::typeName() const {
             switch ( m_type ) {
                 case Construct:
@@ -59,6 +71,10 @@ namespace isomap {
                     return "MoveTo";
                 case Stop:
                     return "Stop";
+                case Done:
+                    return "Done";
+                case Abort:
+                    return "Abort";
             }
             return "Invalid";
         }

@@ -49,6 +49,8 @@ namespace isomap {
                 Status,
                 MoveTo,
                 Stop,
+                Done,
+                Abort,
             };
 
             explicit UnitServerMessage( Type type ) :
@@ -73,6 +75,11 @@ namespace isomap {
             static UnitServerMessage* moveToMsg( const UnitData& data );
 
             static UnitServerMessage* stopMsg( const UnitData& data );
+
+            static UnitServerMessage* doneMsg( const UnitData& data );
+
+            static UnitServerMessage* abortMsg( const UnitData& data );
+
 
         private:
             Type m_type;

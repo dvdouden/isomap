@@ -33,10 +33,9 @@ namespace isomap {
                 case common::UnitServerMessage::Status:
                 case common::UnitServerMessage::MoveTo:
                 case common::UnitServerMessage::Stop:
+                case common::UnitServerMessage::Done:
+                case common::UnitServerMessage::Abort:
                     m_data = msg->data();
-                    break;
-
-                default:
                     break;
             }
             if ( m_controller ) {

@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "Controller.h"
 #include "../player/Controller.h"
 #include "../Structure.h"
@@ -20,11 +18,25 @@ namespace isomap {
             bool Controller::construct( Structure* structure ) {
                 //printf( "Unit %d construct %d\n", id(), structure->id() );
                 if ( !m_unit->type()->canConstruct() ) {
-                    printf( "[%d] Construct command given to unit without construction abilities!\n", m_unit->id() );
+                    printf( "[%d] Construct command given to unit without construction abilities!\n",
+                            m_unit->id() );
+                    return false;
+                }
+                if ( structure->player() != m_unit->player() ) {
+                    printf( "[%d] Construct command given to unit for structure %d of other player!\n",
+                            m_unit->id(),
+                            structure->id() );
+                    return false;
+                }
+                if ( structure->constructionCompleted() ) {
+                    printf( "[%d] Construct command given to unit for completed structure %d!\n",
+                            m_unit->id(),
+                            structure->id() );
                     return false;
                 }
                 if ( !structure->isAdjacentTo( m_unit->tileX(), m_unit->tileY() ) ) {
-                    printf( "[%d] Construct command given to unit not adjacent to structure %d!\n", m_unit->id(),
+                    printf( "[%d] Construct command given to unit not adjacent to structure %d!\n",
+                            m_unit->id(),
                             structure->id() );
                     return false;
                 }
@@ -48,79 +60,22 @@ namespace isomap {
             void Controller::onMessage( common::UnitServerMessage::Type msgType ) {
                 switch ( msgType ) {
                     case common::UnitServerMessage::Construct:
-                        break;
                     case common::UnitServerMessage::Status:
-                        break;
                     case common::UnitServerMessage::MoveTo:
-                        break;
                     case common::UnitServerMessage::Stop:
+                    case common::UnitServerMessage::Done:
+                    case common::UnitServerMessage::Abort:
                         break;
                 }
             }
 
             void Controller::update() {
                 switch ( m_unit->state() ) {
-                    case common::UnitState::Idle:
-                        //updateCommandQueue();
-                        break;
-
                     default:
                         break;
                 }
 
             }
-
-            /*if ( !m_commands.empty() ) {
-                        if ( m_commands.front().type == common::UnitCommandMessage::Move &&
-                             m_commands.front().x == tileX() &&
-                             m_commands.front().y == tileY() ) {
-                            m_commands.pop();
-                        } else if ( m_commands.front().type == common::UnitCommandMessage::Construct ) {
-                            m_commands.pop();
-                        }
-
-                        if ( m_commands.empty() && m_controller ) {
-                            m_controller->onIdle();
-                        }
-                    }*/
-
-
-/*
-            void Unit::updateCommandQueue() {
-                if ( m_commands.empty() ) {
-                    return;
-                }
-
-                if ( !m_commands.empty() && !m_commands.front().messageSent ) {
-                    switch ( m_commands.front().type ) {
-                        case common::UnitCommandMessage::Move:
-                            doMove( m_commands.front() );
-                            break;
-
-                        case common::UnitCommandMessage::Construct:
-                            doConstruct( m_commands.front() );
-                            break;
-                    }
-                    if ( !m_commands.front().messageSent ) {
-                        printf( "Unit [%d] failed to execute command %d\n", id(), m_commands.front().type );
-                        while ( !m_commands.empty() ) {
-                            // cancel commands
-                            auto& command = m_commands.front();
-                            if ( command.type == common::UnitCommandMessage::Construct ) {
-                                if ( m_player->controller() ) {
-                                    // FIXME: how we do this now?
-                                    //m_player->controller()->onBuildStructureAccepted( command.id );
-                                }
-                            }
-                            m_commands.pop();
-                        }
-                        if ( m_controller ) {
-                            m_controller->onStuck();
-                        }
-                    }
-                }
-            }
-*/
 
             bool Controller::moveTo( uint32_t x, uint32_t y, Structure* structure ) {
                 m_wayPoints.clear();
@@ -273,7 +228,7 @@ namespace isomap {
                 } else {
                     printf( "No route!\n" );
                     return false;
-                };
+                }
             }
 
         }

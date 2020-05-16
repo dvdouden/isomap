@@ -970,8 +970,7 @@ void MainWindow::place( int x, int y ) {
                 } else {
                     if ( selectedUnit != nullptr ) {
                         if ( structureAtCursor != nullptr ) {
-                            if ( structureAtCursor->player() == m_controllingPlayer &&
-                                 structureAtCursor->isAdjacentTo( selectedUnit->tileX(), selectedUnit->tileY() ) ) {
+                            if ( structureAtCursor->player() == m_controllingPlayer ) {
                                 selectedUnit->controller()->construct( structureAtCursor );
                             } else {
                                 selectedUnit->controller()->moveTo( structureAtCursor );

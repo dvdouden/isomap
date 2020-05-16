@@ -9,7 +9,7 @@ namespace isomap {
 
             class ConstructorController : public Controller {
             public:
-                ConstructorController( Unit* unit );
+                explicit ConstructorController( Unit* unit );
 
                 ~ConstructorController() override;
 
@@ -17,8 +17,17 @@ namespace isomap {
 
                 ConstructorController& operator=( const ConstructorController& ) = delete;
 
-            private:
+                bool construct( Structure* structure ) override;
 
+                void onMessage( common::UnitServerMessage::Type msgType ) override;
+
+            private:
+                void onDone();
+
+                void onAbort();
+
+                Structure* m_structure = nullptr;
+                common::UnitState m_state = common::UnitState::Idle;
             };
         }
     }
