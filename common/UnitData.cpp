@@ -31,6 +31,7 @@ namespace isomap {
             // FIXME: fog!
             //player()->unFog( m_data.x/  math::fix::precision, m_data.y/  math::fix::precision, 20 );
             if ( x == wayPoint.x * math::fix::precision && y == wayPoint.y * math::fix::precision ) {
+                lastState = state;
                 state = common::Idle;
             }
         }

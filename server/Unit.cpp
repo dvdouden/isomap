@@ -39,7 +39,7 @@ namespace isomap {
                     // FIXME: check if we're on a tile boundary
                     auto* structure = player()->getStructure( msg->id() );
                     if ( structure != nullptr && structure->isAdjacentTo( tileX(), tileY() ) ) {
-                        m_data.state = common::Constructing;
+                        m_data.setState( common::Constructing );
                         m_data.structureId = msg->id();
                         player()->match()->enqueueMessage(
                                 this,
@@ -77,7 +77,7 @@ namespace isomap {
             if ( m_data.state == common::Constructing ) {
                 auto* structure = player()->getStructure( m_data.structureId );
                 if ( structure == nullptr || structure->constructionCompleted() ) {
-                    m_data.state = common::Idle;
+                    m_data.setState( common::Idle );
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
                 } else {
                     structure->constructionTick();
@@ -87,7 +87,7 @@ namespace isomap {
 
             common::PlayerServerMessage* msg = nullptr;
             if ( m_data.state == common::Idle ) {
-                m_data.state = common::Moving;
+                m_data.setState( common::Moving );
                 m_data.wayPoint = m_wayPoints.back();
                 m_wayPoints.pop_back();
                 msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );

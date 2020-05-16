@@ -15,7 +15,13 @@ namespace isomap {
             int32_t z = 0;
             uint32_t orientation = 0;
             UnitState state = UnitState::Idle;
+            UnitState lastState = UnitState::Idle;
             WayPoint wayPoint = {0, 0};
+
+            void setState( UnitState newState ) {
+                lastState = state;
+                state = newState;
+            }
 
             uint32_t getOrientation( int32_t dX, int32_t dY );
 

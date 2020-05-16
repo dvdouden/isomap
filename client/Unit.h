@@ -111,6 +111,10 @@ namespace isomap {
                 return m_data.state;
             }
 
+            common::UnitState lastState() const {
+                return m_data.lastState;
+            }
+
             const char* stateName() const {
                 return m_data.stateName();
             }

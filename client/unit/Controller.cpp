@@ -74,7 +74,6 @@ namespace isomap {
                     default:
                         break;
                 }
-
             }
 
             bool Controller::moveTo( uint32_t x, uint32_t y, Structure* structure ) {
