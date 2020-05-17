@@ -135,7 +135,10 @@ namespace isomap {
 
             void ConstructorController::fail() {
                 m_currentStructure = nullptr;
-                // FIXME: should notify player that we're unable to construct structure
+                // notify player that we're unable to construct structure
+                unit()->player()->controller()->onUnableToConstruct(
+                        unit()->player()->getStructure( m_currentStructureId ),
+                        unit() );
             }
 
             void ConstructorController::dump() {
@@ -143,6 +146,13 @@ namespace isomap {
                 printf( "Current structure id: %d\n", m_currentStructureId );
                 printf( "Current structure: %p\n", m_currentStructure );
                 printf( "Queue size: %d\n", m_structureQueue.size() );
+            }
+
+            int32_t ConstructorController::weight() const {
+                if ( m_currentStructure == nullptr ) {
+                    return 0;
+                }
+                return m_structureQueue.size() + 1;
             }
 
 

@@ -6,77 +6,64 @@ namespace isomap {
     namespace client {
         AutonomousUnitsAI::AutonomousUnitsAI( isomap::client::Player* player )
                 : Controller( player ) {
-
+            m_constructionController = std::make_unique<player::ConstructionController>();
         }
 
         void AutonomousUnitsAI::update() {
-            while ( !m_constructionQueue.empty() && !m_idleConstructionUnits.empty() ) {
-                auto* structure = player()->getStructure( m_constructionQueue.front() );
-                if ( structure == nullptr ) {
-                    // structure no longer exists, could be removed or destroyed
-                    m_constructionQueue.pop();
-                    continue;
-                }
-
-                // FIXME: needs a bit more intelligence (get unit closest to structure)
-                for ( id_t unitId : m_idleConstructionUnits ) {
-                    auto* unit = player()->getUnit( unitId );
-                    if ( unit == nullptr ) {
-                        // shouldn't happen, but who knows...
-                        m_idleConstructionUnits.erase( unitId );
-                        // also, this invalidates the iterator, so exit the loop and retry
-                        break;
-                    }
-                    unit->controller()->construct( structure );
-                    m_constructionQueue.pop();
-                    break;
-                }
+            if ( m_constructionController ) {
+                m_constructionController->update();
             }
-            if ( !m_stuckUnitsQueue.empty() ) {
-                Unit* unit = player()->getUnit( m_stuckUnitsQueue.front() );
-                m_stuckUnitsQueue.pop();
-                if ( unit != nullptr ) {
-                    //if ( unit->controller->idle() ) {
-                    onUnitIdle( unit );
-                    /*} else {
-                        onUnitActive( unit );
-                    }*/
-                }
-            }
-        }
-
-        void AutonomousUnitsAI::onStructureCreated( Structure* structure ) {
-            m_constructionQueue.push( structure->id() );
-        }
-
-        void AutonomousUnitsAI::onUnitIdle( Unit* unit ) {
-            printf( "Unit %d became idle\n", unit->id() );
-            if ( unit->type()->canConstruct() ) {
-                m_idleConstructionUnits.insert( unit->id() );
-            }
-            if ( unit->type()->canHarvest() ) {
-                m_idleHarvesters.insert( unit->id() );
-            }
-        }
-
-        void AutonomousUnitsAI::onUnitActive( Unit* unit ) {
-            printf( "Unit %d became active\n", unit->id() );
-            if ( unit->type()->canConstruct() ) {
-                m_idleConstructionUnits.erase( unit->id() );
-            }
-            if ( unit->type()->canHarvest() ) {
-                m_idleHarvesters.erase( unit->id() );
-            }
-        }
-
-        void AutonomousUnitsAI::onUnitStuck( Unit* unit ) {
-            m_stuckUnitsQueue.push( unit->id() );
         }
 
         void AutonomousUnitsAI::onUnitCreated( Unit* unit ) {
             if ( unit->type()->canConstruct() ) {
                 unit->setController( new unit::ConstructorController( unit ) );
+                if ( m_constructionController ) {
+                    m_constructionController->addConstructor( unit );
+                }
             }
         }
+
+        void AutonomousUnitsAI::onUnitDestroyed( Unit* unit ) {
+            if ( unit->type()->canConstruct() && m_constructionController ) {
+                m_constructionController->removeConstructor( unit );
+            }
+        }
+
+        void AutonomousUnitsAI::onStructureCreated( Structure* structure ) {
+            structure->setController( new structure::Controller( structure ) );
+            if ( m_constructionController ) {
+                m_constructionController->addStructure( structure );
+            }
+        }
+
+        void AutonomousUnitsAI::onConstructionComplete( Structure* structure ) {
+            if ( m_constructionController ) {
+                m_constructionController->removeStructure( structure );
+            }
+        }
+
+        void AutonomousUnitsAI::onStructureDestroyed( Structure* structure ) {
+            if ( m_constructionController ) {
+                m_constructionController->removeStructure( structure );
+            }
+        }
+
+        void AutonomousUnitsAI::dump() const {
+            printf( "Controller:\n" );
+            if ( m_constructionController ) {
+                m_constructionController->dump();
+            }
+
+        }
+
+        void AutonomousUnitsAI::onUnableToConstruct( Structure* structure, Unit* unit ) {
+            if ( structure != nullptr ) {
+                if ( m_constructionController ) {
+                    m_constructionController->unableToConstruct( structure, unit );
+                }
+            }
+        }
+
     }
 }

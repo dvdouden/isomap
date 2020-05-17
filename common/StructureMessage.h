@@ -31,8 +31,8 @@ namespace isomap {
 
         public:
             enum Type {
-                Create,
-                Status
+                Completed,
+                Status,
             };
 
             explicit StructureServerMessage( Type type ) :
@@ -48,8 +48,9 @@ namespace isomap {
                 return m_data;
             }
 
-            static StructureServerMessage*
-            statusMsg( const StructureData& data );
+            static StructureServerMessage* completedMsg( const StructureData& data );
+
+            static StructureServerMessage* statusMsg( const StructureData& data );
 
         private:
             Type m_type;

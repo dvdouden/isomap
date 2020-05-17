@@ -47,6 +47,8 @@ namespace isomap {
         }
 
         namespace structure {
+            class Controller;
+
             class Renderer;
         }
 

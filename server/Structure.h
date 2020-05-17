@@ -27,6 +27,8 @@ namespace isomap {
 
             void processMessage( common::StructureCommandMessage* msg );
 
+            common::StructureServerMessage* completedMessage();
+
             common::StructureServerMessage* statusMessage();
 
             void destroy();

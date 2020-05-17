@@ -1,10 +1,12 @@
 #pragma once
 
+#include <memory>
 #include <set>
 #include <queue>
 
 #include "../../common/types.h"
 #include "Controller.h"
+#include "ConstructionController.h"
 
 namespace isomap {
     namespace client {
@@ -16,19 +18,20 @@ namespace isomap {
 
             void onUnitCreated( Unit* unit ) override;
 
+            void onUnitDestroyed( Unit* unit ) override;
+
             void onStructureCreated( Structure* structure ) override;
 
-            void onUnitIdle( Unit* unit );
+            void onConstructionComplete( Structure* structure ) override;
 
-            void onUnitActive( Unit* unit );
+            void onStructureDestroyed( Structure* structure ) override;
 
-            void onUnitStuck( Unit* unit );
+            void onUnableToConstruct( Structure* structure, Unit* unit ) override;
+
+            void dump() const override;
 
         private:
-            std::queue<id_t> m_constructionQueue;
-            std::set<id_t> m_idleConstructionUnits;
-            std::set<id_t> m_idleHarvesters;
-            std::queue<id_t> m_stuckUnitsQueue;
+            std::unique_ptr<player::ConstructionController> m_constructionController;
         };
     }
 }

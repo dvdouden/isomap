@@ -9,21 +9,20 @@ namespace isomap {
     namespace client {
 
 
-        Structure::~Structure() {
-
-        }
+        Structure::~Structure() = default;
 
         void Structure::processMessage( common::StructureServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
             switch ( msg->type() ) {
+                case common::StructureServerMessage::Completed:
                 case common::StructureServerMessage::Status:
                     m_data = msg->data();
                     break;
-
-                default:
-                    break;
+            }
+            if ( m_controller ) {
+                m_controller->onMessage( msg->type() );
             }
         }
 
@@ -42,7 +41,6 @@ namespace isomap {
             }
             return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
         }
-
 
         bool Structure::isAdjacentTo( uint32_t x, uint32_t y ) const {
             return
@@ -74,6 +72,9 @@ namespace isomap {
                     m_data.x,
                     m_data.y,
                     m_data.constructionProgress );
+            if ( m_controller ) {
+                m_controller->dump();
+            }
         }
 
     }

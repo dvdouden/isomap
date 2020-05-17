@@ -67,8 +67,12 @@ add_executable(
         client/player/AutonomousUnitsAI.cpp
         client/player/AutonomousUnitsAI.h
         client/player/Controller.h
+        client/player/ConstructionController.cpp
+        client/player/ConstructionController.h
         client/player/Renderer.cpp
         client/player/Renderer.h
+        client/structure/Controller.cpp
+        client/structure/Controller.h
         client/structure/Renderer.cpp
         client/structure/Renderer.h
         client/terrain/Renderer.cpp
@@ -116,8 +120,7 @@ add_executable(
         server/Unit.cpp
         server/Unit.h
         util/math.h
-        util/math.cpp
-)
+        util/math.cpp)
 
 if (MINGW)
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static)

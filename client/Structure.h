@@ -1,8 +1,11 @@
 #pragma once
 
 #include "../common/StructureData.h"
+#include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
 #include "../common/types.h"
+
+#include "structure/Controller.h"
 #include "structure/Renderer.h"
 
 
@@ -22,8 +25,16 @@ namespace isomap {
 
             const Structure& operator=( const Structure& ) = delete;
 
+            void setController( structure::Controller* controller ) {
+                m_controller.reset( controller );
+            }
+
             void setRenderer( structure::Renderer* renderer ) {
                 m_renderer.reset( renderer );
+            }
+
+            structure::Controller* controller() const {
+                return m_controller.get();
             }
 
             structure::Renderer* renderer() const {
@@ -95,6 +106,7 @@ namespace isomap {
             common::StructureType* m_type = nullptr;
             bool m_visible = true;
 
+            std::unique_ptr<structure::Controller> m_controller;
             std::unique_ptr<structure::Renderer> m_renderer;
         };
     }

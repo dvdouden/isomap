@@ -22,11 +22,21 @@ namespace isomap {
 
                 virtual void onUnitCreated( Unit* unit ) = 0;
 
+                virtual void onUnitDestroyed( Unit* unit ) = 0;
+
                 virtual void onStructureCreated( Structure* structure ) = 0;
+
+                virtual void onConstructionComplete( Structure* structure ) = 0;
+
+                virtual void onStructureDestroyed( Structure* structure ) = 0;
+
+                virtual void onUnableToConstruct( Structure* structure, Unit* unit ) = 0;
 
                 Player* player() {
                     return m_player;
                 }
+
+                virtual void dump() const = 0;
 
             private:
                 Player* m_player;

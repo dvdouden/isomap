@@ -25,7 +25,11 @@ namespace isomap {
         common::PlayerServerMessage* Structure::update( Terrain* world ) {
             if ( m_dirty ) {
                 m_dirty = false;
-                return common::PlayerServerMessage::structureMsg( statusMessage() );
+                if ( constructionCompleted() ) {
+                    return common::PlayerServerMessage::structureMsg( completedMessage() );
+                } else {
+                    return common::PlayerServerMessage::structureMsg( statusMessage() );
+                }
             }
             return nullptr;
         }
@@ -51,6 +55,10 @@ namespace isomap {
                     }
                 }
             }
+        }
+
+        common::StructureServerMessage* Structure::completedMessage() {
+            return common::StructureServerMessage::completedMsg( m_data );
         }
 
         common::StructureServerMessage* Structure::statusMessage() {

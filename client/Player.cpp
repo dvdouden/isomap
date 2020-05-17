@@ -96,6 +96,9 @@ namespace isomap {
                 case common::PlayerServerMessage::StructureDestroyed: {
                     auto* str = getStructure( msg->id() );
                     if ( str != nullptr ) {
+                        if ( m_controller ) {
+                            m_controller->onStructureDestroyed( str );
+                        }
                         m_terrain->removeStructure( str );
                         m_structures.erase( msg->id() );
                     }
@@ -148,6 +151,9 @@ namespace isomap {
                 case common::PlayerServerMessage::UnitDestroyed: {
                     auto* unit = getUnit( msg->id() );
                     if ( unit != nullptr ) {
+                        if ( m_controller ) {
+                            m_controller->onUnitDestroyed( unit );
+                        }
                         m_terrain->removeUnit( unit );
                         m_units.erase( msg->id() );
                     }
@@ -240,6 +246,9 @@ namespace isomap {
 
         void Player::dump() const {
             printf( "client Player %08X [%s]:\n", m_id, m_name.c_str() );
+            if ( m_controller ) {
+                m_controller->dump();
+            }
             printf( "%d structures\n", m_structures.size() );
             for ( auto& structure : m_structures ) {
                 structure.second->dump();

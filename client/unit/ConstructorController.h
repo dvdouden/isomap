@@ -25,6 +25,8 @@ namespace isomap {
 
                 void update() override;
 
+                int32_t weight() const override;
+
                 void dump() override;
 
             private:

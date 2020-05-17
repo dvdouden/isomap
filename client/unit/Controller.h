@@ -11,7 +11,7 @@ namespace isomap {
 
             class Controller {
             public:
-                Controller( Unit* unit );
+                explicit Controller( Unit* unit );
 
                 virtual ~Controller();
 
@@ -30,6 +30,8 @@ namespace isomap {
                 virtual void onMessage( common::UnitServerMessage::Type msgType );
 
                 virtual void dump();
+
+                virtual int32_t weight() const = 0;
 
                 Unit* unit() const {
                     return m_unit;
