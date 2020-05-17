@@ -50,6 +50,7 @@ add_executable(
         MainWindow.h
         MouseListener.cpp
         MouseListener.h
+        client/types.h
         client/Match.cpp
         client/Match.h
         client/ModelCache.cpp
@@ -83,6 +84,7 @@ add_executable(
         client/unit/Controller.cpp
         client/unit/Renderer.cpp
         client/unit/Renderer.h
+        client/unit/WorkProvider.h
         common/types.h
         common/FootPrint.cpp
         common/FootPrint.h
@@ -105,6 +107,7 @@ add_executable(
         common/UnitMessage.h
         common/UnitType.cpp
         common/UnitType.h
+        server/types.h
         server/Match.cpp
         server/Match.h
         server/Object.cpp
@@ -120,7 +123,8 @@ add_executable(
         server/Unit.cpp
         server/Unit.h
         util/math.h
-        util/math.cpp)
+        util/math.cpp
+)
 
 if (MINGW)
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static)

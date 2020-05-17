@@ -4,7 +4,7 @@
 #include <set>
 #include <queue>
 
-#include "../../common/types.h"
+#include "../types.h"
 #include "Controller.h"
 #include "ConstructionController.h"
 

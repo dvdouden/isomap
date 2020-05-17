@@ -2,6 +2,7 @@
 #include "../Player.h"
 #include "../Structure.h"
 #include "../Unit.h"
+#include "WorkProvider.h"
 
 namespace isomap {
     namespace client {
@@ -15,21 +16,18 @@ namespace isomap {
             ConstructorController::~ConstructorController() = default;
 
             bool ConstructorController::construct( Structure* structure ) {
-                // FIXME: code duplication with Controller::construct!
-                if ( structure->player() != unit()->player() ) {
-                    printf( "[%d] Construct command given to unit for structure %d of other player!\n",
-                            unit()->id(),
-                            structure->id() );
-                    return false;
+                if ( unit()->isAdjacentTo( structure ) ) {
+                    if ( Controller::construct( structure ) ) {
+                        setStructure( structure );
+                        return true;
+                    }
+                } else {
+                    if ( Controller::moveTo( structure ) ) {
+                        setStructure( structure );
+                        return true;
+                    }
                 }
-                if ( structure->constructionCompleted() ) {
-                    printf( "[%d] Construct command given to unit for completed structure %d!\n",
-                            unit()->id(),
-                            structure->id() );
-                    return false;
-                }
-                m_structureQueue.push( structure->id() );
-                return true;
+                return false;
             }
 
             void ConstructorController::onMessage( common::UnitServerMessage::Type msgType ) {
@@ -65,6 +63,9 @@ namespace isomap {
                     case common::Constructing:
                         //printf( "Construction complete\n" );
                         m_currentStructure = nullptr;
+                        if ( workProvider() != nullptr ) {
+                            workProvider()->unitAvailable( unit() );
+                        }
                         break;
 
                     default:
@@ -96,26 +97,14 @@ namespace isomap {
             }
 
             void ConstructorController::update() {
-                if ( m_currentStructure == nullptr && !m_structureQueue.empty() ) {
-                    m_currentStructureId = m_structureQueue.front();
-                    m_structureQueue.pop();
-                    m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                    if ( m_currentStructure == nullptr ) {
-                        printf( "[%d] Construct command given to unit but non-existent structure %d!\n",
-                                unit()->id(),
-                                m_currentStructureId );
-                        fail();
-                    } else if ( unit()->isAdjacentTo( m_currentStructure ) ) {
-                        construct();
-                    } else {
-                        moveTo();
-                    }
+                if ( m_currentStructure == nullptr ) {
+                    Controller::update();
                 }
             }
 
             void ConstructorController::moveTo() {
                 m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                if ( m_currentStructure != nullptr && !Controller::moveTo( m_currentStructure ) ) {
+                if ( m_currentStructure == nullptr || !Controller::moveTo( m_currentStructure ) ) {
                     printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
                             unit()->id(),
                             m_currentStructureId );
@@ -125,7 +114,7 @@ namespace isomap {
 
             void ConstructorController::construct() {
                 m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                if ( m_currentStructure != nullptr && !Controller::construct( m_currentStructure ) ) {
+                if ( m_currentStructure == nullptr || !Controller::construct( m_currentStructure ) ) {
                     printf( "[%d] Construct command given to unit but unable to construct structure %d!\n",
                             unit()->id(),
                             m_currentStructureId );
@@ -139,22 +128,29 @@ namespace isomap {
                 unit()->player()->controller()->onUnableToConstruct(
                         unit()->player()->getStructure( m_currentStructureId ),
                         unit() );
+                if ( workProvider() ) {
+                    workProvider()->unitAvailable( unit() );
+                }
+            }
+
+            void ConstructorController::setStructure( Structure* structure ) {
+                if ( m_currentStructure != nullptr ) {
+                    unit()->player()->controller()->onUnableToConstruct(
+                            unit()->player()->getStructure( m_currentStructureId ),
+                            unit() );
+                }
+                m_currentStructure = structure;
+                m_currentStructureId = m_currentStructure->id();
+                if ( workProvider() != nullptr ) {
+                    workProvider()->unitUnavailable( unit() );
+                }
             }
 
             void ConstructorController::dump() {
                 Controller::dump();
                 printf( "Current structure id: %d\n", m_currentStructureId );
                 printf( "Current structure: %p\n", m_currentStructure );
-                printf( "Queue size: %d\n", m_structureQueue.size() );
             }
-
-            int32_t ConstructorController::weight() const {
-                if ( m_currentStructure == nullptr ) {
-                    return 0;
-                }
-                return m_structureQueue.size() + 1;
-            }
-
 
         }
     }

@@ -3,7 +3,9 @@
 
 #include <vlGraphics/Applet.hpp>
 #include <vlGraphics/Text.hpp>
-#include "common/types.h"
+
+#include "client/types.h"
+#include "server/types.h"
 #include "server/TerrainGenerator.h"
 
 

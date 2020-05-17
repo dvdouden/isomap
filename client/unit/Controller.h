@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "../../common/types.h"
+#include "../types.h"
 #include "../Unit.h"
 
 namespace isomap {
@@ -31,10 +31,16 @@ namespace isomap {
 
                 virtual void dump();
 
-                virtual int32_t weight() const = 0;
-
                 Unit* unit() const {
                     return m_unit;
+                }
+
+                void setWorkProvider( WorkProvider* workProvider ) {
+                    m_workProvider = workProvider;
+                }
+
+                WorkProvider* workProvider() const {
+                    return m_workProvider;
                 }
 
             private:
@@ -42,6 +48,8 @@ namespace isomap {
 
                 Unit* m_unit;
                 std::vector<common::WayPoint> m_wayPoints;
+                WorkProvider* m_workProvider = nullptr;
+
             };
         }
 

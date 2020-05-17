@@ -4,7 +4,7 @@
 
 #include "../common/FootPrint.h"
 #include "../common/TerrainData.h"
-#include "../common/types.h"
+#include "types.h"
 #include "terrain/Renderer.h"
 
 namespace isomap {

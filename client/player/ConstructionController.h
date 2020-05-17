@@ -4,13 +4,14 @@
 #include <set>
 #include <vector>
 
-#include "../../common/types.h"
+#include "../types.h"
+#include "../unit/WorkProvider.h"
 
 namespace isomap {
     namespace client {
         namespace player {
 
-            class ConstructionController {
+            class ConstructionController : public unit::WorkProvider {
             public:
                 ConstructionController();
 
@@ -32,16 +33,22 @@ namespace isomap {
 
                 void unableToConstruct( Structure* structure, Unit* unit );
 
+                void unitAvailable( Unit* unit ) override;
+
+                void unitUnavailable( Unit* unit ) override;
+
                 void dump() const;
 
             private:
-                typedef std::map<Structure*, std::set<Unit*>> AssignementMap;
+                void findStructureForUnit( Unit* unit );
 
-                AssignementMap::iterator unassign( AssignementMap::iterator it, Unit* unit );
+                bool findUnitForStructure( Structure* structure );
 
-                std::vector<Unit*> m_constructors;
+                static uint32_t distance( Unit* unit, Structure* structure );
+
+                std::set<Unit*> m_constructors;
+                std::set<Unit*> m_availableConstructors;
                 std::set<Structure*> m_structures;
-                AssignementMap m_constructorAssignments;
             };
 
         }

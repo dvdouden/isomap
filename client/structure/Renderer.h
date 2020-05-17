@@ -4,7 +4,7 @@
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 
-#include "../../common/types.h"
+#include "../types.h"
 #include "../Unit.h"
 
 

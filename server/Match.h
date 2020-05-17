@@ -4,8 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "../common/types.h"
-
+#include "types.h"
 #include "Object.h"
 #include "Player.h"
 #include "Terrain.h"

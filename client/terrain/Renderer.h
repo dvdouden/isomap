@@ -4,7 +4,7 @@
 #include <vlGraphics/SceneManagerActorTree.hpp>
 
 #include "../../common/FootPrint.h"
-#include "../../common/types.h"
+#include "../types.h"
 #include "../Terrain.h"
 
 

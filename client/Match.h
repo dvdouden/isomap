@@ -7,7 +7,7 @@
 
 #include "../common/MatchMessage.h"
 #include "../common/PlayerMessage.h"
-#include "../common/types.h"
+#include "types.h"
 #include "match/Renderer.h"
 
 namespace isomap {

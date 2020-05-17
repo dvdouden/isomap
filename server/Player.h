@@ -2,7 +2,7 @@
 
 #include <map>
 #include <vector>
-#include "../common/types.h"
+#include "types.h"
 
 namespace isomap {
     namespace server {

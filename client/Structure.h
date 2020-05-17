@@ -3,7 +3,7 @@
 #include "../common/StructureData.h"
 #include "../common/StructureMessage.h"
 #include "../common/StructureType.h"
-#include "../common/types.h"
+#include "types.h"
 
 #include "structure/Controller.h"
 #include "structure/Renderer.h"

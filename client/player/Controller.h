@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common/types.h"
+#include "../types.h"
 
 namespace isomap {
     namespace client {

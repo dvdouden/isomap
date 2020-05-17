@@ -7,7 +7,7 @@
 
 #include "../common/UnitData.h"
 #include "../common/UnitType.h"
-#include "../common/types.h"
+#include "types.h"
 #include "../util/math.h"
 #include "../common/UnitMessage.h"
 

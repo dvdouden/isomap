@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "../common/types.h"
+#include "types.h"
 
 namespace isomap {
     namespace server {

@@ -2,7 +2,7 @@
 
 #include <map>
 #include <memory>
-#include "../common/types.h"
+#include "types.h"
 #include "../common/PlayerMessage.h"
 #include "Match.h"
 #include "Structure.h"

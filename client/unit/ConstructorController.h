@@ -1,8 +1,6 @@
 #pragma once
 
-#include <queue>
-
-#include "../../common/types.h"
+#include "../types.h"
 #include "Controller.h"
 
 namespace isomap {
@@ -25,8 +23,6 @@ namespace isomap {
 
                 void update() override;
 
-                int32_t weight() const override;
-
                 void dump() override;
 
             private:
@@ -40,9 +36,10 @@ namespace isomap {
 
                 void fail();
 
+                void setStructure( Structure* structure );
+
                 Structure* m_currentStructure = nullptr;
                 id_t m_currentStructureId = 0;
-                std::queue<id_t> m_structureQueue;
             };
         }
     }

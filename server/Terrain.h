@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "../common/types.h"
+#include "types.h"
 #include "../common/TerrainData.h"
 
 namespace isomap {

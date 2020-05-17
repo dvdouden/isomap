@@ -7,64 +7,6 @@ namespace isomap {
     typedef uint32_t id_t;
 
     // forward declarations
-    namespace server {
-        class Terrain;
-
-        class TerrainGenerator;
-
-        class Object;
-
-        class Unit;
-
-        class Structure;
-
-        class Player;
-
-        class Match;
-    }
-
-    namespace client {
-        class AutonomousUnitsAI;
-
-        class Match;
-
-        class Player;
-
-        class Structure;
-
-        class Terrain;
-
-        class Unit;
-
-        namespace match {
-            class Renderer;
-        }
-
-        namespace player {
-            class Controller;
-
-            class Renderer;
-        }
-
-        namespace structure {
-            class Controller;
-
-            class Renderer;
-        }
-
-        namespace terrain {
-            class Renderer;
-        }
-
-        namespace unit {
-            class Controller;
-
-            class ConstructorController;
-
-            class Renderer;
-        }
-    }
-
     namespace common {
         class Area;
 

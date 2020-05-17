@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <vlCore/ResourceDatabase.hpp>
 #include <vlCore/Object.hpp>
 #include <map>
