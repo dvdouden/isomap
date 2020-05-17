@@ -25,10 +25,18 @@ namespace isomap {
 
                 void update() override;
 
+                void dump() override;
+
             private:
                 void onDone();
 
                 void onAbort();
+
+                void moveTo();
+
+                void construct();
+
+                void fail();
 
                 Structure* m_currentStructure = nullptr;
                 id_t m_currentStructureId = 0;

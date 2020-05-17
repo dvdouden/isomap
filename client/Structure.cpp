@@ -52,7 +52,6 @@ namespace isomap {
                     (y < player()->terrain()->height() - 1 && occupies( x, y + 1 ));
         }
 
-
         void Structure::setVisible( bool visible ) {
             if ( m_visible == visible ) {
                 return;

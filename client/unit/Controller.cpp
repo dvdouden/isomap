@@ -34,10 +34,12 @@ namespace isomap {
                             structure->id() );
                     return false;
                 }
-                if ( !structure->isAdjacentTo( m_unit->tileX(), m_unit->tileY() ) ) {
-                    printf( "[%d] Construct command given to unit not adjacent to structure %d!\n",
+                if ( !m_unit->isAdjacentTo( structure ) ) {
+                    printf( "[%d] Construct command given to unit not adjacent to structure %d (%d.%d, %d.%d)!\n",
                             m_unit->id(),
-                            structure->id() );
+                            structure->id(),
+                            m_unit->tileX(), m_unit->subTileX(),
+                            m_unit->tileY(), m_unit->subTileY() );
                     return false;
                 }
                 m_unit->player()->enqueueMessage( m_unit->id(),
@@ -54,7 +56,7 @@ namespace isomap {
             }
 
             void Controller::dump() {
-                printf( "Controller %d commands queued\n", 0 );
+                printf( "Controller:\n" );
             }
 
             void Controller::onMessage( common::UnitServerMessage::Type msgType ) {

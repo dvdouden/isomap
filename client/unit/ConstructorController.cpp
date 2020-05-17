@@ -33,7 +33,7 @@ namespace isomap {
             }
 
             void ConstructorController::onMessage( common::UnitServerMessage::Type msgType ) {
-                if ( m_structureQueue.empty() ) {
+                if ( m_currentStructure == nullptr ) {
                     Controller::onMessage( msgType );
                     return;
                 }
@@ -58,14 +58,12 @@ namespace isomap {
             void ConstructorController::onDone() {
                 switch ( unit()->lastState() ) {
                     case common::Moving: // reached target
-                        m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                        if ( m_currentStructure != nullptr && !Controller::construct( m_currentStructure ) ) {
-                            // unable to construct structure, skip!
-                            m_currentStructure = nullptr;
-                        }
+                        //printf( "Reached target, start constructing\n" );
+                        construct();
                         break;
 
                     case common::Constructing:
+                        //printf( "Construction complete\n" );
                         m_currentStructure = nullptr;
                         break;
 
@@ -77,24 +75,18 @@ namespace isomap {
 
             void ConstructorController::onAbort() {
                 switch ( unit()->lastState() ) {
-                    case common::Moving:        // failed to reach target, retry
+                    case common::Moving:
+                        // failed to reach target, retry
                         printf( "[%d] Construct command given to unit but unable to reach structure, retry!\n",
                                 unit()->id() );
-                        m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                        if ( m_currentStructure != nullptr && !Controller::moveTo( m_currentStructure ) ) {
-                            printf( "failed again, abort\n" );
-                            m_currentStructure = nullptr;
-                        }
+                        moveTo();
                         break;
 
-                    case common::Constructing:  // failed to construct target? Retry
+                    case common::Constructing:
+                        // failed to construct target? Retry
                         printf( "[%d] Construct command given to unit but unable to construct structure, retry!\n",
                                 unit()->id() );
-                        m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                        if ( m_currentStructure != nullptr && !Controller::construct( m_currentStructure ) ) {
-                            printf( "failed again, abort\n" );
-                            m_currentStructure = nullptr;
-                        }
+                        construct();
                         break;
 
                     default:
@@ -112,22 +104,45 @@ namespace isomap {
                         printf( "[%d] Construct command given to unit but non-existent structure %d!\n",
                                 unit()->id(),
                                 m_currentStructureId );
-                    } else if ( m_currentStructure->isAdjacentTo( unit()->tileX(), unit()->tileY() ) ) {
-                        if ( !Controller::construct( m_currentStructure ) ) {
-                            printf( "[%d] Construct command given to unit but unable to construct structure %d!\n",
-                                    unit()->id(),
-                                    m_currentStructureId );
-                            m_currentStructure = nullptr;
-                        }
+                        fail();
+                    } else if ( unit()->isAdjacentTo( m_currentStructure ) ) {
+                        construct();
                     } else {
-                        if ( !Controller::moveTo( m_currentStructure ) ) {
-                            printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
-                                    unit()->id(),
-                                    m_currentStructureId );
-                            m_currentStructure = nullptr;
-                        }
+                        moveTo();
                     }
                 }
+            }
+
+            void ConstructorController::moveTo() {
+                m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
+                if ( m_currentStructure != nullptr && !Controller::moveTo( m_currentStructure ) ) {
+                    printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
+                            unit()->id(),
+                            m_currentStructureId );
+                    fail();
+                }
+            }
+
+            void ConstructorController::construct() {
+                m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
+                if ( m_currentStructure != nullptr && !Controller::construct( m_currentStructure ) ) {
+                    printf( "[%d] Construct command given to unit but unable to construct structure %d!\n",
+                            unit()->id(),
+                            m_currentStructureId );
+                    fail();
+                }
+            }
+
+            void ConstructorController::fail() {
+                m_currentStructure = nullptr;
+                // FIXME: should notify player that we're unable to construct structure
+            }
+
+            void ConstructorController::dump() {
+                Controller::dump();
+                printf( "Current structure id: %d\n", m_currentStructureId );
+                printf( "Current structure: %p\n", m_currentStructure );
+                printf( "Queue size: %d\n", m_structureQueue.size() );
             }
 
 

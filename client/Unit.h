@@ -107,6 +107,12 @@ namespace isomap {
                 return m_data.z & math::fix::precisionMask;
             }
 
+            bool onCenterOfTile() const {
+                return subTileX() == 0 && subTileY() == 0;
+            }
+
+            bool isAdjacentTo( const Structure* structure ) const;
+
             common::UnitState state() const {
                 return m_data.state;
             }
@@ -117,6 +123,10 @@ namespace isomap {
 
             const char* stateName() const {
                 return m_data.stateName();
+            }
+
+            const char* lastStateName() const {
+                return m_data.lastStateName();
             }
 
             void dump() const;

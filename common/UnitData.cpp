@@ -105,7 +105,7 @@ namespace isomap {
             }
         }
 
-        const char* UnitData::stateName() const {
+        const char* stateToString( UnitState state ) {
             switch ( state ) {
                 case isomap::common::Idle:
                     return "idle";
@@ -117,6 +117,14 @@ namespace isomap {
                     return "harvesting";
             }
             return "unknown";
+        }
+
+        const char* UnitData::stateName() const {
+            return stateToString( state );
+        }
+
+        const char* UnitData::lastStateName() const {
+            return stateToString( lastState );
         }
     }
 }

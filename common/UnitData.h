@@ -30,6 +30,8 @@ namespace isomap {
             void updateMotion();
 
             const char* stateName() const;
+
+            const char* lastStateName() const;
         };
 
     }

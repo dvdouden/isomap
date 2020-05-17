@@ -117,5 +117,9 @@ namespace isomap {
             }
         }
 
+        bool Unit::isAdjacentTo( const Structure* structure ) const {
+            return onCenterOfTile() && structure->isAdjacentTo( tileX(), tileY() );
+        }
+
     }
 }
