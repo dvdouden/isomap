@@ -16,6 +16,7 @@
 
 #include "common/StructureType.h"
 #include "server/TerrainGenerator.h"
+#include "client/ModelCache.h"
 
 
 const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
@@ -81,10 +82,11 @@ void MainWindow::initEvent() {
     m_serverMatch->update();
     receiveMessages();
 
-    m_clientPlayer->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
-    m_clientPlayer->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ), m_structureOrientation );
-    m_clientAI->buildUnit( 28, 8, isomap::common::UnitType::get( 1 ), 0 );
-    m_clientAI->buildStructure( 30, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
+    m_clientPlayer->controller()->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
+    m_clientPlayer->controller()->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ),
+                                                  m_structureOrientation );
+    m_clientAI->controller()->buildUnit( 28, 8, isomap::common::UnitType::get( 1 ), 0 );
+    m_clientAI->controller()->buildStructure( 30, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
 
     sendAndReceiveMessages();
     printf( "init done\n" );
@@ -97,6 +99,7 @@ void MainWindow::destroyEvent() {
     delete m_clientAIMatch;
     isomap::common::UnitType::clear();
     isomap::common::StructureType::clear();
+    isomap::client::ModelCache::clear();
 }
 
 void MainWindow::resizeEvent( int w, int h ) {
@@ -393,6 +396,15 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
         case vl::Key_V:
             m_mode = DeleteStructure;
             break;
+
+        case vl::Key_H: {
+            auto* unit = m_controllingPlayer->getUnit( m_selectedUnit );
+            if ( unit != nullptr ) {
+                unit->controller()->harvest();
+                m_mode = MoveUnit;
+            }
+            break;
+        }
 
         case vl::Key_M:
             if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
@@ -891,7 +903,7 @@ void MainWindow::renderStructurePlacement( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
     highlightFootPrint( x, y,
                         structureType->footPrint( m_structureOrientation ),
-                        m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) );
+                        m_controllingPlayer->controller()->canPlace( x, y, structureType, m_structureOrientation ) );
 }
 
 
@@ -913,8 +925,8 @@ void MainWindow::place( int x, int y ) {
     switch ( m_mode ) {
         case PlaceStructure: {
             auto* structureType = isomap::common::StructureType::get( m_structureType );
-            if ( m_controllingPlayer->canPlace( x, y, structureType, m_structureOrientation ) ) {
-                m_controllingPlayer->buildStructure( x, y, structureType, m_structureOrientation );
+            if ( m_controllingPlayer->controller()->canPlace( x, y, structureType, m_structureOrientation ) ) {
+                m_controllingPlayer->controller()->buildStructure( x, y, structureType, m_structureOrientation );
             }
             break;
         }
@@ -933,7 +945,8 @@ void MainWindow::place( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
                  m_renderTerrain->isVisible( x, y ) &&
                  (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 ) {
-                m_controllingPlayer->buildUnit( x, y, isomap::common::UnitType::get( 1 ), m_structureOrientation );
+                m_controllingPlayer->controller()->buildUnit( x, y, isomap::common::UnitType::get( 1 ),
+                                                              m_structureOrientation );
             }
             break;
         }
@@ -1029,7 +1042,7 @@ void MainWindow::updateText() {
                                      << m_structureOrientation
                                      << m_cursorX
                                      << m_cursorY
-                                     << (m_controllingPlayer->canPlace(
+                                     << (m_controllingPlayer->controller()->canPlace(
                                              m_cursorX,
                                              m_cursorY,
                                              isomap::common::StructureType::get( m_structureType ),
@@ -1281,6 +1294,7 @@ void MainWindow::updateText() {
                                           "X: %n.%n\n"
                                           "Y: %n.%n\n"
                                           "Z: %n.%n\n"
+                                          "Payload: %n/%n\n"
                                           "State: %s" )
                                          << fps()
                                          << getModeName()
@@ -1293,6 +1307,7 @@ void MainWindow::updateText() {
                                          << unit->tileX() << unit->subTileX()
                                          << unit->tileY() << unit->subTileY()
                                          << unit->tileZ() << unit->subTileZ()
+                                         << unit->payload() << unit->type()->maxPayload()
                                          << unit->stateName() );
             } else {
                 m_text->setText( vl::Say( "FPS %n\n"

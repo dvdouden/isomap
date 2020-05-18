@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <vector>
 #include "types.h"
 #include "../common/TerrainData.h"
@@ -37,6 +38,23 @@ namespace isomap {
                 return m_data.oreMap;
             }
 
+            uint8_t harvest( uint32_t x, uint32_t y ) {
+                uint32_t idx = y * m_data.mapWidth + x;
+                uint8_t oreAmount = m_data.oreMap[idx];
+                if ( oreAmount == 0 ) {
+                    return 0;
+                }
+                --m_data.oreMap[idx];
+                if ( m_data.oreMap[idx] % 64 == 0 ) {
+                    markCellDirty( x, y );
+                }
+                return oreAmount;
+            }
+
+            uint8_t ore( uint32_t x, uint32_t y ) const {
+                return m_data.oreMap[y * m_data.mapWidth + x];
+            }
+
             uint8_t* occupancyMap() const {
                 return m_data.occupancyMap;
             }
@@ -57,7 +75,7 @@ namespace isomap {
 
             void updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY );
 
-            common::TerrainMessage* updateMessage( const std::vector<uint32_t>& cells ) const;
+            common::TerrainMessage* updateMessage( const std::set<uint32_t>& cells ) const;
 
             common::TerrainMessage* uncoverAll() const;
 
@@ -68,6 +86,20 @@ namespace isomap {
             void occupy( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
 
             void vacate( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
+
+            void markCellDirty( uint32_t x, uint32_t y ) {
+                markCellDirty( y * m_width + x );
+            }
+
+            void markCellDirty( uint32_t idx );
+
+            const std::set<uint32_t>& dirtyCells() const {
+                return m_dirtyCells;
+            }
+
+            void clearDirtyCells() {
+                m_dirtyCells.clear();
+            }
 
         private:
             void removeUnitFromChunk( Unit* unit, uint32_t chunk );
@@ -84,6 +116,8 @@ namespace isomap {
             std::vector<uint32_t> getChunks( Structure* pStructure );
 
             uint32_t getChunk( uint32_t x, uint32_t y );
+
+            std::set<uint32_t> m_dirtyCells;
         };
     }
 }

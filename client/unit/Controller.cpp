@@ -42,8 +42,27 @@ namespace isomap {
                             m_unit->tileY(), m_unit->subTileY() );
                     return false;
                 }
-                m_unit->player()->enqueueMessage( m_unit->id(),
-                                                  common::UnitCommandMessage::constructMsg( structure->id() ) );
+                m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                common::UnitCommandMessage::constructMsg(
+                                                                        structure->id() ) );
+                return true;
+            }
+
+            bool Controller::harvest() {
+                //printf( "Unit %d harvest\n", id() );
+                if ( !m_unit->type()->canHarvest() ) {
+                    printf( "[%d] Harvest command given to unit without harvesting abilities!\n",
+                            m_unit->id() );
+                    return false;
+                }
+                if ( m_unit->player()->terrain()->ore( m_unit->tileX(), m_unit->tileY() ) == 0 ) {
+                    printf( "[%d] Harvest command given to unit but no ore at tile!\n",
+                            m_unit->id() );
+                    return false;
+                }
+
+                m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                common::UnitCommandMessage::harvestMsg() );
                 return true;
             }
 
@@ -62,6 +81,7 @@ namespace isomap {
             void Controller::onMessage( common::UnitServerMessage::Type msgType ) {
                 switch ( msgType ) {
                     case common::UnitServerMessage::Construct:
+                    case common::UnitServerMessage::Harvest:
                     case common::UnitServerMessage::Status:
                     case common::UnitServerMessage::MoveTo:
                     case common::UnitServerMessage::Stop:
@@ -102,7 +122,6 @@ namespace isomap {
                 };
                 std::vector<node> nodeMap( width * height );
 
-                // create a todo list for the algorithm
                 std::priority_queue<node, std::vector<node>, std::greater<>> todo;
 
                 uint32_t targetIdx = y * width + x;
@@ -223,8 +242,9 @@ namespace isomap {
                         //}
                         //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, tile_x, tile_y );
                     }
-                    m_unit->player()->enqueueMessage( m_unit->id(),
-                                                      common::UnitCommandMessage::moveMsg( m_wayPoints ) );
+                    m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                    common::UnitCommandMessage::moveMsg(
+                                                                            m_wayPoints ) );
                     return true;
                 } else {
                     printf( "No route!\n" );

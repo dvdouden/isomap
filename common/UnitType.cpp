@@ -18,6 +18,7 @@ namespace isomap {
         void UnitType::load() {
             s_unitTypes[1] = new UnitType( 1, "constructor", true, false );
             s_unitTypes[2] = new UnitType( 2, "harvester", false, true );
+            s_unitTypes[2]->setMaxPayload( 700 );
         }
 
         void UnitType::clear() {

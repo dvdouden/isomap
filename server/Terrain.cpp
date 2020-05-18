@@ -18,7 +18,7 @@ namespace isomap {
             m_data.updatePathMap();
         }
 
-        common::TerrainMessage* Terrain::updateMessage( const std::vector<uint32_t>& ids ) const {
+        common::TerrainMessage* Terrain::updateMessage( const std::set<uint32_t>& ids ) const {
             std::vector<common::TerrainMessage::Cell> cells;
             cells.reserve( ids.size() );
             for ( auto id : ids ) {
@@ -130,6 +130,10 @@ namespace isomap {
                     break;
                 }
             }
+        }
+
+        void Terrain::markCellDirty( uint32_t idx ) {
+            m_dirtyCells.insert( idx );
         }
 
     }

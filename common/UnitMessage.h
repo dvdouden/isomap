@@ -13,6 +13,7 @@ namespace isomap {
             enum Type {
                 Move,
                 Construct,
+                Harvest,
             };
 
             explicit UnitCommandMessage( Type type ) :
@@ -36,6 +37,8 @@ namespace isomap {
 
             static UnitCommandMessage* constructMsg( id_t structureId );
 
+            static UnitCommandMessage* harvestMsg();
+
         private:
             Type m_type;
             std::vector<WayPoint> m_wayPoints;
@@ -46,6 +49,7 @@ namespace isomap {
         public:
             enum Type {
                 Construct,
+                Harvest,
                 Status,
                 MoveTo,
                 Stop,
@@ -69,6 +73,8 @@ namespace isomap {
             }
 
             static UnitServerMessage* constructMsg( const UnitData& data );
+
+            static UnitServerMessage* harvestMsg( const UnitData& data );
 
             static UnitServerMessage* statusMsg( const UnitData& data );
 

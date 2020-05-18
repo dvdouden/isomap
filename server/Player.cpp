@@ -48,7 +48,7 @@ namespace isomap {
                     if ( deltaX + deltaY <= radiusSquared ) {
                         uint32_t idx = y * m_terrain->width() + x;
                         if ( m_fogMap[idx] == 0 ) {
-                            m_uncoveredTiles.push_back( idx );
+                            m_uncoveredTiles.insert( idx );
                         }
                         m_fogMap[idx] = 255;
                     }
@@ -78,9 +78,6 @@ namespace isomap {
         }
 
         common::TerrainMessage* Player::terrainUpdateMessage() {
-            if ( m_uncoveredTiles.empty() ) {
-                return nullptr;
-            }
             for ( uint32_t tile : m_uncoveredTiles ) {
                 uint32_t x = tile % m_terrain->width();
                 uint32_t y = tile / m_terrain->width();
@@ -107,6 +104,14 @@ namespace isomap {
                                                                  unit->data() ) ) );
                     }
                 }
+            }
+            for ( id_t idx : m_terrain->dirtyCells() ) {
+                if ( canSee( idx ) ) {
+                    m_uncoveredTiles.insert( idx );
+                }
+            }
+            if ( m_uncoveredTiles.empty() ) {
+                return nullptr;
             }
             auto* msg = m_terrain->updateMessage( m_uncoveredTiles );
             m_uncoveredTiles.clear();
@@ -171,7 +176,15 @@ namespace isomap {
         }
 
         bool Player::canSee( Unit* unit ) const {
-            return m_fogMap[unit->tileY() * m_terrain->width() + unit->tileX()] >= 1;
+            return canSee( unit->tileX(), unit->tileY() );
+        }
+
+        bool Player::canSee( uint32_t x, uint32_t y ) const {
+            return canSee( y * m_terrain->width() + x );
+        }
+
+        bool Player::canSee( uint32_t idx ) const {
+            return m_fogMap[idx] >= 1;
         }
 
         void Player::destroyStructure( Structure* structure ) {

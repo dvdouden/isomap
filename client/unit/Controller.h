@@ -25,6 +25,8 @@ namespace isomap {
 
                 virtual bool construct( Structure* structure );
 
+                virtual bool harvest();
+
                 virtual void update();
 
                 virtual void onMessage( common::UnitServerMessage::Type msgType );

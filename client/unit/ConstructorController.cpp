@@ -38,6 +38,7 @@ namespace isomap {
 
                 switch ( msgType ) {
                     case common::UnitServerMessage::Construct:
+                    case common::UnitServerMessage::Harvest:
                     case common::UnitServerMessage::Stop:
                     case common::UnitServerMessage::Status:
                     case common::UnitServerMessage::MoveTo:

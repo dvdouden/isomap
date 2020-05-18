@@ -152,10 +152,6 @@ namespace isomap {
 
         void Match::update() {
             ++m_time;
-            for ( auto& player : m_players ) {
-                player.second->update();
-            }
-
             for ( auto& obj : m_objects ) {
                 auto* msg = obj.second->update( m_terrain.get() );
                 if ( msg != nullptr ) {
@@ -164,6 +160,13 @@ namespace isomap {
                     enqueueMessage( obj.second.get(), msg );
                 }
             }
+
+            // update fog, check new visible structures/units, update dirty cells
+            for ( auto& player : m_players ) {
+                player.second->update();
+            }
+            // reset dirty cells registration
+            m_terrain->clearDirtyCells();
         }
 
         Player* Match::getPlayer( isomap::id_t id ) {

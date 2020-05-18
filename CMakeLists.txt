@@ -65,8 +65,9 @@ add_executable(
         client/Unit.h
         client/match/Renderer.cpp
         client/match/Renderer.h
-        client/player/AutonomousUnitsAI.cpp
-        client/player/AutonomousUnitsAI.h
+        client/player/AutonomousUnitsController.cpp
+        client/player/AutonomousUnitsController.h
+        client/player/Controller.cpp
         client/player/Controller.h
         client/player/ConstructionController.cpp
         client/player/ConstructionController.h
@@ -125,6 +126,8 @@ add_executable(
         util/math.h
         util/math.cpp
 )
+
+message("Hello ${VL_LIBRARIES}")
 
 if (MINGW)
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static)

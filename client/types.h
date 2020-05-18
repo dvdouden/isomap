@@ -5,8 +5,6 @@
 namespace isomap {
 
     namespace client {
-        class AutonomousUnitsAI;
-
         class Match;
 
         class Player;
@@ -22,6 +20,8 @@ namespace isomap {
         }
 
         namespace player {
+            class AutonomousUnitsController;
+
             class Controller;
 
             class Renderer;

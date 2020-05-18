@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <vector>
+#include <set>
 #include "types.h"
 
 namespace isomap {
@@ -50,6 +50,10 @@ namespace isomap {
 
             bool canSee( Unit* structure ) const;
 
+            bool canSee( uint32_t x, uint32_t y ) const;
+
+            bool canSee( uint32_t idx ) const;
+
             Match* match() const {
                 return m_match;
             }
@@ -78,7 +82,7 @@ namespace isomap {
             Match* m_match = nullptr;
             bool m_ready = false;
 
-            std::vector<uint32_t> m_uncoveredTiles;
+            std::set<uint32_t> m_uncoveredTiles;
 
             std::map<id_t, Structure*> m_structures;
             std::map<id_t, Unit*> m_units;

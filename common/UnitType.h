@@ -31,6 +31,14 @@ namespace isomap {
                 return m_canHarvest;
             }
 
+            void setMaxPayload( uint32_t maxPayload ) {
+                m_maxPayload = maxPayload;
+            }
+
+            uint32_t maxPayload() const {
+                return m_maxPayload;
+            }
+
             static UnitType* get( id_t id );
 
             static void load();
@@ -45,6 +53,7 @@ namespace isomap {
             std::string m_name;
             bool m_canConstruct;
             bool m_canHarvest;
+            uint32_t m_maxPayload = 0;
 
         };
 

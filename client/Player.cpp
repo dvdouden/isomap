@@ -1,5 +1,5 @@
 
-#include "player/AutonomousUnitsAI.h"
+#include "player/AutonomousUnitsController.h"
 #include "Match.h"
 #include "Player.h"
 
@@ -21,22 +21,8 @@ namespace isomap {
                 m_id( id ),
                 m_name( std::move( name ) ) {
             if ( useAi ) {
-                m_controller = std::make_unique<AutonomousUnitsAI>( this );
+                m_controller = std::make_unique<player::AutonomousUnitsController>( this );
             }
-        }
-
-        void Player::buildStructure( int32_t tileX, int32_t tileY, common::StructureType* structureType,
-                                     uint32_t orientation ) {
-            int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
-            m_terrain->reserve( tileX, tileY, structureType->footPrint( orientation ) );
-            m_match->enqueueMessage( common::PlayerCommandMessage::buildStructureMsg(
-                    tileX, tileY, tileZ, structureType->id(), orientation ) );
-        }
-
-        void Player::buildUnit( int32_t tileX, int32_t tileY, common::UnitType* unitType, uint32_t orientation ) {
-            int32_t tileZ = m_terrain->heightMap()[tileY * m_terrain->width() + tileX];
-            m_match->enqueueMessage(
-                    common::PlayerCommandMessage::buildUnitMsg( tileX, tileY, tileZ, unitType->id(), orientation ) );
         }
 
         void Player::processMessage( common::PlayerServerMessage* msg ) {
@@ -49,8 +35,11 @@ namespace isomap {
                     break;
 
                 case common::PlayerServerMessage::BuildStructureAccepted: {
+                    if ( getStructure( msg->structureData()->id ) != nullptr ) {
+                        printf( "Warning: received BuildStructureAccepted msg for existing structure %d\n",
+                                msg->structureData()->id );
+                    }
                     auto* str = new Structure( this, *msg->structureData() );
-                    // TODO: Make sure there's no structure with the given id
                     m_structures[str->id()].reset( str );
                     if ( m_renderer ) {
                         m_renderer->addStructure( str );
@@ -106,8 +95,10 @@ namespace isomap {
                 }
 
                 case common::PlayerServerMessage::UnitCreated: {
+                    if ( getUnit( msg->unitData()->id ) != nullptr ) {
+                        printf( "Warning: received UnitCreated msg for existing unit %d\n", msg->unitData()->id );
+                    }
                     auto* unit = new Unit( this, *msg->unitData() );
-                    // TODO: Make sure there's no unit with the given id
                     m_units[unit->id()].reset( unit );
                     if ( m_renderer ) {
                         m_renderer->addUnit( unit );
@@ -181,16 +172,25 @@ namespace isomap {
                 return;
             }
             //printf( "Process message for structure %d\n", msg->data().id );
-            // FIXME: check if structure with ID exists
-            m_structures[msg->data().id]->processMessage( msg );
+
+            auto* structure = getStructure( msg->data().id );
+            if ( structure == nullptr ) {
+                printf( "Warning: received msg for non existing structure %d\n", msg->data().id );
+                return;
+            }
+            structure->processMessage( msg );
         }
 
         void Player::processMessage( common::UnitServerMessage* msg ) {
             if ( msg == nullptr ) {
                 return;
             }
-            // FIXME: check if unit with ID exists
-            m_units[msg->data().id]->processMessage( msg );
+            auto* unit = getUnit( msg->data().id );
+            if ( unit == nullptr ) {
+                printf( "Warning: received msg for non existing unit %d\n", msg->data().id );
+                return;
+            }
+            unit->processMessage( msg );
         }
 
         void Player::update() {
@@ -200,28 +200,6 @@ namespace isomap {
             for ( auto& unit : m_units ) {
                 unit.second->update();
             }
-        }
-
-        bool Player::canPlace( int32_t worldX, int32_t worldY, common::StructureType* structureType,
-                               uint32_t rotation ) const {
-            if ( worldX < 0 || worldY < 0 || worldX + structureType->width( rotation ) >= m_terrain->width() ||
-                 worldY + structureType->height( rotation ) >= m_terrain->height() ) {
-                return false;
-            }
-            for ( uint32_t y = 0; y < structureType->height( rotation ); ++y ) {
-                for ( uint32_t x = 0; x < structureType->width( rotation ); ++x ) {
-                    if ( structureType->footPrint( rotation, x, y ) == 0 ) {
-                        continue;
-                    }
-                    if ( !m_terrain->isVisible( worldX + x, worldY + y ) ) {
-                        return false;
-                    }
-                    if ( m_terrain->occupied( worldX + x, worldY + y ) != 0 ) {
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
 
         Structure* Player::getStructure( id_t id ) {

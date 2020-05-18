@@ -50,6 +50,10 @@ namespace isomap {
                 return m_data.oreMap;
             }
 
+            uint8_t ore( uint32_t x, uint32_t y ) const {
+                return m_data.oreMap[y * m_data.mapWidth + x];
+            }
+
             uint8_t* occupancyMap() const {
                 return m_data.occupancyMap;
             }

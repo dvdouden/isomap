@@ -129,6 +129,10 @@ namespace isomap {
                 return m_data.lastStateName();
             }
 
+            uint32_t payload() const {
+                return m_data.payload;
+            }
+
             void dump() const;
 
         private:

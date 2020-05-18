@@ -64,8 +64,27 @@ namespace isomap {
                     break;
                 }
 
-                default:
+                case common::UnitCommandMessage::Harvest: {
+                    if ( !m_type->canHarvest() ) {
+                        printf( "[%d] Received Harvest command but unit has no harvesting abilities!\n", id() );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::abortMsg( m_data ) ) );
+                        break;
+                    }
+                    // FIXME: check if we're on a tile boundary
+                    m_data.setState( common::Harvesting );
+                    if ( player()->terrain()->ore( tileX(), tileY() ) == 0 ) {
+                        m_data.setState( common::Idle );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::doneMsg( m_data ) ) );
+                        break;
+                    }
                     break;
+                }
             }
         }
 
@@ -83,6 +102,31 @@ namespace isomap {
                     structure->constructionTick();
                     return nullptr;
                 }
+            } else if ( m_data.state == common::Harvesting ) {
+                if ( m_data.payload == m_type->maxPayload() ) {
+                    //printf( "Harvester full, payload is %d\n", m_data.payload );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                }
+                uint8_t oreTile = player()->terrain()->harvest( tileX(), tileY() );
+                if ( oreTile > 0 ) {
+                    m_data.payload++;
+                    //printf( "Harvesting from tile %d, %d, ore amount was %d\n", tileX(), tileY(), oreTile );
+                }
+                if ( oreTile == 1 || m_data.payload == m_type->maxPayload() ) {
+                    //printf( "Harvesting done, payload is now %d\n", m_data.payload );
+                    m_data.setState( common::Idle );
+                    player()->terrain()->markCellDirty( tileX(), tileY() );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                }
+                if ( m_data.payload % 64 == 0 ) {
+                    //printf( "Updating payload %d\n", m_data.payload );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
+                }
+                if ( m_data.lastState != common::Harvesting ) {
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
+                }
+                return nullptr;
             }
 
             common::PlayerServerMessage* msg = nullptr;
@@ -195,8 +239,9 @@ namespace isomap {
         }
 
         void Unit::dump() {
-            printf( "Unit [%d] (%d:%s) at %d,%d,%d\n", id(), m_type->id(), m_type->name().c_str(), tileX(), tileY(),
-                    tileZ() );
+            printf( "Unit [%d] (%d:%s) at %d,%d,%d (payload %d/%d)\n", id(), m_type->id(), m_type->name().c_str(),
+                    tileX(), tileY(),
+                    tileZ(), m_data.payload, m_type->maxPayload() );
         }
     }
 }

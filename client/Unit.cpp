@@ -30,6 +30,7 @@ namespace isomap {
             }
             switch ( msg->type() ) {
                 case common::UnitServerMessage::Construct:
+                case common::UnitServerMessage::Harvest:
                 case common::UnitServerMessage::Status:
                 case common::UnitServerMessage::MoveTo:
                 case common::UnitServerMessage::Stop:
@@ -73,8 +74,16 @@ namespace isomap {
                     break;
                 }
 
-                default:
+                case common::Idle:
+                case common::Constructing:
                     break;
+
+                case common::Harvesting: {
+                    // we'll be receiving updates once every X frames
+                    // so we'll just assume it's happily harvesting away...
+                    m_data.payload++;
+                    break;
+                }
             }
 
             if ( m_controller ) {

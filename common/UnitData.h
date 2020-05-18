@@ -16,6 +16,7 @@ namespace isomap {
             uint32_t orientation = 0;
             UnitState state = UnitState::Idle;
             UnitState lastState = UnitState::Idle;
+            uint32_t payload = 0;
             WayPoint wayPoint = {0, 0};
 
             void setState( UnitState newState ) {
