@@ -36,6 +36,7 @@ namespace isomap {
                 case common::UnitServerMessage::Stop:
                 case common::UnitServerMessage::Done:
                 case common::UnitServerMessage::Abort:
+                case common::UnitServerMessage::Unload:
                     m_data = msg->data();
                     break;
             }
@@ -81,9 +82,18 @@ namespace isomap {
                 case common::Harvesting: {
                     // we'll be receiving updates once every X frames
                     // so we'll just assume it's happily harvesting away...
-                    m_data.payload++;
+                    if ( m_data.payload < m_type->maxPayload() ) {
+                        m_data.payload++;
+                    }
                     break;
                 }
+                case common::Unloading:
+                    // we'll be receiving updates once every X frames
+                    // so we'll just assume it's happily unloading...
+                    if ( m_data.payload > 0 ) {
+                        m_data.payload--;
+                    }
+                    break;
             }
 
             if ( m_controller ) {

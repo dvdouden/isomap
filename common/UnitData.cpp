@@ -107,14 +107,16 @@ namespace isomap {
 
         const char* stateToString( UnitState state ) {
             switch ( state ) {
-                case isomap::common::Idle:
+                case Idle:
                     return "idle";
-                case isomap::common::Moving:
+                case Moving:
                     return "moving";
-                case isomap::common::Constructing:
+                case Constructing:
                     return "constructing";
-                case isomap::common::Harvesting:
+                case Harvesting:
                     return "harvesting";
+                case Unloading:
+                    return "unloading";
             }
             return "unknown";
         }

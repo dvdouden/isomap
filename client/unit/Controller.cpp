@@ -66,6 +66,20 @@ namespace isomap {
                 return true;
             }
 
+            bool Controller::unload() {
+                //printf( "Unit %d unload\n", id() );
+                if ( !m_unit->type()->canHarvest() ) {
+                    printf( "[%d] Unload command given to unit without harvesting abilities!\n",
+                            m_unit->id() );
+                    return false;
+                }
+                // FIXME: check if we're on a docking tile
+
+                m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                common::UnitCommandMessage::unloadMsg() );
+                return true;
+            }
+
             bool Controller::moveTo( uint32_t x, uint32_t y ) {
                 return moveTo( x, y, nullptr );
             }
@@ -87,6 +101,7 @@ namespace isomap {
                     case common::UnitServerMessage::Stop:
                     case common::UnitServerMessage::Done:
                     case common::UnitServerMessage::Abort:
+                    case common::UnitServerMessage::Unload:
                         break;
                 }
             }

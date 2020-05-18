@@ -42,6 +42,7 @@ namespace isomap {
                     case common::UnitServerMessage::Stop:
                     case common::UnitServerMessage::Status:
                     case common::UnitServerMessage::MoveTo:
+                    case common::UnitServerMessage::Unload:
                         break;
 
                     case common::UnitServerMessage::Done:

@@ -20,6 +20,11 @@ namespace isomap {
             return msg;
         }
 
+        UnitCommandMessage* UnitCommandMessage::unloadMsg() {
+            auto* msg = new UnitCommandMessage( Unload );
+            return msg;
+        }
+
         const char* UnitCommandMessage::typeName() const {
             switch ( m_type ) {
                 case Move:
@@ -28,6 +33,8 @@ namespace isomap {
                     return "Construct";
                 case Harvest:
                     return "Harvest";
+                case Unload:
+                    return "Unload";
             }
             return "Invalid";
         }
@@ -74,6 +81,12 @@ namespace isomap {
             return msg;
         }
 
+        UnitServerMessage* UnitServerMessage::unloadMsg( const UnitData& data ) {
+            auto* msg = new UnitServerMessage( Unload );
+            msg->m_data = data;
+            return msg;
+        }
+
         const char* UnitServerMessage::typeName() const {
             switch ( m_type ) {
                 case Construct:
@@ -90,6 +103,8 @@ namespace isomap {
                     return "Done";
                 case Abort:
                     return "Abort";
+                case Unload:
+                    return "Unload";
             }
             return "Invalid";
         }

@@ -42,7 +42,8 @@ namespace isomap {
             Idle,
             Moving,
             Constructing,
-            Harvesting
+            Harvesting,
+            Unloading,
         };
 
         struct WayPoint {

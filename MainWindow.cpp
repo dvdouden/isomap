@@ -406,6 +406,15 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
         }
 
+        case vl::Key_J: {
+            auto* unit = m_controllingPlayer->getUnit( m_selectedUnit );
+            if ( unit != nullptr ) {
+                unit->controller()->unload();
+                m_mode = MoveUnit;
+            }
+            break;
+        }
+
         case vl::Key_M:
             if ( m_controllingPlayer->getUnit( m_selectedUnit ) != nullptr ) {
                 m_mode = MoveUnit;

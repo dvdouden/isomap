@@ -83,6 +83,39 @@ namespace isomap {
                                         common::UnitServerMessage::doneMsg( m_data ) ) );
                         break;
                     }
+
+                    player()->match()->enqueueMessage(
+                            this,
+                            common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::harvestMsg( m_data ) ) );
+                    break;
+                }
+
+                case common::UnitCommandMessage::Unload: {
+                    if ( !m_type->canHarvest() ) {
+                        printf( "[%d] Received Unload command but unit has no payload!\n", id() );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::abortMsg( m_data ) ) );
+                        break;
+                    }
+                    // FIXME: check if we're on a tile boundary
+                    // FIXME: check if we're on a docking tile
+                    m_data.setState( common::Unloading );
+                    if ( m_data.payload == 0 ) {
+                        m_data.setState( common::Idle );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::doneMsg( m_data ) ) );
+                        break;
+                    }
+
+                    player()->match()->enqueueMessage(
+                            this,
+                            common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::unloadMsg( m_data ) ) );
                     break;
                 }
             }
@@ -123,7 +156,22 @@ namespace isomap {
                     //printf( "Updating payload %d\n", m_data.payload );
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
                 }
-                if ( m_data.lastState != common::Harvesting ) {
+                return nullptr;
+            } else if ( m_data.state == common::Unloading ) {
+                if ( m_data.payload == 0 ) {
+                    //printf( "Harvester empty, payload is %d\n", m_data.payload );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                }
+                // TODO: check for docking tile
+                --m_data.payload;
+                if ( m_data.payload == 0 ) {
+                    //printf( "Harvester empty, payload is %d\n", m_data.payload );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                }
+                if ( m_data.payload % 64 == 0 ) {
+                    //printf( "Updating payload %d\n", m_data.payload );
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
                 }
                 return nullptr;
