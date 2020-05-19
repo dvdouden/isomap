@@ -58,7 +58,9 @@ namespace isomap {
         }
 
         void Player::uncoverAll() {
-            m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->uncoverAll() ) );
+            for ( uint32_t idx = 0; idx < m_terrain->width() * m_terrain->height(); ++idx ) {
+                m_uncoveredTiles.insert( idx );
+            }
         }
 
         common::PlayerServerMessage* Player::update() {
