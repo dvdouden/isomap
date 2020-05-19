@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include <vlGraphics/RenderingAbstract.hpp>
 #include <vlGraphics/SceneManagerActorTree.hpp>
 
@@ -40,19 +42,16 @@ namespace isomap {
                 }
 
 
-                void highLight( const common::Area& area, const vl::fvec4& color ) {
-                    m_highlightArea = area;
-                    m_highlightColor = color;
-                    m_renderHighlight = true;
+                void addCursor( uint32_t x, uint32_t y, const vl::fvec4& color );
+
+                void clearCursor() {
+                    m_cursor.clear();
                 }
 
-                void addHighlight( const common::Area& area, const vl::fvec4& color ) {
-                    m_highLightAreas.emplace_back( area, color );
-                }
+                void addHighlight( uint32_t x, uint32_t y, const vl::fvec4& color );
 
                 void clearHighlight() {
-                    m_renderHighlight = false;
-                    m_highLightAreas.clear();
+                    m_highlights.clear();
                 }
 
 
@@ -60,13 +59,10 @@ namespace isomap {
                 Terrain* m_terrain;
 
                 bool m_renderFog = false;
-                bool m_renderHighlight = false;
                 bool m_renderOccupancy = false;
 
-                common::Area m_highlightArea;
-                vl::fvec4 m_highlightColor;
-
-                std::vector<std::pair<common::Area, vl::fvec4>> m_highLightAreas;
+                std::map<uint32_t, vl::fvec4> m_cursor;
+                std::map<uint32_t, vl::fvec4> m_highlights;
 
                 vl::ref<vl::SceneManagerActorTree> m_sceneManager;
             };

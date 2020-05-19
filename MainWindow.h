@@ -7,8 +7,6 @@
 #include "client/types.h"
 #include "server/types.h"
 #include "server/TerrainGenerator.h"
-#include "Cursor.h"
-
 
 class MainWindow : public vl::Applet {
 
@@ -79,8 +77,8 @@ protected:
 
     int m_angle = 0;
 
-    int m_width = 256;
-    int m_height = 256;
+    int m_width = 64;
+    int m_height = 64;
     bool m_paused = true;
     bool m_renderColumn = false;
 
@@ -121,7 +119,11 @@ protected:
 
     const char* getModeName() const;
 
-    Cursor m_cursor;
+    void highlightStructure( isomap::client::Structure* pStructure, bool b );
+
+    void highlightTile( uint32_t x, uint32_t y, bool green );
+
+    void highlightFootPrint( uint32_t x, uint32_t y, isomap::common::FootPrint* footPrint, bool green );
 };
 
 

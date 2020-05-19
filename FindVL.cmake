@@ -48,10 +48,10 @@
 
 macro(_vl_find_library _var)
     find_library(${_var}
-                 NAMES ${ARGN}
-                 PATHS ${VL_ROOT} ENV VL_ROOT
-                 PATH_SUFFIXES "lib"
-                 )
+            NAMES ${ARGN}
+            PATHS ${VL_ROOT} ENV VL_ROOT
+            PATH_SUFFIXES "lib"
+            )
 endmacro()
 
 macro(_vl_find_component _name)
@@ -77,9 +77,9 @@ endmacro()
 
 set(_vl_required_vars VL_INCLUDE_DIRS)
 find_path(VL_INCLUDE_DIRS "vlCore/VisualizationLibrary.hpp"
-          PATHS ${VL_ROOT} ENV VL_ROOT
-          PATH_SUFFIXES "include" "include/vl"
-          )
+        PATHS ${VL_ROOT} ENV VL_ROOT
+        PATH_SUFFIXES "include" "include/vl"
+        )
 
 # Find the requested VL components
 foreach (component_name ${VL_FIND_COMPONENTS})

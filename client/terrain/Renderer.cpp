@@ -142,18 +142,17 @@ namespace isomap {
                             }
                         }
 
-                        if ( m_renderHighlight && m_highlightArea.contains( x, y ) ) {
-                            r = m_highlightColor.r() * 255;
-                            g = m_highlightColor.g() * 255;
-                            b = m_highlightColor.b() * 255;
+                        auto cursor = m_cursor.find( idx );
+                        if ( cursor != m_cursor.end() ) {
+                            r = cursor->second.r() * 255;
+                            g = cursor->second.g() * 255;
+                            b = cursor->second.b() * 255;
                         }
-                        for ( const auto& area : m_highLightAreas ) {
-                            if ( area.first.contains( x, y ) ) {
-                                r = area.second.r() * 255;
-                                g = area.second.g() * 255;
-                                b = area.second.b() * 255;
-                                break;
-                            }
+                        auto highlight = m_highlights.find( idx );
+                        if ( highlight != m_highlights.end() ) {
+                            r = highlight->second.r() * 255;
+                            g = highlight->second.g() * 255;
+                            b = highlight->second.b() * 255;
                         }
 
                         c[0] = vl::ubvec4( r, g, b, 255 );
@@ -298,6 +297,14 @@ namespace isomap {
                 if ( m_sceneManager ) {
                     m_sceneManager->setEnableMask( 0xFFFFFFFF );
                 }
+            }
+
+            void Renderer::addHighlight( uint32_t x, uint32_t y, const vl::fvec4& color ) {
+                m_highlights[y * m_terrain->width() + x] = color;
+            }
+
+            void Renderer::addCursor( uint32_t x, uint32_t y, const vl::fvec4& color ) {
+                m_cursor[y * m_terrain->width() + x] = color;
             }
 
         }

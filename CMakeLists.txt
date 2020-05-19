@@ -132,7 +132,7 @@ add_executable(
         server/Unit.h
         util/math.h
         util/math.cpp
-        Cursor.cpp Cursor.h)
+)
 
 message("Hello ${VL_LIBRARIES}")
 

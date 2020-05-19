@@ -581,7 +581,6 @@ void MainWindow::updateScene() {
 
     m_renderTerrain->updateFog();
     m_renderMatch->renderer()->render();
-    m_cursor.render( m_renderTerrain->renderer() );
 }
 
 void MainWindow::zoomIn() {
@@ -723,7 +722,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
                 color = vl::red;
             }
             if ( m_renderColumn ) {
-                m_renderTerrain->renderer()->addHighlight( isomap::common::Area( temp_x, temp_y, 1, 1 ), color );
+                m_renderTerrain->renderer()->addHighlight( temp_x, temp_y, color );
             }
         }
 
@@ -803,6 +802,7 @@ void MainWindow::worldToScreen( int world_x, int world_y, int world_z, int corne
 }
 
 void MainWindow::highlight( int x, int y ) {
+    m_renderTerrain->renderer()->clearCursor();
     m_cursorX = x;
     m_cursorY = y;
     switch ( m_mode ) {
@@ -814,9 +814,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* structure = m_renderTerrain->getObstructingStructureAt( x, y );
                 if ( structure != nullptr ) {
-                    m_cursor.highlightStructure( structure, structure->player()->id() == m_controllingPlayer->id() );
+                    highlightStructure( structure, structure->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_cursor.highlightTile( x, y, false );
+                    highlightTile( x, y, false );
                 }
             }
             break;
@@ -824,7 +824,7 @@ void MainWindow::highlight( int x, int y ) {
         case PlaceUnit:
             if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
                 if ( m_renderTerrain->isVisible( x, y ) ) {
-                    m_cursor.highlightTile(
+                    highlightTile(
                             x,
                             y,
                             (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 );
@@ -836,9 +836,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    m_cursor.highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
+                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_cursor.highlightTile( x, y, false );
+                    highlightTile( x, y, false );
                 }
             }
             break;
@@ -847,9 +847,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    m_cursor.highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
+                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    m_cursor.highlightTile( x, y, false );
+                    highlightTile( x, y, false );
                 }
             }
             break;
@@ -860,10 +860,10 @@ void MainWindow::highlight( int x, int y ) {
                 auto* structureAtCursor = m_renderTerrain->getObstructingStructureAt( x, y );
                 auto* selectedUnit = m_controllingPlayer->getUnit( m_selectedUnit );
                 if ( unitAtCursor != nullptr ) {
-                    m_cursor.highlightTile( x, y, unitAtCursor->player()->id() == m_controllingPlayer->id() );
+                    highlightTile( x, y, unitAtCursor->player()->id() == m_controllingPlayer->id() );
                 } else if ( selectedUnit != nullptr ) {
                     if ( structureAtCursor != nullptr ) {
-                        m_cursor.highlightStructure( structureAtCursor, structureAtCursor->player() == m_controllingPlayer );
+                        highlightStructure( structureAtCursor, structureAtCursor->player() == m_controllingPlayer );
                     } else {
                         renderPathMap( x, y );
                     }
@@ -881,28 +881,28 @@ void MainWindow::renderPathMap( int x, int y ) {
     if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
         uint8_t pathBits = m_renderTerrain->pathMap()[y * m_renderTerrain->width() + x];
         if ( y < m_renderTerrain->height() - 1 ) {
-            m_cursor.highlightTile( x, y + 1, (pathBits & isomap::common::path::bitUp) != 0 );
+            highlightTile( x, y + 1, (pathBits & isomap::common::path::bitUp) != 0 );
             if ( x > 0 ) {
-                m_cursor.highlightTile( x - 1, y + 1, (pathBits & isomap::common::path::bitUpLeft) != 0 );
+                highlightTile( x - 1, y + 1, (pathBits & isomap::common::path::bitUpLeft) != 0 );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                m_cursor.highlightTile( x + 1, y + 1, (pathBits & isomap::common::path::bitUpRight) != 0 );
+                highlightTile( x + 1, y + 1, (pathBits & isomap::common::path::bitUpRight) != 0 );
             }
         }
         if ( y > 0 ) {
-            m_cursor.highlightTile( x, y - 1, (pathBits & isomap::common::path::bitDown) != 0 );
+            highlightTile( x, y - 1, (pathBits & isomap::common::path::bitDown) != 0 );
             if ( x > 0 ) {
-                m_cursor.highlightTile( x - 1, y - 1, (pathBits & isomap::common::path::bitDownLeft) );
+                highlightTile( x - 1, y - 1, (pathBits & isomap::common::path::bitDownLeft) );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                m_cursor.highlightTile( x + 1, y - 1, (pathBits & isomap::common::path::bitDownRight) != 0 );
+                highlightTile( x + 1, y - 1, (pathBits & isomap::common::path::bitDownRight) != 0 );
             }
         }
         if ( x > 0 ) {
-            m_cursor.highlightTile( x - 1, y, (pathBits & isomap::common::path::bitLeft) != 0 );
+            highlightTile( x - 1, y, (pathBits & isomap::common::path::bitLeft) != 0 );
         }
         if ( x < m_renderTerrain->width() - 1 ) {
-            m_cursor.highlightTile( x + 1, y, (pathBits & isomap::common::path::bitRight) != 0 );
+            highlightTile( x + 1, y, (pathBits & isomap::common::path::bitRight) != 0 );
         }
     }
 
@@ -910,11 +910,10 @@ void MainWindow::renderPathMap( int x, int y ) {
 
 void MainWindow::renderStructurePlacement( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
-    m_cursor.highlightFootPrint( x, y,
+    highlightFootPrint( x, y,
                         structureType->footPrint( m_structureOrientation ),
                         m_controllingPlayer->controller()->canPlace( x, y, structureType, m_structureOrientation ) );
 }
-
 
 
 void MainWindow::place( int x, int y ) {
@@ -1454,3 +1453,22 @@ void MainWindow::updateEvent() {
     Applet::updateEvent();
     m_renderTerrain->renderer()->clearHighlight();
 }
+
+void MainWindow::highlightStructure( isomap::client::Structure* structure, bool green ) {
+    highlightFootPrint( structure->x(), structure->y(), structure->footPrint(), green );
+}
+
+void MainWindow::highlightFootPrint( uint32_t x, uint32_t y, isomap::common::FootPrint* footPrint, bool green ) {
+    for ( uint32_t fpY = 0; fpY < footPrint->height(); ++fpY ) {
+        for ( uint32_t fpX = 0; fpX < footPrint->width(); ++fpX ) {
+            if ( footPrint->get( fpX, fpY ) != 0 ) {
+                highlightTile( x + fpX, y + fpY, green );
+            }
+        }
+    }
+}
+
+void MainWindow::highlightTile( uint32_t x, uint32_t y, bool green ) {
+    m_renderTerrain->renderer()->addCursor( x, y, green ? vl::green : vl::red );
+}
+

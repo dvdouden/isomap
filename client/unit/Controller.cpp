@@ -139,7 +139,7 @@ namespace isomap {
                 }
 
                 for ( auto& wayPoint : m_wayPoints ) {
-                    m_unit->player()->terrain()->renderer()->addHighlight( common::Area( wayPoint.x, wayPoint.y, 1, 1), vl::fuchsia );
+                    m_unit->player()->terrain()->renderer()->addHighlight( wayPoint.x, wayPoint.y, vl::fuchsia );
                 }
             }
 
@@ -295,8 +295,8 @@ namespace isomap {
 
             void Controller::onMove() {
                 if ( !m_wayPoints.empty() &&
-                    m_wayPoints.back().x == m_unit->tileX() &&
-                    m_wayPoints.back().y == m_unit->tileY() ) {
+                     m_wayPoints.back().x == m_unit->tileX() &&
+                     m_wayPoints.back().y == m_unit->tileY() ) {
                     m_wayPoints.pop_back();
                 }
             }
