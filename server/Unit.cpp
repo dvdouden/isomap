@@ -146,10 +146,12 @@ namespace isomap {
                     m_data.payload++;
                     //printf( "Harvesting from tile %d, %d, ore amount was %d\n", tileX(), tileY(), oreTile );
                 }
-                if ( oreTile == 1 || m_data.payload == m_type->maxPayload() ) {
+                if ( oreTile <= 1 || m_data.payload == m_type->maxPayload() ) {
                     //printf( "Harvesting done, payload is now %d\n", m_data.payload );
                     m_data.setState( common::Idle );
-                    player()->terrain()->markCellDirty( tileX(), tileY() );
+                    if ( oreTile == 1 ) {
+                        player()->terrain()->markCellDirty( tileX(), tileY() );
+                    }
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
                 }
                 if ( m_data.payload % 64 == 0 ) {
@@ -163,11 +165,28 @@ namespace isomap {
                     m_data.setState( common::Idle );
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
                 }
-                // TODO: check for docking tile
-                --m_data.payload;
+                auto* structure = terrain->getConstructedStructureAt( tileX(), tileY() );
+                if ( structure == nullptr ) {
+                    printf( "Harvester not at structure, abort unloading\n" );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                }
+                if ( structure->type()->id() != m_type->dockStructureType() ) {
+                    printf( "Harvester at wrong structure type %d, abort unloading\n", structure->type()->id() );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                }
+                if ( (terrain->occupancy( tileX(), tileY() ) & common::occupancy::bitDockingPoint) == 0 ) {
+                    printf( "Harvester at not at docking point, abort unloading\n" );
+                    m_data.setState( common::Idle );
+                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                }
+                m_data.payload -= player()->incCredits( 1 );
+
                 if ( m_data.payload == 0 ) {
                     //printf( "Harvester empty, payload is %d\n", m_data.payload );
                     m_data.setState( common::Idle );
+                    player()->markDirty();
                     return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
                 }
                 if ( m_data.payload % 64 == 0 ) {
@@ -279,11 +298,11 @@ namespace isomap {
         }
 
         int32_t Unit::speedX( int32_t speed, int32_t orientation ) const {
-            return static_cast<int32_t>(speed * ::cosf( (orientation * math::fPi) / 65536.0f ) );
+            return static_cast<int32_t>(speed * ::cosf( (orientation * math::fPi) / 65536.0f ));
         }
 
         int32_t Unit::speedY( int32_t speed, int32_t orientation ) const {
-            return static_cast<int32_t>(speed * ::sinf( (orientation * math::fPi) / 65536.0f ) );
+            return static_cast<int32_t>(speed * ::sinf( (orientation * math::fPi) / 65536.0f ));
         }
 
         void Unit::dump() {

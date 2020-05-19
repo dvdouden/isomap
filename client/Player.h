@@ -31,6 +31,14 @@ namespace isomap {
                 return m_name;
             }
 
+            uint32_t credits() const {
+                return m_credits;
+            }
+
+            uint32_t maxCredits() const {
+                return m_maxCredits;
+            }
+
             player::Controller* controller() const {
                 return m_controller.get();
             }
@@ -73,12 +81,44 @@ namespace isomap {
                 return m_units;
             }
 
+            void setCredits( uint32_t credits ) {
+                m_credits = credits;
+            }
+
+            void setMaxCredits( uint32_t maxCredits ) {
+                m_maxCredits = maxCredits;
+            }
+
+            uint32_t incCredits( uint32_t amount ) {
+                uint32_t maxAmount = m_maxCredits - m_credits;
+                if ( amount > maxAmount ) {
+                    amount = maxAmount;
+                }
+
+                if ( amount == 0 ) {
+                    return 0;
+                }
+
+                m_credits += amount;
+                return amount;
+            }
+
+            uint32_t decCredits( uint32_t amount ) {
+                if ( amount > m_credits ) { ;
+                    return false;
+                }
+                m_credits -= amount;
+                return amount;
+            }
+
             void dump() const;
 
         private:
             Match* m_match;
             id_t m_id;
             std::string m_name;
+            uint32_t m_credits;
+            uint32_t m_maxCredits;
 
             Terrain* m_terrain = nullptr;
             // renderer needs to be on on top

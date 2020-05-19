@@ -45,6 +45,10 @@ namespace isomap {
 
             void ConstructionController::addStructure( Structure* structure ) {
                 printf( "CC Add structure [%d]\n", structure->id() );
+                if ( structure->constructionCompleted() ) {
+                    printf( "Already completed, ignore\n" );
+                    return;
+                }
                 m_structures.insert( structure );
                 findUnitForStructure( structure );
             }
@@ -72,9 +76,9 @@ namespace isomap {
 
             void ConstructionController::dump() const {
                 printf( "ConstructionController:\n" );
-                printf( "Registered structures: %d\n", m_structures.size() );
-                printf( "Registered constructors: %d\n", m_constructors.size() );
-                printf( "Available constructors: %d\n", m_availableConstructors.size() );
+                printf( "Registered structures: %lu\n", m_structures.size() );
+                printf( "Registered constructors: %lu\n", m_constructors.size() );
+                printf( "Available constructors: %lu\n", m_availableConstructors.size() );
             }
 
             void ConstructionController::findStructureForUnit( Unit* unit ) {

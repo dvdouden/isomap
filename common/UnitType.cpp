@@ -19,6 +19,7 @@ namespace isomap {
             s_unitTypes[1] = new UnitType( 1, "constructor", true, false );
             s_unitTypes[2] = new UnitType( 2, "harvester", false, true );
             s_unitTypes[2]->setMaxPayload( 700 );
+            s_unitTypes[2]->setDockStructureType( 4 );
         }
 
         void UnitType::clear() {
@@ -34,6 +35,10 @@ namespace isomap {
                 m_canConstruct( canConstruct ),
                 m_canHarvest( canHarvest ) {
 
+        }
+
+        void UnitType::setDockStructureType( id_t dockStructureTypeId ) {
+            m_dockStructureId = dockStructureTypeId;
         }
     }
 }

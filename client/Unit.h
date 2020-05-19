@@ -133,6 +133,18 @@ namespace isomap {
                 return m_data.payload;
             }
 
+            bool payloadFull() const {
+                return m_data.payload >= m_type->maxPayload();
+            }
+
+            common::UnitData& data() {
+                return m_data;
+            }
+
+            const common::UnitData& data() const {
+                return m_data;
+            }
+
             void dump() const;
 
         private:

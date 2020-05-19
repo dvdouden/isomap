@@ -98,7 +98,11 @@ namespace isomap {
 
             void removeStructure( Structure* structure );
 
-            Structure* getStructureAt( uint32_t x, uint32_t y );
+            Structure* getObstructingStructureAt( uint32_t x, uint32_t y ) const;
+
+            Structure* getConstructedStructureAt( uint32_t x, uint32_t y ) const;
+
+            Structure* getStructureAt( uint32_t x, uint32_t y ) const;
 
             void addUnit( Unit* unit );
 
@@ -106,18 +110,22 @@ namespace isomap {
 
             void updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY );
 
-            Unit* getUnitAt( uint32_t x, uint32_t y );
+            Unit* getUnitAt( uint32_t x, uint32_t y ) const;
 
             uint8_t getCornerSafe( int x, int y, int c ) const;
+
+            void dump() const;
 
         private:
 
 
-            std::vector<uint32_t> getChunks( Structure* structure );
+            std::vector<uint32_t> getChunks( Structure* structure ) const;
 
-            uint32_t getChunk( uint32_t x, uint32_t y );
+            uint32_t getChunk( uint32_t x, uint32_t y ) const;
 
             void removeUnitFromChunk( Unit* unit, uint32_t chunk );
+
+            void addUnitToChunk( Unit* unit, uint32_t chunk );
 
             uint32_t m_width = 0;
             uint32_t m_height = 0;

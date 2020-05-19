@@ -146,10 +146,21 @@ namespace isomap {
             vacate( structure->x(), structure->y(), structure->footPrint() );
         }
 
-        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
-            if ( (m_data.occupancyMap[y * m_width + x] & 0b0000'0001u) == 0 ) {
+        Structure* Terrain::getObstructingStructureAt( uint32_t x, uint32_t y ) const {
+            if ( (m_data.occupancyMap[y * m_width + x] & common::occupancy::bitObstructed) == 0 ) {
                 return nullptr;
             }
+            return getStructureAt( x, y );
+        }
+
+        Structure* Terrain::getConstructedStructureAt( uint32_t x, uint32_t y ) const {
+            if ( (m_data.occupancyMap[y * m_width + x] & common::occupancy::bitConstructed) == 0 ) {
+                return nullptr;
+            }
+            return getStructureAt( x, y );
+        }
+
+        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) const {
             uint32_t chunk = getChunk( x, y );
             for ( Structure* structure : m_structures[chunk] ) {
                 if ( structure->occupies( x, y ) ) {
@@ -160,23 +171,26 @@ namespace isomap {
         }
 
         void Terrain::addUnit( Unit* unit ) {
-            m_units[getChunk( unit->tileX(), unit->tileY() )].push_back( unit );
+            //printf( "Add unit %d\n", unit->id() );
+            addUnitToChunk( unit, getChunk( unit->tileX(), unit->tileY() ) );
         }
 
         void Terrain::removeUnit( Unit* unit ) {
+            //printf( "Remove unit %d\n", unit->id() );
             removeUnitFromChunk( unit, getChunk( unit->tileX(), unit->tileY() ) );
         }
 
         void Terrain::updateUnit( Unit* unit, uint32_t oldX, uint32_t oldY ) {
+            //printf( "Update unit %d (old %d, %d)\n", unit->id(), oldX, oldY );
             uint32_t oldChunk = getChunk( oldX, oldY );
             uint32_t chunk = getChunk( unit->tileX(), unit->tileY() );
             if ( oldChunk != chunk ) {
                 removeUnitFromChunk( unit, oldChunk );
-                addUnit( unit );
+                addUnitToChunk( unit, chunk );
             }
         }
 
-        Unit* Terrain::getUnitAt( uint32_t x, uint32_t y ) {
+        Unit* Terrain::getUnitAt( uint32_t x, uint32_t y ) const {
             uint32_t chunk = getChunk( x, y );
             for ( Unit* unit : m_units[chunk] ) {
                 if ( unit->tileX() == x && unit->tileY() == y ) {
@@ -186,7 +200,7 @@ namespace isomap {
             return nullptr;
         }
 
-        std::vector<uint32_t> Terrain::getChunks( Structure* structure ) {
+        std::vector<uint32_t> Terrain::getChunks( Structure* structure ) const {
             std::vector<uint32_t> chunks;
             uint32_t x1 = structure->x() / m_chunkSize;
             uint32_t y1 = structure->y() / m_chunkSize;
@@ -200,19 +214,52 @@ namespace isomap {
             return std::move( chunks );
         }
 
-        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) {
+        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) const {
             uint32_t chunkX = x / m_chunkSize;
             uint32_t chunkY = y / m_chunkSize;
             return chunkY * (m_width / m_chunkSize) + chunkX;
         }
 
         void Terrain::removeUnitFromChunk( Unit* unit, uint32_t chunk ) {
+            //printf( "Remove unit %d from chunk %d\n", unit->id(), chunk );
             for ( auto it = m_units[chunk].begin(); it != m_units[chunk].end(); ++it ) {
                 if ( (*it) == unit ) {
+                    //printf( "Removed %d\n", (*it)->id() );
                     m_units[chunk].erase( it );
                     break;
                 }
             }
+        }
+
+        void Terrain::addUnitToChunk( Unit* unit, uint32_t chunk ) {
+            //printf( "Add unit %d to chunk %d\n", unit->id(), chunk );
+            m_units[chunk].push_back( unit );
+        }
+
+        void Terrain::dump() const {
+            printf( "Terrain:\n" );
+            printf( "\tWidth: %d\n", m_width );
+            printf( "\tHeight: %d\n", m_height );
+            for ( int i = 0; i < (m_width / m_chunkSize) * (m_height / m_chunkSize); ++i ) {
+                if ( !m_structures[i].empty() || !m_units[i].empty() ) {
+                    printf( "\tChunk %d (%d, %d):\n", i, (i % (m_width / m_chunkSize)) * m_chunkSize,
+                            (i / (m_width / m_chunkSize)) * m_chunkSize );
+                    if ( !m_structures[i].empty() ) {
+                        printf( "\t\tStructures (%lu):\n", m_structures[i].size() );
+                        for ( auto* s : m_structures[i] ) {
+                            printf( "\t\t\t%d (%s): %d, %d\n", s->id(), s->type()->name().c_str(), s->x(), s->y() );
+                        }
+                    }
+                    if ( !m_units[i].empty() ) {
+                        printf( "\t\tUnits (%lu):\n", m_units[i].size() );
+                        for ( auto* u : m_units[i] ) {
+                            printf( "\t\t\t%d (%s): %d, %d\n", u->id(), u->type()->name().c_str(), u->tileX(),
+                                    u->tileY() );
+                        }
+                    }
+                }
+            }
+
         }
     }
 

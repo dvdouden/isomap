@@ -17,7 +17,7 @@ namespace isomap {
 
                 void update() override;
 
-                void onUnitCreated( Unit* unit ) override;
+                void onUnitCreated( Unit* unit, id_t structureId ) override;
 
                 void onUnitDestroyed( Unit* unit ) override;
 

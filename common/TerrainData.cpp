@@ -5,6 +5,23 @@
 namespace isomap {
     namespace common {
 
+
+        // use the slope constants to set bias for moving up and down hills
+        //static const int8_t s_slopeConstants[8] = { 0, 1, 2, 1, 0, -2, -4, -2 };
+        //static const int8_t s_slopeConstants[8] = { -6, -6, -6, -6, -6, -6, -6, -6 };
+        static const int8_t s_slopeConstants[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        static const uint8_t s_slopeOffsets[16] = {8, 3, 1, 2, 7, 8, 0, 1, 5, 4, 8, 3, 6, 5, 7, 8};
+        //static const uint8_t s_slopeOffsets[16] = { 8, 3, 1, 2, 7, 0, 0, 1, 5, 4, 0, 3, 6, 5, 7, 8 };
+
+        int8_t slope( uint8_t slopeBits, uint8_t orientation ) {
+            return 0;
+            /*if ( s_slopeOffsets[orientation] == 8 ) {
+                return 0;
+            }
+            slopeBits += s_slopeOffsets[orientation];
+            return -s_slopeConstants[slopeBits % 16u];*/
+        }
+
         TerrainData::TerrainData( uint32_t width, uint32_t height ) :
                 mapWidth( width ),
                 mapHeight( height ),
@@ -102,7 +119,7 @@ namespace isomap {
                         uint8_t hDown = tmpHeightMap[-stride];
                         uint8_t oDown = tmpOccupancyMap[-stride];
                         if ( (hDown == h || hDown - h == 1 || h - hDown == 1) &&
-                             (oDown & occupancy::bitObstructed) == 0 ) {
+                             (oDown & occupancy::bitObstructed) == 0 && hDown >= 4 ) {
                             pathBits |= path::bitDown;
                         }
                     }
@@ -112,7 +129,7 @@ namespace isomap {
                         uint8_t hRight = tmpHeightMap[1];
                         uint8_t oRight = tmpOccupancyMap[1];
                         if ( (hRight == h || hRight - h == 1 || h - hRight == 1) &&
-                             (oRight & occupancy::bitObstructed) == 0 ) {
+                             (oRight & occupancy::bitObstructed) == 0 && hRight >= 4 ) {
                             pathBits |= path::bitRight;
                         }
                     }
@@ -122,7 +139,7 @@ namespace isomap {
                         uint8_t hUp = tmpHeightMap[stride];
                         uint8_t oUp = tmpOccupancyMap[stride];
                         if ( (hUp == h || hUp - h == 1 || h - hUp == 1) &&
-                             (oUp & occupancy::bitObstructed) == 0 ) {
+                             (oUp & occupancy::bitObstructed) == 0 && hUp >= 4 ) {
                             pathBits |= path::bitUp;
                         }
                     }
@@ -132,7 +149,7 @@ namespace isomap {
                         uint8_t hLeft = tmpHeightMap[-1];
                         uint8_t oLeft = tmpOccupancyMap[-1];
                         if ( (hLeft == h || hLeft - h == 1 || h - hLeft == 1) &&
-                             (oLeft & occupancy::bitObstructed) == 0 ) {
+                             (oLeft & occupancy::bitObstructed) == 0 && hLeft >= 4 ) {
                             pathBits |= path::bitLeft;
                         }
                     }
@@ -142,7 +159,7 @@ namespace isomap {
                         uint8_t hDownLeft = tmpHeightMap[-stride - 1];
                         uint8_t oDownLeft = tmpOccupancyMap[-stride - 1];
                         if ( (hDownLeft == h || hDownLeft - h == 1 || h - hDownLeft == 1) &&
-                             (oDownLeft & occupancy::bitObstructed) == 0 ) {
+                             (oDownLeft & occupancy::bitObstructed) == 0 && hDownLeft >= 4 ) {
                             pathBits |= path::bitDownLeft;
                         }
                     }
@@ -153,7 +170,7 @@ namespace isomap {
                         uint8_t hDownRight = tmpHeightMap[-stride + 1];
                         uint8_t oDownRight = tmpOccupancyMap[-stride + 1];
                         if ( (hDownRight == h || hDownRight - h == 1 || h - hDownRight == 1) &&
-                             (oDownRight & occupancy::bitObstructed) == 0 ) {
+                             (oDownRight & occupancy::bitObstructed) == 0 && hDownRight >= 4 ) {
                             pathBits |= path::bitDownRight;
                         }
                     }
@@ -164,7 +181,7 @@ namespace isomap {
                         uint8_t hUpRight = tmpHeightMap[stride + 1];
                         uint8_t oUpRight = tmpOccupancyMap[stride + 1];
                         if ( (hUpRight == h || hUpRight - h == 1 || h - hUpRight == 1) &&
-                             (oUpRight & occupancy::bitObstructed) == 0 ) {
+                             (oUpRight & occupancy::bitObstructed) == 0 && hUpRight >= 4 ) {
                             pathBits |= path::bitUpRight;
                         }
                     }
@@ -174,7 +191,7 @@ namespace isomap {
                         uint8_t hUpLeft = tmpHeightMap[stride - 1];
                         uint8_t oUpLeft = tmpOccupancyMap[stride - 1];
                         if ( (hUpLeft == h || hUpLeft - h == 1 || h - hUpLeft == 1) &&
-                             (oUpLeft & occupancy::bitObstructed) == 0 ) {
+                             (oUpLeft & occupancy::bitObstructed) == 0 && hUpLeft >= 4 ) {
                             pathBits |= path::bitUpLeft;
                         }
                     }

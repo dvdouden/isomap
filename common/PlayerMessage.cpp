@@ -52,8 +52,10 @@ namespace isomap {
         }
 
 
-        PlayerServerMessage* PlayerServerMessage::statusMsg() {
+        PlayerServerMessage* PlayerServerMessage::statusMsg( uint32_t credits, uint32_t maxCredits ) {
             auto* msg = new PlayerServerMessage( Status );
+            msg->m_credits = credits;
+            msg->m_maxCredits = maxCredits;
             return msg;
         }
 
@@ -76,9 +78,10 @@ namespace isomap {
             return msg;
         }
 
-        PlayerServerMessage* PlayerServerMessage::unitCreatedMsg( const UnitData& unitData ) {
+        PlayerServerMessage* PlayerServerMessage::unitCreatedMsg( const UnitData& unitData, id_t structureId ) {
             auto* msg = new PlayerServerMessage( UnitCreated );
             msg->m_unitData = new UnitData( unitData );
+            msg->m_id = structureId;
             return msg;
         }
 

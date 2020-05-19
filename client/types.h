@@ -42,6 +42,8 @@ namespace isomap {
 
             class ConstructorController;
 
+            class PathCondition;
+
             class Renderer;
 
             class WorkProvider;

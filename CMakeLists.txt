@@ -79,10 +79,17 @@ add_executable(
         client/structure/Renderer.h
         client/terrain/Renderer.cpp
         client/terrain/Renderer.h
+        client/unit/AdjacentToStructurePathCondition.h
         client/unit/ConstructorController.cpp
         client/unit/ConstructorController.h
         client/unit/Controller.h
         client/unit/Controller.cpp
+        client/unit/DockingTilePathCondition.h
+        client/unit/HarvesterController.cpp
+        client/unit/HarvesterController.h
+        client/unit/OreTilePathCondition.h
+        client/unit/PathCondition.h
+        client/unit/PositionPathCondition.h
         client/unit/Renderer.cpp
         client/unit/Renderer.h
         client/unit/WorkProvider.h
@@ -125,7 +132,7 @@ add_executable(
         server/Unit.h
         util/math.h
         util/math.cpp
-)
+        Cursor.cpp Cursor.h)
 
 message("Hello ${VL_LIBRARIES}")
 

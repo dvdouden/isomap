@@ -1,4 +1,7 @@
+#include <vlCore/Colors.hpp>
+
 #include "Controller.h"
+#include "PathCondition.h"
 #include "../player/Controller.h"
 #include "../Structure.h"
 #include "../Player.h"
@@ -55,6 +58,11 @@ namespace isomap {
                             m_unit->id() );
                     return false;
                 }
+                if ( m_unit->payload() >= m_unit->type()->maxPayload() ) {
+                    printf( "[%d] Harvest command given to unit with full payload!\n",
+                            m_unit->id() );
+                    return false;
+                }
                 if ( m_unit->player()->terrain()->ore( m_unit->tileX(), m_unit->tileY() ) == 0 ) {
                     printf( "[%d] Harvest command given to unit but no ore at tile!\n",
                             m_unit->id() );
@@ -73,19 +81,21 @@ namespace isomap {
                             m_unit->id() );
                     return false;
                 }
-                // FIXME: check if we're on a docking tile
+                auto* structure = m_unit->player()->terrain()->getConstructedStructureAt( m_unit->tileX(),
+                                                                                          m_unit->tileY() );
+                if ( structure == nullptr ) {
+                    return false;
+                }
+                if ( structure->type()->id() != m_unit->type()->dockStructureType() ) {
+                    return false;
+                }
+                if ( !structure->dockingTileAt( m_unit->tileX(), m_unit->tileY() ) ) {
+                    return false;
+                }
 
                 m_unit->player()->controller()->enqueueMessage( m_unit->id(),
                                                                 common::UnitCommandMessage::unloadMsg() );
                 return true;
-            }
-
-            bool Controller::moveTo( uint32_t x, uint32_t y ) {
-                return moveTo( x, y, nullptr );
-            }
-
-            bool Controller::moveTo( Structure* structure ) {
-                return moveTo( 0, 0, structure );
             }
 
             void Controller::dump() {
@@ -97,31 +107,46 @@ namespace isomap {
                     case common::UnitServerMessage::Construct:
                     case common::UnitServerMessage::Harvest:
                     case common::UnitServerMessage::Status:
-                    case common::UnitServerMessage::MoveTo:
                     case common::UnitServerMessage::Stop:
-                    case common::UnitServerMessage::Done:
                     case common::UnitServerMessage::Abort:
                     case common::UnitServerMessage::Unload:
+                        break;
+                    case common::UnitServerMessage::MoveTo:
+                        onMove();
+                        break;
+                    case common::UnitServerMessage::Done:
+                        if ( m_unit->lastState() == common::Moving ) {
+                            onMove();
+                        }
                         break;
                 }
             }
 
             void Controller::update() {
                 switch ( m_unit->state() ) {
+                    case common::Harvesting:
+                        if ( !m_unit->payloadFull() ) {
+                            m_unit->data().payload++;
+                        }
+                        break;
+
+                    case common::Unloading:
+                        m_unit->data().payload -= m_unit->player()->incCredits( 1 );
+                        break;
+
                     default:
                         break;
                 }
+
+                for ( auto& wayPoint : m_wayPoints ) {
+                    m_unit->player()->terrain()->renderer()->addHighlight( common::Area( wayPoint.x, wayPoint.y, 1, 1), vl::fuchsia );
+                }
             }
 
-            bool Controller::moveTo( uint32_t x, uint32_t y, Structure* structure ) {
+            bool Controller::moveTo( const PathCondition& pathCondition ) {
                 m_wayPoints.clear();
 
                 auto* terrain = m_unit->player()->terrain();
-                if ( structure != nullptr ) {
-                    printf( "Move to structure %d\n", structure->id() );
-                } else {
-                    printf( "Move to %d %d\n", x, y );
-                }
 
                 auto width = terrain->width();
                 auto height = terrain->height();
@@ -139,106 +164,96 @@ namespace isomap {
 
                 std::priority_queue<node, std::vector<node>, std::greater<>> todo;
 
-                uint32_t targetIdx = y * width + x;
                 uint32_t startIdx = m_unit->tileY() * width + m_unit->tileX();
+                uint32_t targetIdx = 0;
 
                 todo.push( {1, startIdx} );
                 bool found = false;
                 while ( !todo.empty() ) {
-                    auto tile = todo.top();
+                    node tile = todo.top();
                     todo.pop();
-                    auto value = nodeMap[tile.from];
-                    uint32_t tile_x = tile.from % width;
-                    uint32_t tile_y = tile.from / width;
-                    //printf( "Test %d %d\n", tile_x, tile_y);
-                    if ( structure != nullptr ) {
-                        if ( structure->isAdjacentTo( tile_x, tile_y ) ) {
-                            targetIdx = tile.from;
-                            // update the target position in the command, now that we have found a place to go
-                            x = targetIdx % width;
-                            y = targetIdx / width;
-                            printf( "Found tile %d %d to be adjacent to structure\n", x, y );
-                            found = true;
-                            break;
-                        }
-                    } else if ( tile.from == targetIdx ) {
+                    node value = nodeMap[tile.from];
+                    if ( pathCondition.hasReached( tile.from ) ) {
+                        //printf( "Found a route!\n" );
                         found = true;
+                        targetIdx = tile.from;
                         break;
                     }
                     uint8_t canReach = terrain->pathMap()[tile.from];
                     //printf( "[%2d,%2d] %02X\n", tile_x, tile_y, canReach );
+                    uint8_t slopeBits = terrain->slopeMap()[tile.from] % 16u;
 
                     // for now we're going to move in every direction, as long as we haven't traveled there yet.
                     if ( canReach & common::path::bitDownLeft ) {
                         //printf( "down left\n" );
-                        auto idx = tile.from - width - 1;
+                        uint32_t idx = tile.from - width - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 14;
+                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 5 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 14, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitDown ) {
                         //printf( "down\n" );
-                        auto idx = tile.from - width;
+                        uint32_t idx = tile.from - width;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10;
+                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 4 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 10, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitDownRight ) {
                         //printf( "down right\n" );
-                        auto idx = tile.from - width + 1;
+                        uint32_t idx = tile.from - width + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 14;
+                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 3 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 14, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitRight ) {
                         //printf( "right\n" );
-                        auto idx = tile.from + 1;
+                        uint32_t idx = tile.from + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10;
+                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 2 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 10, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitUpRight ) {
                         //printf( "right up\n" );
-                        auto idx = tile.from + width + 1;
+                        uint32_t idx = tile.from + width + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 14;
+                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 1 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 14, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitUp ) {
                         //printf( "up\n" );
-                        auto idx = tile.from + width;
+                        uint32_t idx = tile.from + width;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10;
+                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 0 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 10, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitUpLeft ) {
                         //printf( "up left\n" );
-                        auto idx = tile.from + width - 1;
+                        uint32_t idx = tile.from + width - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 14;
+                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 7 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 14, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                     if ( canReach & common::path::bitLeft ) {
                         //printf( "left\n" );
-                        auto idx = tile.from - 1;
+                        uint32_t idx = tile.from - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10;
+                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 6 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {value.value + 10, idx} );
+                            todo.push( {nodeMap[idx].value, idx} );
                         }
                     }
                 }
@@ -264,6 +279,25 @@ namespace isomap {
                 } else {
                     printf( "No route!\n" );
                     return false;
+                }
+            }
+
+            Structure* Controller::assignedStructure() {
+                if ( m_assignedStructureId == 0 ) {
+                    return nullptr;
+                }
+                Structure* structure = m_unit->player()->getStructure( m_assignedStructureId );
+                if ( structure == nullptr ) {
+                    m_assignedStructureId = 0;
+                }
+                return structure;
+            }
+
+            void Controller::onMove() {
+                if ( !m_wayPoints.empty() &&
+                    m_wayPoints.back().x == m_unit->tileX() &&
+                    m_wayPoints.back().y == m_unit->tileY() ) {
+                    m_wayPoints.pop_back();
                 }
             }
 

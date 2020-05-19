@@ -26,6 +26,10 @@ namespace isomap {
             }
         }
 
+        bool Structure::occupies( uint32_t idx ) const {
+            return occupies( idx % player()->terrain()->width(), idx / player()->terrain()->width() );
+        }
+
         bool Structure::occupies( uint32_t x, uint32_t y ) const {
             if ( x >= m_data.x + m_type->width( m_data.orientation ) ) {
                 return false; // structure right of point
@@ -42,12 +46,27 @@ namespace isomap {
             return footPrint()->get( x - m_data.x, y - m_data.y ) != 0;
         }
 
+        bool Structure::isAdjacentTo( uint32_t idx ) const {
+            return isAdjacentTo( idx % player()->terrain()->width(), idx / player()->terrain()->width() );
+        }
+
         bool Structure::isAdjacentTo( uint32_t x, uint32_t y ) const {
             return
                     (x > 0 && occupies( x - 1, y )) ||
                     (x < player()->terrain()->width() - 1 && occupies( x + 1, y )) ||
                     (y > 0 && occupies( x, y - 1 )) ||
                     (y < player()->terrain()->height() - 1 && occupies( x, y + 1 ));
+        }
+
+        bool Structure::dockingTileAt( uint32_t idx ) const {
+            return dockingTileAt( idx % player()->terrain()->width(), idx / player()->terrain()->width() );
+        }
+
+        bool Structure::dockingTileAt( uint32_t x, uint32_t y ) const {
+            if ( !occupies( x, y ) ) {
+                return false;
+            }
+            return (footPrint()->get( x - m_data.x, y - m_data.y ) & common::occupancy::bitDockingPoint) != 0;
         }
 
         void Structure::setVisible( bool visible ) {

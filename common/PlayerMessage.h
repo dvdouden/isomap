@@ -100,7 +100,7 @@ namespace isomap {
                 return m_type;
             }
 
-            static PlayerServerMessage* statusMsg();
+            static PlayerServerMessage* statusMsg( uint32_t credits, uint32_t maxCredits );
 
             static PlayerServerMessage*
             buildStructureAcceptedMsg( const StructureData& structureData );
@@ -117,7 +117,7 @@ namespace isomap {
             static PlayerServerMessage*
             structureDestroyedMsg( id_t id );
 
-            static PlayerServerMessage* unitCreatedMsg( const UnitData& unitData );
+            static PlayerServerMessage* unitCreatedMsg( const UnitData& unitData, id_t structureId );
 
             static PlayerServerMessage* unitVisibleMsg( const UnitData& unitData );
 
@@ -153,6 +153,14 @@ namespace isomap {
                 return m_typeId;
             }
 
+            uint32_t credits() const {
+                return m_credits;
+            }
+
+            uint32_t maxCredits() const {
+                return m_maxCredits;
+            }
+
             StructureServerMessage* structureMessage() const {
                 return m_structureMessage;
             }
@@ -180,6 +188,8 @@ namespace isomap {
 
             id_t m_id = 0;
             id_t m_typeId = 0;
+            uint32_t m_credits = 0;
+            uint32_t m_maxCredits = 0;
 
             StructureData* m_structureData = nullptr;
             UnitData* m_unitData = nullptr;

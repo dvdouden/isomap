@@ -7,6 +7,7 @@
 #include "client/types.h"
 #include "server/types.h"
 #include "server/TerrainGenerator.h"
+#include "Cursor.h"
 
 
 class MainWindow : public vl::Applet {
@@ -20,6 +21,8 @@ public:
     void keyPressEvent( unsigned short, vl::EKey ) override;
 
     void keyReleaseEvent( unsigned short, vl::EKey ) override;
+
+    void updateEvent() override;
 
     void resizeEvent( int w, int h ) override;
 
@@ -63,12 +66,6 @@ protected:
     void regenerateMap();
 
     void renderPathMap( int x, int y );
-
-    void highlightTile( int x, int y, bool green );
-
-    void highlightFootPrint( int x, int y, isomap::common::FootPrint* footPrint, bool green );
-
-    void highlightStructure( isomap::client::Structure* structure, bool green );
 
     void renderStructurePlacement( int x, int y );
 
@@ -123,6 +120,8 @@ protected:
     bool isBelow( int dx, int dy, int x0, int y0, int x1, int y1 );
 
     const char* getModeName() const;
+
+    Cursor m_cursor;
 };
 
 

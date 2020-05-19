@@ -11,13 +11,11 @@
 namespace isomap {
     namespace server {
 
-        Match::Match() {
-
-        }
+        Match::Match() = default;
 
         Match::~Match() {
             // clean up undelivered messages
-            for ( auto msgs : m_messages ) {
+            for ( const auto& msgs : m_messages ) {
                 for ( auto msg : msgs.second ) {
                     delete msg;
                 }
@@ -30,7 +28,7 @@ namespace isomap {
             switch ( msg->type() ) {
                 case common::MatchClientMessage::RegisterPlayer: {
                     if ( m_players.size() >= m_maxPlayers ) {
-                        printf( "Too many players (%d/%d), reject player [%s]\n",
+                        printf( "Too many players (%lu/%d), reject player [%s]\n",
                                 m_players.size(), m_maxPlayers, msg->name().c_str() );
                         enqueueMessage( msg->id(), common::MatchServerMessage::playerRejected( msg->name() ) );
                         return;
@@ -89,8 +87,8 @@ namespace isomap {
                     player->startMatch();
                     if ( m_players.size() >= m_minPlayers ) {
                         bool ready = true;
-                        for ( auto& player : m_players ) {
-                            if ( !player.second->ready() ) {
+                        for ( auto& p : m_players ) {
+                            if ( !p.second->ready() ) {
                                 ready = false;
                                 break;
                             }
@@ -143,10 +141,13 @@ namespace isomap {
             m_time = 0;
             m_terrain->init();
             for ( auto& player : m_players ) {
+                player.second->setCredits( m_startCredits );
+                player.second->setMaxCredits( m_startCredits );
                 player.second->init();
                 enqueueMessage( player.first,
                                 common::MatchServerMessage::initTerrain( m_terrain->width(), m_terrain->height() ) );
-                enqueueMessage( player.first, common::MatchServerMessage::matchStarted() );
+                enqueueMessage( player.first, common::MatchServerMessage::matchStarted( player.second->credits(),
+                                                                                        player.second->maxCredits() ) );
             }
         }
 
@@ -163,7 +164,10 @@ namespace isomap {
 
             // update fog, check new visible structures/units, update dirty cells
             for ( auto& player : m_players ) {
-                player.second->update();
+                auto* msg = player.second->update();
+                if ( msg != nullptr ) {
+                    enqueueMessage( player.first, common::MatchServerMessage::playerMsg( player.first, msg ) );
+                }
             }
             // reset dirty cells registration
             m_terrain->clearDirtyCells();

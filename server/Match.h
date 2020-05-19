@@ -57,6 +57,14 @@ namespace isomap {
 
             Player* getPlayer( id_t id );
 
+            uint32_t startCredits() const {
+                return m_startCredits;
+            }
+
+            uint32_t creditLimit() const {
+                return m_creditLimit;
+            }
+
             void dump();
 
 
@@ -69,6 +77,8 @@ namespace isomap {
             uint32_t m_minPlayers = 2;
             uint32_t m_maxPlayers = 4;
             bool m_started = false;
+            uint32_t m_startCredits = 5000;
+            uint32_t m_creditLimit = 25000;
 
             std::map<id_t, std::vector<common::MatchServerMessage*>> m_messages;
         };

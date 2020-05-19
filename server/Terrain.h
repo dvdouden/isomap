@@ -59,6 +59,10 @@ namespace isomap {
                 return m_data.occupancyMap;
             }
 
+            uint8_t occupancy( uint32_t x, uint32_t y ) const {
+                return m_data.occupancyMap[y * m_data.mapWidth + x];
+            }
+
             uint8_t* pathMap() const {
                 return m_data.pathMap;
             }
@@ -79,7 +83,11 @@ namespace isomap {
 
             common::TerrainMessage* uncoverAll() const;
 
-            Structure* getStructureAt( uint32_t x, uint32_t y );
+            Structure* getObstructingStructureAt( uint32_t x, uint32_t y ) const;
+
+            Structure* getConstructedStructureAt( uint32_t x, uint32_t y ) const;
+
+            Structure* getStructureAt( uint32_t x, uint32_t y ) const;
 
             Unit* getUnitAt( uint32_t x, uint32_t y );
 
@@ -113,9 +121,9 @@ namespace isomap {
             std::vector<std::vector<Structure*>> m_structures;
             std::vector<std::vector<Unit*>> m_units;
 
-            std::vector<uint32_t> getChunks( Structure* pStructure );
+            std::vector<uint32_t> getChunks( Structure* pStructure ) const;
 
-            uint32_t getChunk( uint32_t x, uint32_t y );
+            uint32_t getChunk( uint32_t x, uint32_t y ) const;
 
             std::set<uint32_t> m_dirtyCells;
         };

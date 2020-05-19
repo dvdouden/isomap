@@ -46,8 +46,9 @@ namespace isomap {
                                                                     {0, 3, 0,
                                                                      3, 3, 3,
                                                                      3, 3, 3,
-                                                                     2, occupancy::bitSpawnPoint | 2u, 2} ),
+                                                                     2, occupancy::bitDockAndSpawn | 2u, 2} ),
                                                      2 );
+            s_structureTypes[4]->setCreditStorage( 1500 );
 
             s_structureTypes[5] = new StructureType( 5,
                                                      "turret",

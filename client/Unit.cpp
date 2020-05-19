@@ -36,9 +36,16 @@ namespace isomap {
                 case common::UnitServerMessage::Stop:
                 case common::UnitServerMessage::Done:
                 case common::UnitServerMessage::Abort:
-                case common::UnitServerMessage::Unload:
+                case common::UnitServerMessage::Unload: {
+                    uint32_t oldTileX = tileX();
+                    uint32_t oldTileY = tileY();
                     m_data = msg->data();
+                    if ( tileX() != oldTileX || tileY() != oldTileY ) {
+                        m_player->terrain()->updateUnit( this, oldTileX, oldTileY );
+                    }
                     break;
+                }
+
             }
             if ( m_controller ) {
                 m_controller->onMessage( msg->type() );
@@ -77,22 +84,8 @@ namespace isomap {
 
                 case common::Idle:
                 case common::Constructing:
-                    break;
-
-                case common::Harvesting: {
-                    // we'll be receiving updates once every X frames
-                    // so we'll just assume it's happily harvesting away...
-                    if ( m_data.payload < m_type->maxPayload() ) {
-                        m_data.payload++;
-                    }
-                    break;
-                }
+                case common::Harvesting:
                 case common::Unloading:
-                    // we'll be receiving updates once every X frames
-                    // so we'll just assume it's happily unloading...
-                    if ( m_data.payload > 0 ) {
-                        m_data.payload--;
-                    }
                     break;
             }
 

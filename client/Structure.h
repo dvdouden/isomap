@@ -43,9 +43,17 @@ namespace isomap {
 
             void processMessage( common::StructureServerMessage* msg );
 
+            bool occupies( uint32_t idx ) const;
+
             bool occupies( uint32_t x, uint32_t y ) const;
 
+            bool isAdjacentTo( uint32_t idx ) const;
+
             bool isAdjacentTo( uint32_t x, uint32_t y ) const;
+
+            bool dockingTileAt( uint32_t idx ) const;
+
+            bool dockingTileAt( uint32_t x, uint32_t y ) const;
 
             common::StructureType* type() const {
                 return m_type;

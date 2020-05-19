@@ -17,6 +17,8 @@
 #include "common/StructureType.h"
 #include "server/TerrainGenerator.h"
 #include "client/ModelCache.h"
+#include "client/unit/AdjacentToStructurePathCondition.h"
+#include "client/unit/PositionPathCondition.h"
 
 
 const int ZOOM_LEVELS[] = {2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256};
@@ -493,7 +495,6 @@ void MainWindow::updateCamera() {
 
 // called every frame
 void MainWindow::updateScene() {
-
     // smooth rotation
     switch ( m_orientation ) {
         default:
@@ -580,6 +581,7 @@ void MainWindow::updateScene() {
 
     m_renderTerrain->updateFog();
     m_renderMatch->renderer()->render();
+    m_cursor.render( m_renderTerrain->renderer() );
 }
 
 void MainWindow::zoomIn() {
@@ -611,8 +613,6 @@ void MainWindow::rotateRight() {
 }
 
 void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& world_y ) {
-    m_renderTerrain->renderer()->clearHighlight();
-
     // get viewport size first
     int w = rendering()->as<vl::Rendering>()->camera()->viewport()->width();
     int h = rendering()->as<vl::Rendering>()->camera()->viewport()->height();
@@ -812,11 +812,11 @@ void MainWindow::highlight( int x, int y ) {
 
         case DeleteStructure:
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
-                auto* structure = m_renderTerrain->getStructureAt( x, y );
+                auto* structure = m_renderTerrain->getObstructingStructureAt( x, y );
                 if ( structure != nullptr ) {
-                    highlightStructure( structure, structure->player()->id() == m_controllingPlayer->id() );
+                    m_cursor.highlightStructure( structure, structure->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    highlightTile( x, y, false );
+                    m_cursor.highlightTile( x, y, false );
                 }
             }
             break;
@@ -824,7 +824,7 @@ void MainWindow::highlight( int x, int y ) {
         case PlaceUnit:
             if ( x >= 0 && x < m_renderMatch->terrain()->width() && y >= 0 && y < m_renderMatch->terrain()->height() ) {
                 if ( m_renderTerrain->isVisible( x, y ) ) {
-                    highlightTile(
+                    m_cursor.highlightTile(
                             x,
                             y,
                             (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 );
@@ -836,9 +836,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
+                    m_cursor.highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    highlightTile( x, y, false );
+                    m_cursor.highlightTile( x, y, false );
                 }
             }
             break;
@@ -847,9 +847,9 @@ void MainWindow::highlight( int x, int y ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unit = m_renderTerrain->getUnitAt( x, y );
                 if ( unit != nullptr ) {
-                    highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
+                    m_cursor.highlightTile( x, y, unit->player()->id() == m_controllingPlayer->id() );
                 } else {
-                    highlightTile( x, y, false );
+                    m_cursor.highlightTile( x, y, false );
                 }
             }
             break;
@@ -857,13 +857,13 @@ void MainWindow::highlight( int x, int y ) {
         case MoveUnit:
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unitAtCursor = m_renderTerrain->getUnitAt( x, y );
-                auto* structureAtCursor = m_renderTerrain->getStructureAt( x, y );
+                auto* structureAtCursor = m_renderTerrain->getObstructingStructureAt( x, y );
                 auto* selectedUnit = m_controllingPlayer->getUnit( m_selectedUnit );
                 if ( unitAtCursor != nullptr ) {
-                    highlightTile( x, y, unitAtCursor->player()->id() == m_controllingPlayer->id() );
+                    m_cursor.highlightTile( x, y, unitAtCursor->player()->id() == m_controllingPlayer->id() );
                 } else if ( selectedUnit != nullptr ) {
                     if ( structureAtCursor != nullptr ) {
-                        highlightStructure( structureAtCursor, structureAtCursor->player() == m_controllingPlayer );
+                        m_cursor.highlightStructure( structureAtCursor, structureAtCursor->player() == m_controllingPlayer );
                     } else {
                         renderPathMap( x, y );
                     }
@@ -881,28 +881,28 @@ void MainWindow::renderPathMap( int x, int y ) {
     if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
         uint8_t pathBits = m_renderTerrain->pathMap()[y * m_renderTerrain->width() + x];
         if ( y < m_renderTerrain->height() - 1 ) {
-            highlightTile( x, y + 1, (pathBits & isomap::common::path::bitUp) != 0 );
+            m_cursor.highlightTile( x, y + 1, (pathBits & isomap::common::path::bitUp) != 0 );
             if ( x > 0 ) {
-                highlightTile( x - 1, y + 1, (pathBits & isomap::common::path::bitUpLeft) != 0 );
+                m_cursor.highlightTile( x - 1, y + 1, (pathBits & isomap::common::path::bitUpLeft) != 0 );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                highlightTile( x + 1, y + 1, (pathBits & isomap::common::path::bitUpRight) != 0 );
+                m_cursor.highlightTile( x + 1, y + 1, (pathBits & isomap::common::path::bitUpRight) != 0 );
             }
         }
         if ( y > 0 ) {
-            highlightTile( x, y - 1, (pathBits & isomap::common::path::bitDown) != 0 );
+            m_cursor.highlightTile( x, y - 1, (pathBits & isomap::common::path::bitDown) != 0 );
             if ( x > 0 ) {
-                highlightTile( x - 1, y - 1, (pathBits & isomap::common::path::bitDownLeft) );
+                m_cursor.highlightTile( x - 1, y - 1, (pathBits & isomap::common::path::bitDownLeft) );
             }
             if ( x < m_renderTerrain->width() - 1 ) {
-                highlightTile( x + 1, y - 1, (pathBits & isomap::common::path::bitDownRight) != 0 );
+                m_cursor.highlightTile( x + 1, y - 1, (pathBits & isomap::common::path::bitDownRight) != 0 );
             }
         }
         if ( x > 0 ) {
-            highlightTile( x - 1, y, (pathBits & isomap::common::path::bitLeft) != 0 );
+            m_cursor.highlightTile( x - 1, y, (pathBits & isomap::common::path::bitLeft) != 0 );
         }
         if ( x < m_renderTerrain->width() - 1 ) {
-            highlightTile( x + 1, y, (pathBits & isomap::common::path::bitRight) != 0 );
+            m_cursor.highlightTile( x + 1, y, (pathBits & isomap::common::path::bitRight) != 0 );
         }
     }
 
@@ -910,23 +910,12 @@ void MainWindow::renderPathMap( int x, int y ) {
 
 void MainWindow::renderStructurePlacement( int x, int y ) {
     auto* structureType = isomap::common::StructureType::get( m_structureType );
-    highlightFootPrint( x, y,
+    m_cursor.highlightFootPrint( x, y,
                         structureType->footPrint( m_structureOrientation ),
                         m_controllingPlayer->controller()->canPlace( x, y, structureType, m_structureOrientation ) );
 }
 
 
-void MainWindow::highlightTile( int x, int y, bool green ) {
-    m_renderTerrain->renderer()->addHighlight( isomap::common::Area( x, y, 1, 1 ), green ? vl::green : vl::red );
-}
-
-void MainWindow::highlightFootPrint( int x, int y, isomap::common::FootPrint* footPrint, bool green ) {
-    m_renderTerrain->renderer()->highLight( isomap::common::Area( x, y, footPrint ), green ? vl::green : vl::red );
-}
-
-void MainWindow::highlightStructure( isomap::client::Structure* structure, bool green ) {
-    highlightFootPrint( structure->x(), structure->y(), structure->footPrint(), green );
-}
 
 void MainWindow::place( int x, int y ) {
     m_cursorX = x;
@@ -943,7 +932,7 @@ void MainWindow::place( int x, int y ) {
         case DeleteStructure:
             // FIXME: shouldn't be using server structure here but client...
             if ( x >= 0 && x < m_serverMatch->terrain()->width() && y >= 0 && y < m_serverMatch->terrain()->height() ) {
-                auto* structure = m_serverMatch->terrain()->getStructureAt( x, y );
+                auto* structure = m_serverMatch->terrain()->getObstructingStructureAt( x, y );
                 if ( structure != nullptr && structure->player()->id() == m_controllingPlayer->id() ) {
                     structure->destroy();
                 }
@@ -983,7 +972,8 @@ void MainWindow::place( int x, int y ) {
         case MoveUnit:
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
                 auto* unitAtCursor = m_renderTerrain->getUnitAt( x, y );
-                auto* structureAtCursor = m_renderTerrain->getStructureAt( x, y );
+                printf( "Unit at cursor: %p\n", unitAtCursor );
+                auto* structureAtCursor = m_renderTerrain->getObstructingStructureAt( x, y );
                 auto* selectedUnit = m_controllingPlayer->getUnit( m_selectedUnit );
                 if ( unitAtCursor != nullptr ) {
                     if ( unitAtCursor->player()->id() == m_controllingPlayer->id() ) {
@@ -995,10 +985,12 @@ void MainWindow::place( int x, int y ) {
                             if ( structureAtCursor->player() == m_controllingPlayer ) {
                                 selectedUnit->controller()->construct( structureAtCursor );
                             } else {
-                                selectedUnit->controller()->moveTo( structureAtCursor );
+                                selectedUnit->controller()->moveTo(
+                                        isomap::client::unit::AdjacentToStructurePathCondition( structureAtCursor ) );
                             }
                         } else {
-                            selectedUnit->controller()->moveTo( x, y );
+                            selectedUnit->controller()->moveTo(
+                                    isomap::client::unit::PositionPathCondition( y * m_renderTerrain->width() + x ) );
                         }
                     }
                 }
@@ -1037,6 +1029,7 @@ void MainWindow::updateText() {
             m_text->setText( vl::Say( "FPS %n\n"
                                       "Mode: %s\n"
                                       "Player: %s\n"
+                                      "Credits: %n/%n\n"
                                       "Structure Type Id %n\n"
                                       "Structure Type Name %s\n"
                                       "Orientation %n\n"
@@ -1046,6 +1039,8 @@ void MainWindow::updateText() {
                                      << fps()
                                      << getModeName()
                                      << m_controllingPlayer->name()
+                                     << m_controllingPlayer->credits()
+                                     << m_controllingPlayer->maxCredits()
                                      << m_structureType
                                      << isomap::common::StructureType::get( m_structureType )->name()
                                      << m_structureOrientation
@@ -1063,7 +1058,7 @@ void MainWindow::updateText() {
             bool canDelete = false;
             if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
                  m_cursorY < m_renderTerrain->height() ) {
-                structure = m_renderTerrain->getStructureAt( m_cursorX, m_cursorY );
+                structure = m_renderTerrain->getObstructingStructureAt( m_cursorX, m_cursorY );
                 if ( structure != nullptr ) {
                     canDelete = structure->player()->id() == m_controllingPlayer->id();
                 }
@@ -1072,6 +1067,7 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "Structure Id: %n\n"
                                           "Structure Owner: %s\n"
                                           "Structure Type Id: %n\n"
@@ -1083,6 +1079,8 @@ void MainWindow::updateText() {
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << structure->id()
                                          << structure->player()->name()
                                          << structure->type()->id()
@@ -1095,11 +1093,14 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "X: %n\n"
                                           "Y: %n" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << m_cursorX
                                          << m_cursorY );
             }
@@ -1116,6 +1117,7 @@ void MainWindow::updateText() {
                         m_text->setText( vl::Say( "FPS %n\n"
                                                   "Mode: %s\n"
                                                   "Player: %s\n"
+                                                  "Credits: %n/%n\n"
                                                   "Unit Type Id %n\n"
                                                   "Unit Type Name %s\n"
                                                   "Orientation %n\n"
@@ -1125,6 +1127,8 @@ void MainWindow::updateText() {
                                                  << fps()
                                                  << getModeName()
                                                  << m_controllingPlayer->name()
+                                                 << m_controllingPlayer->credits()
+                                                 << m_controllingPlayer->maxCredits()
                                                  << m_unitType
                                                  << isomap::common::UnitType::get( m_unitType )->name()
                                                  << m_structureOrientation
@@ -1134,6 +1138,7 @@ void MainWindow::updateText() {
                         m_text->setText( vl::Say( "FPS %n\n"
                                                   "Mode: %s\n"
                                                   "Player: %s\n"
+                                                  "Credits: %n/%n\n"
                                                   "Unit Type Id %n\n"
                                                   "Unit Type Name %s\n"
                                                   "Orientation %n\n"
@@ -1143,6 +1148,8 @@ void MainWindow::updateText() {
                                                  << fps()
                                                  << getModeName()
                                                  << m_controllingPlayer->name()
+                                                 << m_controllingPlayer->credits()
+                                                 << m_controllingPlayer->maxCredits()
                                                  << m_unitType
                                                  << isomap::common::UnitType::get( m_unitType )->name()
                                                  << m_structureOrientation
@@ -1153,6 +1160,7 @@ void MainWindow::updateText() {
                     m_text->setText( vl::Say( "FPS %n\n"
                                               "Mode: %s\n"
                                               "Player: %s\n"
+                                              "Credits: %n/%n\n"
                                               "Unit Type Id %n\n"
                                               "Unit Type Name %s\n"
                                               "Orientation %n\n"
@@ -1162,6 +1170,8 @@ void MainWindow::updateText() {
                                              << fps()
                                              << getModeName()
                                              << m_controllingPlayer->name()
+                                             << m_controllingPlayer->credits()
+                                             << m_controllingPlayer->maxCredits()
                                              << m_unitType
                                              << isomap::common::UnitType::get( m_unitType )->name()
                                              << m_structureOrientation
@@ -1172,6 +1182,7 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "Unit Type Id %n\n"
                                           "Unit Type Name %s\n"
                                           "Orientation %n\n"
@@ -1181,6 +1192,8 @@ void MainWindow::updateText() {
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << m_unitType
                                          << isomap::common::UnitType::get( m_unitType )->name()
                                          << m_structureOrientation
@@ -1203,6 +1216,7 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "Unit Id: %n\n"
                                           "Unit Owner: %s\n"
                                           "Unit Type Id: %n\n"
@@ -1215,6 +1229,8 @@ void MainWindow::updateText() {
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << unit->id()
                                          << unit->player()->name()
                                          << unit->type()->id()
@@ -1228,11 +1244,14 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "X: %n\n"
                                           "Y: %n" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << m_cursorX
                                          << m_cursorY );
             }
@@ -1253,6 +1272,7 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "Unit Id: %n\n"
                                           "Unit Owner: %s\n"
                                           "Unit Type Id: %n\n"
@@ -1265,6 +1285,8 @@ void MainWindow::updateText() {
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << unit->id()
                                          << unit->player()->name()
                                          << unit->type()->id()
@@ -1278,11 +1300,14 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "X: %n\n"
                                           "Y: %n" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << m_cursorX
                                          << m_cursorY );
             }
@@ -1295,6 +1320,7 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "Unit Id: %n\n"
                                           "Unit Owner: %s\n"
                                           "Unit Type Id: %n\n"
@@ -1308,6 +1334,8 @@ void MainWindow::updateText() {
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << unit->id()
                                          << unit->player()->name()
                                          << unit->type()->id()
@@ -1322,11 +1350,14 @@ void MainWindow::updateText() {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"
                                           "Player: %s\n"
+                                          "Credits: %n/%n\n"
                                           "X: %n\n"
                                           "Y: %n" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
                                          << m_cursorX
                                          << m_cursorY );
             }
@@ -1417,4 +1448,9 @@ const char* MainWindow::getModeName() const {
             return "Move Unit (M)";
     }
     return "Unknown";
+}
+
+void MainWindow::updateEvent() {
+    Applet::updateEvent();
+    m_renderTerrain->renderer()->clearHighlight();
 }

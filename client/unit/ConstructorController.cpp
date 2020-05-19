@@ -3,6 +3,7 @@
 #include "../Structure.h"
 #include "../Unit.h"
 #include "WorkProvider.h"
+#include "AdjacentToStructurePathCondition.h"
 
 namespace isomap {
     namespace client {
@@ -22,7 +23,7 @@ namespace isomap {
                         return true;
                     }
                 } else {
-                    if ( Controller::moveTo( structure ) ) {
+                    if ( Controller::moveTo( AdjacentToStructurePathCondition( structure ) ) ) {
                         setStructure( structure );
                         return true;
                     }
@@ -46,16 +47,17 @@ namespace isomap {
                         break;
 
                     case common::UnitServerMessage::Done:
-                        onDone();
+                        onMove();
                         break;
 
                     case common::UnitServerMessage::Abort:
                         onAbort();
                         break;
                 }
+                Controller::onMessage( msgType );
             }
 
-            void ConstructorController::onDone() {
+            void ConstructorController::onMove() {
                 switch ( unit()->lastState() ) {
                     case common::Moving: // reached target
                         //printf( "Reached target, start constructing\n" );
@@ -106,7 +108,8 @@ namespace isomap {
 
             void ConstructorController::moveTo() {
                 m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                if ( m_currentStructure == nullptr || !Controller::moveTo( m_currentStructure ) ) {
+                if ( m_currentStructure == nullptr || !Controller::moveTo(
+                        AdjacentToStructurePathCondition( m_currentStructure ) ) ) {
                     printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
                             unit()->id(),
                             m_currentStructureId );

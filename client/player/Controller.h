@@ -44,7 +44,7 @@ namespace isomap {
 
                 virtual void update() = 0;
 
-                virtual void onUnitCreated( Unit* unit ) = 0;
+                virtual void onUnitCreated( Unit* unit, id_t structureId ) = 0;
 
                 virtual void onUnitDestroyed( Unit* unit ) = 0;
 

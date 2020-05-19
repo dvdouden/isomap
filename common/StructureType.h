@@ -41,6 +41,14 @@ namespace isomap {
 
             UnitType* includedUnitType() const;
 
+            uint32_t creditStorage() const {
+                return m_creditStorage;
+            }
+
+            void setCreditStorage( uint32_t creditStorage ) {
+                m_creditStorage = creditStorage;
+            }
+
             static StructureType* get( id_t id );
 
             static void load();
@@ -55,6 +63,7 @@ namespace isomap {
             id_t m_spawnUnitId = 0;
             FootPrint* m_footPrint[4];
             std::string m_name;
+            uint32_t m_creditStorage = 0;
         };
     }
 }

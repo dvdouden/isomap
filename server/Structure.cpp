@@ -51,7 +51,10 @@ namespace isomap {
                 m_data.constructionProgress++;
                 if ( m_data.constructionProgress == 100 ) {
                     if ( m_type->includedUnitType() != nullptr ) {
-                        player()->registerNewUnit( spawnUnit() );
+                        player()->registerNewUnit( spawnUnit(), id() );
+                    }
+                    if ( m_type->creditStorage() != 0 ) {
+                        player()->updateMaxCredits();
                     }
                 }
             }

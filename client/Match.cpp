@@ -66,6 +66,8 @@ namespace isomap {
                     for ( auto& player : m_players ) {
                         player.second->startMatch();
                     }
+                    m_player->setCredits( msg->startCredits() );
+                    m_player->setMaxCredits( msg->maxCredits() );
                     break;
                 }
 

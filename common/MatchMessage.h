@@ -82,7 +82,7 @@ namespace isomap {
 
             static MatchServerMessage* initTerrain( uint32_t width, uint32_t height );
 
-            static MatchServerMessage* matchStarted();
+            static MatchServerMessage* matchStarted( uint32_t startCredits, uint32_t maxCredits );
 
             static MatchServerMessage* matchUpdate( uint32_t time );
 
@@ -108,6 +108,14 @@ namespace isomap {
                 return m_time;
             }
 
+            uint32_t startCredits() const {
+                return m_startCredits;
+            }
+
+            uint32_t maxCredits() const {
+                return m_maxCredits;
+            }
+
             PlayerServerMessage* playerMsg() {
                 return m_playerServerMessage;
             }
@@ -127,6 +135,8 @@ namespace isomap {
             id_t m_id = 0;
             std::string m_name;
             uint32_t m_time = 0;
+            uint32_t m_startCredits = 0;
+            uint32_t m_maxCredits = 0;
 
             PlayerServerMessage* m_playerServerMessage = nullptr;
 

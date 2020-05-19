@@ -27,8 +27,13 @@ namespace isomap {
             const uint8_t bitConstructed = 0b0000'0010u;
             const uint8_t bitReserved = 0b0000'0100u;
             const uint8_t bitSpawnPoint = 0b0000'1000u;
-            const uint8_t maskStructureBits = uint8_t( bitObstructed | bitConstructed ) | bitSpawnPoint;
+            const uint8_t bitDockingPoint = 0b0001'0000u;
+            const uint8_t bitDockAndSpawn = bitSpawnPoint | bitDockingPoint;
+            const uint8_t maskStructureBits = uint8_t(
+                    uint32_t( bitObstructed ) | bitConstructed | bitSpawnPoint | bitDockingPoint );
         }
+
+        int8_t slope( uint8_t slopeBits, uint8_t orientation );
 
         // common data structure and methods
         struct TerrainData {

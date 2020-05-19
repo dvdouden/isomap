@@ -1,5 +1,6 @@
 #include "AutonomousUnitsController.h"
 #include "../unit/ConstructorController.h"
+#include "../unit/HarvesterController.h"
 #include "../Player.h"
 
 namespace isomap {
@@ -16,15 +17,18 @@ namespace isomap {
                 }
             }
 
-            void AutonomousUnitsController::onUnitCreated( Unit* unit ) {
+            void AutonomousUnitsController::onUnitCreated( Unit* unit, id_t structureId ) {
                 if ( unit->type()->canConstruct() ) {
                     unit->setController( new unit::ConstructorController( unit ) );
                     if ( m_constructionController ) {
                         m_constructionController->addConstructor( unit );
                     }
+                } else if ( unit->type()->canHarvest() ) {
+                    unit->setController( new unit::HarvesterController( unit ) );
                 } else {
                     unit->setController( new unit::Controller( unit ) );
                 }
+                unit->controller()->assignStructure( structureId );
             }
 
             void AutonomousUnitsController::onUnitDestroyed( Unit* unit ) {

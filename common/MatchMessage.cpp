@@ -81,8 +81,10 @@ namespace isomap {
         }
 
         MatchServerMessage*
-        MatchServerMessage::matchStarted() {
+        MatchServerMessage::matchStarted( uint32_t startCredits, uint32_t maxCredits ) {
             auto* msg = new MatchServerMessage( MatchStarted );
+            msg->m_startCredits = startCredits;
+            msg->m_maxCredits = maxCredits;
             return msg;
         }
 

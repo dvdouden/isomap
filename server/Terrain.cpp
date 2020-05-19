@@ -72,7 +72,7 @@ namespace isomap {
             }
         }
 
-        std::vector<uint32_t> Terrain::getChunks( Structure* structure ) {
+        std::vector<uint32_t> Terrain::getChunks( Structure* structure ) const {
             std::vector<uint32_t> chunks;
             uint32_t x1 = structure->x() / m_chunkSize;
             uint32_t y1 = structure->y() / m_chunkSize;
@@ -86,16 +86,27 @@ namespace isomap {
             return std::move( chunks );
         }
 
-        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) {
+        uint32_t Terrain::getChunk( uint32_t x, uint32_t y ) const {
             uint32_t chunkX = x / m_chunkSize;
             uint32_t chunkY = y / m_chunkSize;
             return chunkY * (m_width / m_chunkSize) + chunkX;
         }
 
-        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) {
-            if ( (m_data.occupancyMap[y * m_width + x] & 0b0000'0001u) == 0 ) {
+        Structure* Terrain::getObstructingStructureAt( uint32_t x, uint32_t y ) const {
+            if ( (m_data.occupancyMap[y * m_width + x] & common::occupancy::bitObstructed) == 0 ) {
                 return nullptr;
             }
+            return getStructureAt( x, y );
+        }
+
+        Structure* Terrain::getConstructedStructureAt( uint32_t x, uint32_t y ) const {
+            if ( (m_data.occupancyMap[y * m_width + x] & common::occupancy::bitConstructed) == 0 ) {
+                return nullptr;
+            }
+            return getStructureAt( x, y );
+        }
+
+        Structure* Terrain::getStructureAt( uint32_t x, uint32_t y ) const {
             uint32_t chunk = getChunk( x, y );
             for ( Structure* structure : m_structures[chunk] ) {
                 if ( structure->occupies( x, y ) ) {

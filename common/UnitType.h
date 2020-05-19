@@ -39,6 +39,12 @@ namespace isomap {
                 return m_maxPayload;
             }
 
+            void setDockStructureType( id_t dockStructureTypeId );
+
+            id_t dockStructureType() const {
+                return m_dockStructureId;
+            }
+
             static UnitType* get( id_t id );
 
             static void load();
@@ -54,6 +60,7 @@ namespace isomap {
             bool m_canConstruct;
             bool m_canHarvest;
             uint32_t m_maxPayload = 0;
+            id_t m_dockStructureId = 0;
 
         };
 

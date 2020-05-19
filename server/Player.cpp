@@ -28,6 +28,7 @@ namespace isomap {
             auto size = m_terrain->width() * m_terrain->height();
             m_fogMap = new uint8_t[size]();
             m_uncoveredTiles.clear();
+            m_dirty = true;
         }
 
         void Player::unFog( int32_t tile_x, int32_t tile_y, int32_t radius ) {
@@ -60,7 +61,7 @@ namespace isomap {
             m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( m_terrain->uncoverAll() ) );
         }
 
-        void Player::update() {
+        common::PlayerServerMessage* Player::update() {
             //printf( "Player %s update!\n", m_name.c_str() );
             auto* scratch = m_fogMap;
             for ( uint32_t y = 0; y < m_terrain->height(); ++y ) {
@@ -75,13 +76,18 @@ namespace isomap {
             if ( terrainMessage != nullptr ) {
                 m_match->enqueueMessage( m_id, common::MatchServerMessage::terrainMsg( terrainMessage ) );
             }
+            if ( m_dirty ) {
+                m_dirty = false;
+                return common::PlayerServerMessage::statusMsg( m_credits, m_maxCredits );
+            }
+            return nullptr;
         }
 
         common::TerrainMessage* Player::terrainUpdateMessage() {
             for ( uint32_t tile : m_uncoveredTiles ) {
                 uint32_t x = tile % m_terrain->width();
                 uint32_t y = tile / m_terrain->width();
-                Structure* str = m_terrain->getStructureAt( x, y );
+                Structure* str = m_terrain->getObstructingStructureAt( x, y );
                 if ( str != nullptr ) {
                     if ( !str->isSubscribed( this ) ) {
                         str->subscribe( this );
@@ -138,7 +144,7 @@ namespace isomap {
                 case common::PlayerCommandMessage::BuildUnit: {
                     auto* unit = new Unit( this, msg->x(), msg->y(), msg->z(),
                                            common::UnitType::get( msg->id() ), msg->orientation() );
-                    registerNewUnit( unit );
+                    registerNewUnit( unit, 0 );
                     break;
                 }
 
@@ -192,8 +198,12 @@ namespace isomap {
             m_match->enqueueMessage( structure, common::PlayerServerMessage::structureDestroyedMsg( structure->id() ) );
             m_terrain->removeStructure( structure );
             m_structures.erase( structure->id() );
+            bool updateCreditStorage = structure->type()->creditStorage() != 0;
             // FIXME: this will invalidate iterators, so can't be called from Match::update!
             m_match->removeObject( structure );
+            if ( updateCreditStorage ) {
+                updateMaxCredits();
+            }
         }
 
         void Player::destroyUnit( Unit* unit ) {
@@ -205,13 +215,32 @@ namespace isomap {
             m_match->removeObject( unit );
         }
 
+        void Player::updateMaxCredits() {
+            //printf( "[%s] updating max credits (was %d)\n", m_name.c_str(), m_maxCredits );
+            uint32_t oldMaxCredits = m_maxCredits;
+            m_maxCredits = m_match->startCredits();
+            for ( auto& structure : m_structures ) {
+                m_maxCredits += structure.second->type()->creditStorage();
+            }
+            if ( m_maxCredits > m_match->creditLimit() ) {
+                m_maxCredits = m_match->creditLimit();
+            }
+            if ( oldMaxCredits != m_maxCredits ) {
+                //printf( "is now %d\n", m_maxCredits );
+                if ( m_credits > m_maxCredits ) {
+                    m_credits = m_maxCredits;
+                }
+                markDirty();
+            }
+        }
+
         void Player::dump() {
             printf( "server Player %08X [%s]:\n", m_id, m_name.c_str() );
-            printf( "%d structures\n", m_structures.size() );
+            printf( "%lu structures\n", m_structures.size() );
             for ( auto& structure : m_structures ) {
                 structure.second->dump();
             }
-            printf( "%d units\n", m_units.size() );
+            printf( "%lu units\n", m_units.size() );
             for ( auto& unit : m_units ) {
                 unit.second->dump();
             }
@@ -233,8 +262,8 @@ namespace isomap {
             return unit->second;
         }
 
-        void Player::registerNewUnit( Unit* unit ) {
-            m_match->enqueueMessage( unit, common::PlayerServerMessage::unitCreatedMsg( unit->data() ) );
+        void Player::registerNewUnit( Unit* unit, id_t structureId ) {
+            m_match->enqueueMessage( unit, common::PlayerServerMessage::unitCreatedMsg( unit->data(), structureId ) );
             unFog( unit->tileX(), unit->tileY(), 10 );
             m_match->addObject( unit );
             m_terrain->addUnit( unit );

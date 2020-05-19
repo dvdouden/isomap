@@ -28,7 +28,7 @@ namespace isomap {
 
             void setTerrain( Terrain* terrain );
 
-            void update();
+            common::PlayerServerMessage* update();
 
             void unFog( int32_t tile_x, int32_t tile_y, int32_t radius );
 
@@ -70,7 +70,58 @@ namespace isomap {
 
             Unit* getUnit( id_t id ) const;
 
-            void registerNewUnit( Unit* unit );
+            void registerNewUnit( Unit* unit, id_t structureId );
+
+            void setCredits( uint32_t credits ) {
+                m_credits = credits;
+            }
+
+            void setMaxCredits( uint32_t maxCredits ) {
+                m_maxCredits = maxCredits;
+            }
+
+            uint32_t incCredits( uint32_t amount ) {
+                uint32_t maxAmount = m_maxCredits - m_credits;
+                if ( amount > maxAmount ) {
+                    amount = maxAmount;
+                }
+
+                if ( amount == 0 ) {
+                    return 0;
+                }
+
+                m_credits += amount;
+
+                if ( m_credits % 64 == 0 || m_credits == m_maxCredits ) {
+                    m_dirty = true;
+                }
+                return amount;
+            }
+
+            uint32_t decCredits( uint32_t amount ) {
+                if ( amount > m_credits ) { ;
+                    return false;
+                }
+                m_credits -= amount;
+                if ( m_credits % 64 == 0 ) {
+                    m_dirty = true;
+                }
+                return amount;
+            }
+
+            uint32_t credits() const {
+                return m_credits;
+            }
+
+            uint32_t maxCredits() const {
+                return m_maxCredits;
+            }
+
+            void markDirty() {
+                m_dirty = true;
+            }
+
+            void updateMaxCredits();
 
             void dump();
 
@@ -81,6 +132,10 @@ namespace isomap {
             Terrain* m_terrain = nullptr;
             Match* m_match = nullptr;
             bool m_ready = false;
+            uint32_t m_credits = 0;
+            uint32_t m_maxCredits = 0;
+
+            bool m_dirty = false;
 
             std::set<uint32_t> m_uncoveredTiles;
 

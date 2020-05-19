@@ -19,9 +19,7 @@ namespace isomap {
 
                 Controller& operator=( const Controller& ) = delete;
 
-                bool moveTo( uint32_t x, uint32_t y );
-
-                bool moveTo( Structure* structure );
+                bool moveTo( const PathCondition& pathCondition );
 
                 virtual bool construct( Structure* structure );
 
@@ -47,13 +45,24 @@ namespace isomap {
                     return m_workProvider;
                 }
 
+                void assignStructure( id_t structureId ) {
+                    m_assignedStructureId = structureId;
+                }
+
+                id_t assignedStructureId() const {
+                    return m_assignedStructureId;
+                }
+
+                Structure* assignedStructure();
+
             private:
-                bool moveTo( uint32_t x, uint32_t y, Structure* structure );
+                void onMove();
 
                 Unit* m_unit;
                 std::vector<common::WayPoint> m_wayPoints;
                 WorkProvider* m_workProvider = nullptr;
 
+                id_t m_assignedStructureId = 0;
             };
         }
 

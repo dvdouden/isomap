@@ -32,6 +32,8 @@ namespace isomap {
             //printf( "Client Session[%s] Player %s process server msg of type %d\n", m_match->player()->name().c_str(), m_name.c_str(), msg->type() );
             switch ( msg->type() ) {
                 case common::PlayerServerMessage::Status:
+                    m_credits = msg->credits();
+                    m_maxCredits = msg->maxCredits();
                     break;
 
                 case common::PlayerServerMessage::BuildStructureAccepted: {
@@ -105,7 +107,7 @@ namespace isomap {
                     }
                     m_terrain->addUnit( unit );
                     if ( m_controller ) {
-                        m_controller->onUnitCreated( unit );
+                        m_controller->onUnitCreated( unit, msg->id() );
                     }
                     break;
                 }
@@ -227,14 +229,15 @@ namespace isomap {
             if ( m_controller ) {
                 m_controller->dump();
             }
-            printf( "%d structures\n", m_structures.size() );
+            printf( "%lu structures\n", m_structures.size() );
             for ( auto& structure : m_structures ) {
                 structure.second->dump();
             }
-            printf( "%d units\n", m_units.size() );
+            printf( "%lu units\n", m_units.size() );
             for ( auto& unit : m_units ) {
                 unit.second->dump();
             }
+            m_terrain->dump();
         }
     }
 
