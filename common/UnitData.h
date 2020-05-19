@@ -24,9 +24,9 @@ namespace isomap {
                 state = newState;
             }
 
-            uint32_t getOrientation( int32_t dX, int32_t dY );
+            static uint32_t getOrientation( int32_t dX, int32_t dY );
 
-            void getMotion( int32_t& dX, int32_t& dY, uint32_t orientation );
+            static void getMotion( int32_t& dX, int32_t& dY, uint32_t orientation );
 
             void updateMotion();
 

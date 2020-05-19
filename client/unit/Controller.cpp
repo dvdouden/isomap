@@ -259,18 +259,22 @@ namespace isomap {
                 }
                 if ( found ) {
                     printf( "Found a route!\n" );
+                    uint8_t lastOrientation = 8;
                     while ( targetIdx != startIdx ) {
-                        int wayPointX = (int)(targetIdx % width);
-                        int wayPointY = (int)(targetIdx / width);
+                        auto wayPointX = (int32_t)(targetIdx % width);
+                        auto wayPointY = (int32_t)(targetIdx / width);
+                        //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, wayPointX, wayPointY );
                         targetIdx = nodeMap[targetIdx].from;
-                        // FIXME: reduce nr of waypoints!
-                        //int tile_x = (int)(targetIdx % width);
-                        //int tile_y = (int)(targetIdx / width);
-                        //unsigned char direction = getDirection( wayPointX - tile_x, wayPointY - tile_y );
-                        //if ( wayPoints.empty() || direction != wayPoints.back().direction ) {
-                        m_wayPoints.push_back( {wayPointX, wayPointY} );
-                        //}
-                        //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, tile_x, tile_y );
+
+                        auto tile_x = (int32_t)(targetIdx % width);
+                        auto tile_y = (int32_t)(targetIdx / width);
+                        uint8_t orientation = common::UnitData::getOrientation( wayPointX - tile_x,
+                                                                                wayPointY - tile_y );
+                        if ( m_wayPoints.empty() || orientation != lastOrientation ) {
+                            m_wayPoints.push_back( {wayPointX, wayPointY} );
+                            lastOrientation = orientation;
+                        }
+
                     }
                     m_unit->player()->controller()->enqueueMessage( m_unit->id(),
                                                                     common::UnitCommandMessage::moveMsg(
