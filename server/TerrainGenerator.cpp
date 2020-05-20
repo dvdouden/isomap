@@ -137,48 +137,6 @@ namespace isomap {
             return tmp;
         }
 
-        void TerrainGenerator::generateOreMap(
-                uint8_t* map,
-                uint32_t width,
-                uint32_t height,
-                math::rng& rnd ) {
-            uint32_t scale = 1u << m_oreScale;
-            uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
-            uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-
-            // create ore map
-            uint8_t* ore_map = diamondSquare( sdWidth, sdHeight, scale, m_oreNoise, rnd );
-            uint8_t* scr_o = ore_map;
-            for ( uint32_t i = 0; i < sdWidth * sdHeight; ++i ) {
-                if ( *scr_o >= m_oreThreshold ) {
-                    *scr_o = 0;
-                } else {
-                    // tiles with 0 have highest concentration
-                    // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
-                    uint32_t amount = (m_oreThreshold - *scr_o);
-                    // linear interpolation from (oreDensity * 2) to 1
-                    amount = ((m_oreDensity * 2) * amount) / m_oreThreshold;
-                    if ( amount > 255 ) {
-                        // clamp at 255
-                        amount = 255;
-                    } else if ( amount == 0 ) {
-                        // ensure a minimum of 1
-                        amount = 1;
-                    }
-                    *scr_o = amount;
-                }
-                ++scr_o;
-            }
-
-            // copy data to actual oremap
-            for ( int y = 0; y < height; ++y ) {
-                memcpy( map + (y * width), ore_map + (y * sdWidth), width );
-            }
-
-            delete[] ore_map;
-        }
-
-
         uint8_t safe_height( uint8_t* heightMap, uint32_t width, uint32_t height, int x, int y ) {
             if ( y < 0 ) y = 0;
             if ( y >= height ) y = height - 1;
@@ -188,45 +146,9 @@ namespace isomap {
         }
 
 
-        uint8_t
-        getCorner( const uint8_t* heightMap, const uint8_t* slopes, uint32_t width, uint32_t height, int x, int y,
-                   int i ) {
-            if ( x < 0 ) {
-                x = 0;
-                if ( i == 1 ) {
-                    i = 0;
-                } else if ( i == 2 ) {
-                    i = 3;
-                }
-            } else if ( x >= width ) {
-                x = (int)width - 1;
-                if ( i == 0 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 2;
-                }
-            }
-            if ( y < 0 ) {
-                y = 0;
-                if ( i == 2 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 0;
-                }
-            } else if ( y >= height ) {
-                y = (int)height - 1;
-                if ( i == 0 ) {
-                    i = 3;
-                } else if ( i == 1 ) {
-                    i = 2;
-                }
-            }
-            return heightMap[y * width + x] - (uint8_t( slopes[y * width + x] >> uint32_t( i ) ) & 0b0000'0001u);
-        }
-
-
         Terrain* TerrainGenerator::generate( uint32_t width, uint32_t height ) {
             auto* terrain = new Terrain( width, height );
+            auto& data = terrain->data();
 
             math::rng rnd( m_seed );
 
@@ -287,7 +209,7 @@ namespace isomap {
             delete[] tmpCliffMap;
 
             // copy data to actual map
-            uint8_t* heightMap = terrain->heightMap();
+            uint8_t* heightMap = data.heightMap;
             for ( int y = 0; y < height; ++y ) {
                 memcpy( heightMap + (y * width), tmpHeightMap + (y * sdWidth), width );
             }
@@ -350,7 +272,7 @@ namespace isomap {
             }
 
             // now calculate the corners of each tile
-            uint8_t* scratchSlope = terrain->slopeMap();
+            uint8_t* scratchSlope = data.slopeMap;
             for ( int y = 0; y < height; ++y ) {
                 for ( int x = 0; x < width; ++x ) {
                     auto h = heightMap[y * width + x];
@@ -385,47 +307,51 @@ namespace isomap {
             }
 
             // calculate if the tile has a cliff side
-            uint8_t* slopeMap = terrain->slopeMap();
-            for ( int y = 0; y < height; ++y ) {
-                for ( int x = 0; x < width; ++x ) {
-                    // get tile corners
-                    auto c0 = getCorner( heightMap, slopeMap, width, height, x, y, 0 );
-                    auto c1 = getCorner( heightMap, slopeMap, width, height, x, y, 1 );
-                    auto c2 = getCorner( heightMap, slopeMap, width, height, x, y, 2 );
-                    auto c3 = getCorner( heightMap, slopeMap, width, height, x, y, 3 );
+            data.updateCliffs();
 
-                    // get adjacent corners
-                    auto c03 = getCorner( heightMap, slopeMap, width, height, x, y - 1, 3 );
-                    auto c02 = getCorner( heightMap, slopeMap, width, height, x, y - 1, 2 );
-
-                    auto c10 = getCorner( heightMap, slopeMap, width, height, x + 1, y, 0 );
-                    auto c13 = getCorner( heightMap, slopeMap, width, height, x + 1, y, 3 );
-
-                    auto c21 = getCorner( heightMap, slopeMap, width, height, x, y + 1, 1 );
-                    auto c20 = getCorner( heightMap, slopeMap, width, height, x, y + 1, 0 );
-
-                    auto c32 = getCorner( heightMap, slopeMap, width, height, x - 1, y, 2 );
-                    auto c31 = getCorner( heightMap, slopeMap, width, height, x - 1, y, 1 );
-
-                    if ( c0 > c03 || c1 > c02 ) {
-                        slopeMap[y * width + x] |= 0b0001'0000u;
-                    }
-                    if ( c1 > c10 || c2 > c13 ) {
-                        slopeMap[y * width + x] |= 0b0010'0000u;
-                    }
-                    if ( c2 > c21 || c3 > c20 ) {
-                        slopeMap[y * width + x] |= 0b0100'0000u;
-                    }
-                    if ( c3 > c32 || c0 > c31 ) {
-                        slopeMap[y * width + x] |= 0b1000'0000u;
-                    }
-                }
-            }
-
-
-            generateOreMap( terrain->oreMap(), width, height, rnd );
+            generateOreMap( data, rnd );
 
             return terrain;
         }
+
+        void TerrainGenerator::generateOreMap(
+                common::TerrainData& data,
+                math::rng& rnd ) {
+            uint32_t scale = 1u << m_oreScale;
+            uint32_t sdWidth = ((data.mapWidth + (scale - 1)) / scale) * scale + 1;
+            uint32_t sdHeight = ((data.mapHeight + (scale - 1)) / scale) * scale + 1;
+
+            // create ore map
+            uint8_t* ore_map = diamondSquare( sdWidth, sdHeight, scale, m_oreNoise, rnd );
+            uint8_t* scr_o = ore_map;
+            for ( uint32_t i = 0; i < sdWidth * sdHeight; ++i ) {
+                if ( *scr_o >= m_oreThreshold ) {
+                    *scr_o = 0;
+                } else {
+                    // tiles with 0 have highest concentration
+                    // density runs from 0 (0%, all tiles minimum) to 255 (200% half tiles max)
+                    uint32_t amount = (m_oreThreshold - *scr_o);
+                    // linear interpolation from (oreDensity * 2) to 1
+                    amount = ((m_oreDensity * 2) * amount) / m_oreThreshold;
+                    if ( amount > 255 ) {
+                        // clamp at 255
+                        amount = 255;
+                    } else if ( amount == 0 ) {
+                        // ensure a minimum of 1
+                        amount = 1;
+                    }
+                    *scr_o = amount;
+                }
+                ++scr_o;
+            }
+
+            // copy data to actual ore map
+            for ( int y = 0; y < data.mapHeight; ++y ) {
+                memcpy( data.oreMap + (y * data.mapWidth), ore_map + (y * sdWidth), data.mapWidth );
+            }
+
+            delete[] ore_map;
+        }
+
     }
 }

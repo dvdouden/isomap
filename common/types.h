@@ -20,12 +20,6 @@ namespace isomap {
 
         class PlayerServerMessage;
 
-        class UnitCommandMessage;
-
-        class UnitServerMessage;
-
-        class UnitType;
-
         class StructureCommandMessage;
 
         struct StructureData;
@@ -36,7 +30,15 @@ namespace isomap {
 
         class TerrainMessage;
 
+        struct TerrainData;
+
+        class UnitCommandMessage;
+
         struct UnitData;
+
+        class UnitServerMessage;
+
+        class UnitType;
 
         enum UnitState {
             Idle,

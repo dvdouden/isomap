@@ -136,7 +136,7 @@ namespace isomap {
             }
 
         private:
-            void generateOreMap( uint8_t* map, uint32_t width, uint32_t height, math::rng& rnd );
+            void generateOreMap( common::TerrainData&, math::rng& rnd );
 
             uint32_t m_seed = 0;
 

@@ -26,6 +26,14 @@ namespace isomap {
                 return m_height;
             }
 
+            const common::TerrainData& data() const {
+                return m_data;
+            }
+
+            common::TerrainData& data() {
+                return m_data;
+            }
+
             uint8_t* heightMap() const {
                 return m_data.heightMap;
             }
