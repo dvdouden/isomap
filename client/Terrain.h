@@ -114,6 +114,10 @@ namespace isomap {
 
             uint8_t getCornerSafe( int x, int y, int c ) const;
 
+            common::TerrainData& data() {
+                return m_data;
+            }
+
             void dump() const;
 
         private:

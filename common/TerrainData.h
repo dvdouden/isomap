@@ -35,6 +35,8 @@ namespace isomap {
 
         int8_t slope( uint8_t slopeBits, uint8_t orientation );
 
+
+
         // common data structure and methods
         struct TerrainData {
             uint32_t mapWidth = 0;
@@ -66,6 +68,21 @@ namespace isomap {
             void updatePathMap();
 
             void updatePathMap( uint32_t x, uint32_t y, uint32_t width, uint32_t height );
+
+            void flatten( uint32_t x, uint32_t y );
+
+            void raise( uint32_t x, uint32_t y );
+
+            void lower( uint32_t x, uint32_t y );
+
+            uint8_t corner( int32_t x, int32_t y, uint32_t i ) const;
+
+            uint8_t calcCliffBits( uint32_t x, uint32_t y ) const;
+
+            void updateCliffs();
+
+            void updateCliffs( uint32_t x, uint32_t y, uint32_t width, uint32_t height );
+
         };
 
     }

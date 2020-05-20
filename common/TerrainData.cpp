@@ -204,5 +204,105 @@ namespace isomap {
             }
         }
 
+        void TerrainData::flatten( uint32_t x, uint32_t y ) {
+            uint32_t idx = y * mapWidth + x;
+            uint8_t slope = slopeMap[idx];
+            if ( (slope & 0b0000'1111u) != 0 ) {
+                slopeMap[idx] = 0;
+                updateCliffs( x, y, 1 , 1);
+            }
+        }
+
+        uint8_t TerrainData::corner( int32_t x, int32_t y, uint32_t i ) const {
+            if ( x < 0 ) {
+                x = 0;
+                if ( i == 1 ) {
+                    i = 0;
+                } else if ( i == 2 ) {
+                    i = 3;
+                }
+            } else if ( x >= mapWidth ) {
+                x = (int)mapWidth - 1;
+                if ( i == 0 ) {
+                    i = 1;
+                } else if ( i == 3 ) {
+                    i = 2;
+                }
+            }
+            if ( y < 0 ) {
+                y = 0;
+                if ( i == 2 ) {
+                    i = 1;
+                } else if ( i == 3 ) {
+                    i = 0;
+                }
+            } else if ( y >= mapHeight ) {
+                y = (int)mapHeight - 1;
+                if ( i == 0 ) {
+                    i = 3;
+                } else if ( i == 1 ) {
+                    i = 2;
+                }
+            }
+            uint32_t idx = y * mapWidth + x;
+            return heightMap[idx] - (uint8_t( slopeMap[idx] >> uint32_t( i ) ) & 0b0000'0001u);
+        }
+
+        uint8_t TerrainData::calcCliffBits( uint32_t x, uint32_t y ) const {
+            auto c0 = corner( x, y, 0 );
+            auto c1 = corner( x, y, 1 );
+            auto c2 = corner( x, y, 2 );
+            auto c3 = corner( x, y, 3 );
+
+            // get adjacent corners
+            auto c03 = corner( x, y - 1, 3 );
+            auto c02 = corner( x, y - 1, 2 );
+
+            auto c10 = corner( x + 1, y, 0 );
+            auto c13 = corner( x + 1, y, 3 );
+
+            auto c21 = corner( x, y + 1, 1 );
+            auto c20 = corner( x, y + 1, 0 );
+
+            auto c32 = corner( x - 1, y, 2 );
+            auto c31 = corner( x - 1, y, 1 );
+
+            uint8_t cliffBits = 0;
+
+            if ( c0 > c03 || c1 > c02 ) {
+                cliffBits |= 0b0001'0000u;
+            }
+            if ( c1 > c10 || c2 > c13 ) {
+                cliffBits |= 0b0010'0000u;
+            }
+            if ( c2 > c21 || c3 > c20 ) {
+                cliffBits |= 0b0100'0000u;
+            }
+            if ( c3 > c32 || c0 > c31 ) {
+                cliffBits |= 0b1000'0000u;
+            }
+            return cliffBits;
+        }
+
+
+        void TerrainData::updateCliffs() {
+            updateCliffs( 0, 0, mapWidth, mapHeight );
+        }
+
+        void TerrainData::updateCliffs( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+            uint32_t startX = x > 0 ? x - 1 : x;
+            uint32_t startY = y > 0 ? y - 1 : y;
+            uint32_t endX = std::min( x + width + 1, mapWidth );
+            uint32_t endY = std::min( y + height + 1, mapHeight );
+
+            for ( int tileY = startY; tileY < endY; ++tileY ) {
+                for ( int tileX = startX; tileX < endX; ++tileX ) {
+                    uint32_t idx = tileY * mapWidth + tileX;
+                    slopeMap[idx] = (slopeMap[idx] & 0b0000'1111u) | calcCliffBits( tileX, tileY );
+                }
+            }
+        }
+
+
     }
 }

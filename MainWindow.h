@@ -55,6 +55,7 @@ protected:
         DeleteUnit,
         SelectUnit,
         MoveUnit,
+        Flatten,
     };
 
     void updateProjection();

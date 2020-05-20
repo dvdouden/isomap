@@ -437,6 +437,11 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             m_mode = DeleteUnit;
             break;
 
+        case vl::Key_W: {
+            m_mode = Flatten;
+            break;
+        }
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -872,6 +877,9 @@ void MainWindow::highlight( int x, int y ) {
                 }
             }
             break;
+        case Flatten:
+            highlightTile( x, y, true );
+            break;
     }
 
 }
@@ -996,6 +1004,13 @@ void MainWindow::place( int x, int y ) {
             }
 
             break;
+
+        case Flatten: {
+            if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
+                m_renderTerrain->data().flatten( x, y );
+            }
+            break;
+        }
     }
 }
 
@@ -1361,6 +1376,49 @@ void MainWindow::updateText() {
                                          << m_cursorY );
             }
             break;
+        case Flatten:
+            if ( m_cursorX >= 0 && m_cursorX < m_renderTerrain->width() && m_cursorY >= 0 &&
+                 m_cursorY < m_renderTerrain->height() ) {
+                uint32_t idx = m_cursorY * m_renderTerrain->width() + m_cursorX;
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Credits: %n/%n\n"
+                                          "X: %n\n"
+                                          "Y: %n\n"
+                                          "Height: %n\n"
+                                          "Slope: %b08n\n"
+                                          "Ore: %n\n"
+                                          "Occupancy: %b08n\n"
+                                          "Path: %b08n\n"  )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
+                                         << m_cursorX
+                                         << m_cursorY
+                                         << m_renderTerrain->heightMap()[idx]
+                                         << m_renderTerrain->slopeMap()[idx]
+                                         << m_renderTerrain->oreMap()[idx]
+                                         << m_renderTerrain->occupancyMap()[idx]
+                                         << m_renderTerrain->pathMap()[idx]);
+            } else {
+                m_text->setText( vl::Say( "FPS %n\n"
+                                          "Mode: %s\n"
+                                          "Player: %s\n"
+                                          "Credits: %n/%n\n"
+                                          "X: %n\n"
+                                          "Y: %n" )
+                                         << fps()
+                                         << getModeName()
+                                         << m_controllingPlayer->name()
+                                         << m_controllingPlayer->credits()
+                                         << m_controllingPlayer->maxCredits()
+                                         << m_cursorX
+                                         << m_cursorY );
+            }
+            break;
     }
 /*
     m_text->setText( vl::Say( "FPS %n\n"
@@ -1445,6 +1503,8 @@ const char* MainWindow::getModeName() const {
             return "Select Unit (N)";
         case MoveUnit:
             return "Move Unit (M)";
+        case Flatten:
+            return "Flatten Landscape (W)";
     }
     return "Unknown";
 }

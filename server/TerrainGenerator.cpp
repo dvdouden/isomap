@@ -92,7 +92,7 @@ namespace isomap {
             }
         }
 
-        uint8_t* squareDiamond( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd,
+        uint8_t* diamondSquare( uint32_t width, uint32_t height, uint32_t scale, uint32_t noise, math::rng& rnd,
                                 uint8_t minHeight = 0, uint8_t maxHeight = 255, uint8_t shores = 0 ) {
             auto* tmp = new uint8_t[width * height];
             for ( uint32_t i = 0; i < width * height; ++i ) {
@@ -147,7 +147,7 @@ namespace isomap {
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
 
             // create ore map
-            uint8_t* ore_map = squareDiamond( sdWidth, sdHeight, scale, m_oreNoise, rnd );
+            uint8_t* ore_map = diamondSquare( sdWidth, sdHeight, scale, m_oreNoise, rnd );
             uint8_t* scr_o = ore_map;
             for ( uint32_t i = 0; i < sdWidth * sdHeight; ++i ) {
                 if ( *scr_o >= m_oreThreshold ) {
@@ -253,11 +253,11 @@ namespace isomap {
             uint32_t scale = 1u << m_heightScale;
             uint32_t sdWidth = ((width + (scale - 1)) / scale) * scale + 1;
             uint32_t sdHeight = ((height + (scale - 1)) / scale) * scale + 1;
-            uint8_t* tmpHeightMap = squareDiamond( sdWidth, sdHeight, scale, m_heightNoise, rnd, m_minHeight,
+            uint8_t* tmpHeightMap = diamondSquare( sdWidth, sdHeight, scale, m_heightNoise, rnd, m_minHeight,
                                                    m_maxHeight, grayCode[m_shoreBits] );
 
             // apply cliffs
-            uint8_t* tmpCliffMap = squareDiamond( sdWidth, sdHeight, 1u << m_cliffScale, m_cliffNoise, rnd );
+            uint8_t* tmpCliffMap = diamondSquare( sdWidth, sdHeight, 1u << m_cliffScale, m_cliffNoise, rnd );
             uint8_t* scratchHeightMap = tmpHeightMap;
             uint8_t* scratchCliffMap = tmpCliffMap;
             for ( int i = 0; i < sdWidth * sdHeight; ++i ) {
