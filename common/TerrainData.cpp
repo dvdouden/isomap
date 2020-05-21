@@ -1,4 +1,6 @@
 #include <list>
+#include <cstring>
+#include <vector>
 #include "FootPrint.h"
 #include "TerrainData.h"
 
@@ -206,79 +208,139 @@ namespace isomap {
 
         void TerrainData::flatten( uint32_t x, uint32_t y ) {
             uint32_t idx = y * mapWidth + x;
+            uint8_t h = heightMap[idx];
+
             uint8_t slope = slopeMap[idx];
             if ( (slope & 0b0000'1111u) != 0 ) {
-                slopeMap[idx] = 0;
-                updateCliffs( x, y, 1 , 1);
+                heightMap[idx] = h - 1;
+                if ( useSlopes ) {
+                    updateSlopes( x, y, 1, 1 );
+                }
+                updateCliffs( x, y, 1, 1 );
+                updatePathMap( x, y, 1, 1 );
             }
         }
 
-        uint8_t TerrainData::corner( int32_t x, int32_t y, uint32_t i ) const {
+        void TerrainData::flatten( uint32_t x, uint32_t y, uint8_t height ) {
+            uint32_t idx = y * mapWidth + x;
+            heightMap[idx] = height;
+/*
+            if ( x > 0 ) {
+                if ( heightMap[idx - 1] == height - 1 ) {
+                    heightMap[idx - 1] = height;
+                }
+            }
+            if ( x < mapWidth - 1 ) {
+                if ( heightMap[idx + 1] == height - 1 ) {
+                    heightMap[idx + 1] = height;
+                }
+            }
+
+            if ( y > 0 ) {
+                if ( heightMap[idx - mapWidth] == height - 1 ) {
+                    heightMap[idx - mapWidth] = height;
+                }
+            }
+            if ( y < mapHeight - 1 ) {
+                if ( heightMap[idx + mapWidth] == height - 1 ) {
+                    heightMap[idx + mapWidth] = height;
+                }
+            }
+            */
+            if ( useSlopes ) {
+                updateSlopes( x - 1, y - 1, 3, 3 );
+            }
+            updateCliffs( x - 1, y - 1, 3, 3 );
+            updatePathMap( x - 1, y - 1, 3, 3 );
+        }
+
+        uint8_t TerrainData::safeCorner( int32_t x, int32_t y, uint32_t c ) const {
             if ( x < 0 ) {
                 x = 0;
-                if ( i == 1 ) {
-                    i = 0;
-                } else if ( i == 2 ) {
-                    i = 3;
+                if ( c == 1 ) {
+                    c = 0;
+                } else if ( c == 2 ) {
+                    c = 3;
                 }
             } else if ( x >= mapWidth ) {
-                x = (int)mapWidth - 1;
-                if ( i == 0 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 2;
+                x = mapWidth - 1;
+                if ( c == 0 ) {
+                    c = 1;
+                } else if ( c == 3 ) {
+                    c = 2;
                 }
             }
             if ( y < 0 ) {
                 y = 0;
-                if ( i == 2 ) {
-                    i = 1;
-                } else if ( i == 3 ) {
-                    i = 0;
+                if ( c == 2 ) {
+                    c = 1;
+                } else if ( c == 3 ) {
+                    c = 0;
                 }
             } else if ( y >= mapHeight ) {
-                y = (int)mapHeight - 1;
-                if ( i == 0 ) {
-                    i = 3;
-                } else if ( i == 1 ) {
-                    i = 2;
+                y = mapHeight - 1;
+                if ( c == 0 ) {
+                    c = 3;
+                } else if ( c == 1 ) {
+                    c = 2;
                 }
             }
             uint32_t idx = y * mapWidth + x;
-            return heightMap[idx] - (uint8_t( slopeMap[idx] >> uint32_t( i ) ) & 0b0000'0001u);
+            return heightMap[idx] + (uint8_t( slopeMap[idx] >> uint32_t( c ) ) & 0b0000'0001u);
+        }
+
+        uint8_t TerrainData::corner( uint32_t x, uint32_t y, uint32_t c ) const {
+            uint32_t idx = y * mapWidth + x;
+            return heightMap[idx] + (uint8_t( slopeMap[idx] >> uint32_t( c ) ) & 0b0000'0001u);
+        }
+
+        uint8_t TerrainData::safeHeight( int32_t x, int32_t y ) const {
+            if ( y < 0 ) {
+                y = 0;
+            }
+            if ( y >= mapHeight ) {
+                y = mapHeight - 1;
+            }
+            if ( x < 0 ) {
+                x = 0;
+            }
+            if ( x >= mapWidth ) {
+                x = mapWidth - 1;
+            }
+            return heightMap[y * mapWidth + x];
         }
 
         uint8_t TerrainData::calcCliffBits( uint32_t x, uint32_t y ) const {
-            auto c0 = corner( x, y, 0 );
-            auto c1 = corner( x, y, 1 );
-            auto c2 = corner( x, y, 2 );
-            auto c3 = corner( x, y, 3 );
+            auto c0 = safeCorner( x, y, 0 );
+            auto c1 = safeCorner( x, y, 1 );
+            auto c2 = safeCorner( x, y, 2 );
+            auto c3 = safeCorner( x, y, 3 );
 
             // get adjacent corners
-            auto c03 = corner( x, y - 1, 3 );
-            auto c02 = corner( x, y - 1, 2 );
+            auto c03 = safeCorner( x, y - 1, 3 );
+            auto c02 = safeCorner( x, y - 1, 2 );
 
-            auto c10 = corner( x + 1, y, 0 );
-            auto c13 = corner( x + 1, y, 3 );
+            auto c10 = safeCorner( x + 1, y, 0 );
+            auto c13 = safeCorner( x + 1, y, 3 );
 
-            auto c21 = corner( x, y + 1, 1 );
-            auto c20 = corner( x, y + 1, 0 );
+            auto c21 = safeCorner( x, y + 1, 1 );
+            auto c20 = safeCorner( x, y + 1, 0 );
 
-            auto c32 = corner( x - 1, y, 2 );
-            auto c31 = corner( x - 1, y, 1 );
+            auto c32 = safeCorner( x - 1, y, 2 );
+            auto c31 = safeCorner( x - 1, y, 1 );
 
             uint8_t cliffBits = 0;
 
-            if ( c0 > c03 || c1 > c02 ) {
+            if ( c0 < c03 || c1 > c02 ) {
                 cliffBits |= 0b0001'0000u;
             }
-            if ( c1 > c10 || c2 > c13 ) {
+            if ( c1 > c10 || c2 < c13 ) {
                 cliffBits |= 0b0010'0000u;
             }
-            if ( c2 > c21 || c3 > c20 ) {
+            if ( c2 < c21 || c3 < c20 ) {
                 cliffBits |= 0b0100'0000u;
             }
-            if ( c3 > c32 || c0 > c31 ) {
+            if ( c3 < c32 || c0 < c31 ) {
                 cliffBits |= 0b1000'0000u;
             }
             return cliffBits;
@@ -301,6 +363,181 @@ namespace isomap {
                     slopeMap[idx] = (slopeMap[idx] & 0b0000'1111u) | calcCliffBits( tileX, tileY );
                 }
             }
+        }
+
+        void TerrainData::updateSlopes() {
+            updateSlopes( 0, 0, mapWidth, mapHeight );
+        }
+
+        void TerrainData::updateSlopes( uint32_t x, uint32_t y, uint32_t width, uint32_t height ) {
+            uint32_t startX = x > 0 ? x - 1 : x;
+            uint32_t startY = y > 0 ? y - 1 : y;
+            uint32_t endX = std::min( x + width + 1, mapWidth );
+            uint32_t endY = std::min( y + height + 1, mapHeight );
+
+            for ( int tileY = startY; tileY < endY; ++tileY ) {
+                for ( int tileX = startX; tileX < endX; ++tileX ) {
+                    uint32_t idx = tileY * mapWidth + tileX;
+                    slopeMap[idx] = calcSlopeBits( tileX, tileY );
+                    if ( slopeMap[idx] == 0b0000'1111u ) {
+                        slopeMap[idx] = 0;
+                        heightMap[idx]++;
+                    }
+                }
+            }
+        }
+
+        uint8_t TerrainData::calcSlopeBits( uint32_t tileX, uint32_t tileY ) const {
+            int32_t x = tileX;
+            int32_t y = tileY;
+            auto h = heightMap[y * mapWidth + x];
+            auto h1 = safeHeight( x - 1, y - 1 );
+            auto h2 = safeHeight( x, y - 1 );
+            auto h3 = safeHeight( x + 1, y - 1 );
+            auto h4 = safeHeight( x + 1, y );
+            auto h5 = safeHeight( x + 1, y + 1 );
+            auto h6 = safeHeight( x, y + 1 );
+            auto h7 = safeHeight( x - 1, y + 1 );
+            auto h8 = safeHeight( x - 1, y );
+            if ( h == h2 && h == h4 && h == h6 && h == h8 ) {
+                //return 0;
+            }
+
+            uint8_t slope = 0;
+            if ( (h8 > h || h1 > h || h2 > h) && !(h8 > h + 1 || h1 > h + 1 || h2 > h + 1) ) {
+                slope |= 0b0000'0001u;
+            }
+
+            if ( (h2 > h || h3 > h || h4 > h) && !(h2 > h + 1 || h3 > h + 1 || h4 > h + 1) ) {
+                slope |= 0b0000'0010u;
+            }
+
+            if ( (h4 > h || h5 > h || h6 > h) && !(h4 > h + 1 || h5 > h + 1 || h6 > h + 1) ) {
+                slope |= 0b0000'0100u;
+            }
+
+            if ( (h6 > h || h7 > h || h8 > h) && !(h6 > h + 1 || h7 > h + 1 || h8 > h + 1) ) {
+                slope |= 0b0000'1000u;
+            }
+/*
+            if ( h == h2 ) {
+                slope &= 0b0000'1100u;
+            }
+            if ( h == h4 ) {
+                slope &= 0b0000'1001u;
+            }
+            if ( h == h6 ) {
+                slope &= 0b0000'0011u;
+            }
+            if ( h == h8 ) {
+                slope &= 0b0000'0110u;
+            }
+*/
+            return slope;
+        }
+
+        void TerrainData::toggleSlopes() {
+            useSlopes = !useSlopes;
+            if ( !useSlopes ) {
+                memset( slopeMap, 0, mapWidth * mapHeight );
+            } else {
+                updateSlopes();
+            }
+            updateCliffs();
+            updatePathMap();
+        }
+
+        void TerrainData::raise( uint32_t x, uint32_t y ) {
+            uint32_t idx = y * mapWidth + x;
+            heightMap[idx]++;
+            if ( useSlopes ) {
+                updateSlopes( x, y, 1, 1 );
+            }
+            updateCliffs( x, y, 1, 1);
+        }
+
+        void TerrainData::lower( uint32_t x, uint32_t y ) {
+            uint32_t idx = y * mapWidth + x;
+            heightMap[idx]--;
+            if ( useSlopes ) {
+                updateSlopes( x, y, 1, 1 );
+            }
+            updateCliffs( x, y, 1, 1);
+        }
+
+        void TerrainData::incSlope( uint32_t x, uint32_t y ) {
+            uint32_t idx = y * mapWidth + x;
+            uint8_t slope = slopeMap[idx];
+            slopeMap[idx] = (slope + 1u) % 16u;
+            updateCliffs( x, y, 1, 1);
+        }
+
+        void TerrainData::splode( uint32_t origX, uint32_t origY, uint32_t radius ) {
+
+            std::vector<std::pair<uint32_t, int8_t>> radii;
+
+            // calculate crater shape
+            for ( int32_t r = 0; r < radius; ++r ) {
+                radii.emplace_back( r * r, -(radius - r) / 2 );
+                //printf( "crater %d (%d) = %d\n", r, radii.back().first, radii.back().second );
+            }
+
+            uint32_t lipWidth = radius / 2;
+            // calculate lip shape
+            for ( int32_t r = 0; r <= lipWidth; ++r ) {
+                if ( r <= lipWidth / 2 ) {
+                    radii.emplace_back( (radius + r) * (radius + r), r / 2 );
+                } else {
+                    radii.emplace_back( (radius + r) * (radius + r), (lipWidth - r) / 2 );
+                }
+                //printf( "lip %d (%d) = %d\n", r, radii.back().first, radii.back().second );
+            }
+
+            int8_t level = heightMap[origY * mapWidth + origX];
+
+            radius += lipWidth;
+            uint32_t startY = radius > origY  ? 0 : origY - radius;
+            uint32_t endY = radius + origY > mapHeight - 1 ? mapHeight - 1 : origY + radius;
+            uint32_t startX = radius > origX  ? 0 : origX - radius;
+            uint32_t endX = radius + origX > mapWidth - 1? mapWidth - 1 : origX + radius;
+
+            for ( int32_t y = startY; y <= endY; ++y ) {
+                if ( y < 0 || y >= mapHeight ) {
+                    continue;
+                }
+
+                int32_t deltaY = (y - int32_t(origY)) * (y - int32_t(origY));
+                for ( int32_t x = startX; x <= endX; ++x ) {
+                    if ( x < 0 || x >= mapWidth ) {
+                        continue;
+                    }
+                    int32_t deltaX = (x - int32_t(origX)) * (x - int32_t(origX));
+
+                    for ( auto& r : radii ) {
+                        if ( deltaX + deltaY <= r.first ) {
+                            int8_t newLevel = level + r.second;
+                            //printf( "%d, %d in range %d, (%d) new level: %d\n", x, y, r.first, r.second, newLevel );
+                            if ( newLevel < 0 ) {
+                                newLevel = 0;
+                            }
+                            uint32_t idx = y * mapWidth + x;
+                            uint8_t oldLevel = heightMap[idx];
+
+                            int8_t newOtherLevel = oldLevel + r.second;
+                            if ( newOtherLevel < 0 ) {
+                                newOtherLevel = 0;
+                            }
+                            newLevel = (newLevel + newOtherLevel) / 2;
+                            heightMap[idx] = uint8_t( newLevel );
+                            break;
+                        }
+                    }
+                }
+            }
+            if ( useSlopes ) {
+                updateSlopes( startX, startY, endX - startX, endY - startY );
+            }
+            updateCliffs( startX, startY, endX - startX, endY - startY );
         }
 
 

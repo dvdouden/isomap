@@ -36,7 +36,6 @@ namespace isomap {
         int8_t slope( uint8_t slopeBits, uint8_t orientation );
 
 
-
         // common data structure and methods
         struct TerrainData {
             uint32_t mapWidth = 0;
@@ -47,6 +46,8 @@ namespace isomap {
             uint8_t* oreMap = nullptr;
             uint8_t* occupancyMap = nullptr;
             uint8_t* pathMap = nullptr;
+
+            bool useSlopes = true;
 
             TerrainData( uint32_t width, uint32_t heigth );
 
@@ -71,18 +72,35 @@ namespace isomap {
 
             void flatten( uint32_t x, uint32_t y );
 
+            void flatten( uint32_t x, uint32_t y, uint8_t height );
+
             void raise( uint32_t x, uint32_t y );
 
             void lower( uint32_t x, uint32_t y );
 
-            uint8_t corner( int32_t x, int32_t y, uint32_t i ) const;
+            uint8_t safeCorner( int32_t x, int32_t y, uint32_t c ) const;
 
-            uint8_t calcCliffBits( uint32_t x, uint32_t y ) const;
+            uint8_t corner( uint32_t x, uint32_t y, uint32_t c ) const;
+
+            uint8_t safeHeight( int32_t x, int32_t y) const;
+
+            void toggleSlopes();
+
+            void incSlope( uint32_t x, uint32_t y);
 
             void updateCliffs();
 
             void updateCliffs( uint32_t x, uint32_t y, uint32_t width, uint32_t height );
 
+            uint8_t calcCliffBits( uint32_t x, uint32_t y ) const;
+
+            void updateSlopes();
+
+            void updateSlopes( uint32_t x, uint32_t y, uint32_t width, uint32_t height );
+
+            uint8_t calcSlopeBits( uint32_t x, uint32_t y ) const;
+
+            void splode( uint32_t x, uint32_t y, uint32_t radius);
         };
 
     }

@@ -50,13 +50,13 @@ namespace isomap {
                         uint8_t slope = m_terrain->slopeMap()[idx];
                         uint8_t ore = m_terrain->oreMap()[idx];
 
-                        uint8_t ha = h - (slope & 0b0000'0001u);
+                        uint8_t ha = h + (slope & 0b0000'0001u);
                         slope >>= 1u;
-                        uint8_t hb = h - (slope & 0b0000'0001u);
+                        uint8_t hb = h + (slope & 0b0000'0001u);
                         slope >>= 1u;
-                        uint8_t hc = h - (slope & 0b0000'0001u);
+                        uint8_t hc = h + (slope & 0b0000'0001u);
                         slope >>= 1u;
-                        uint8_t hd = h - (slope & 0b0000'0001u);
+                        uint8_t hd = h + (slope & 0b0000'0001u);
                         slope <<= 3u;
 
                         vl::real hra = ha * ::sqrt( 2.0 / 3.0 ) / 2.0;
@@ -164,8 +164,8 @@ namespace isomap {
                         ++quads;
 
                         if ( slope & 0b0001'0000u ) {
-                            auto c03 = m_terrain->getCornerSafe( x, y - 1, 3 );
-                            auto c02 = m_terrain->getCornerSafe( x, y - 1, 2 );
+                            auto c03 = m_terrain->safeCorner( x, y - 1, 3 );
+                            auto c02 = m_terrain->safeCorner( x, y - 1, 2 );
                             vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             vl::real hc02 = c02 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             // TODO: figure out if we need a quad or a tri...
@@ -187,8 +187,8 @@ namespace isomap {
                             ++quads;
                         }
                         if ( slope & 0b0010'0000u ) {
-                            auto c10 = m_terrain->getCornerSafe( x + 1, y, 0 );
-                            auto c13 = m_terrain->getCornerSafe( x + 1, y, 3 );
+                            auto c10 = m_terrain->safeCorner( x + 1, y, 0 );
+                            auto c13 = m_terrain->safeCorner( x + 1, y, 3 );
                             vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             vl::real hc13 = c13 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             // TODO: figure out if we need a quad or a tri...
@@ -210,8 +210,8 @@ namespace isomap {
                             ++quads;
                         }
                         if ( slope & 0b0100'0000u ) {
-                            auto c21 = m_terrain->getCornerSafe( x, y + 1, 1 );
-                            auto c20 = m_terrain->getCornerSafe( x, y + 1, 0 );
+                            auto c21 = m_terrain->safeCorner( x, y + 1, 1 );
+                            auto c20 = m_terrain->safeCorner( x, y + 1, 0 );
                             vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             vl::real hc20 = c20 * ::sqrt( 2.0 / 3.0 ) / 2.0;
 
@@ -234,8 +234,8 @@ namespace isomap {
                             ++quads;
                         }
                         if ( slope & 0b1000'0000u ) {
-                            auto c32 = m_terrain->getCornerSafe( x - 1, y, 2 );
-                            auto c31 = m_terrain->getCornerSafe( x - 1, y, 1 );
+                            auto c32 = m_terrain->safeCorner( x - 1, y, 2 );
+                            auto c31 = m_terrain->safeCorner( x - 1, y, 1 );
                             // TODO: figure out if we need a quad or a tri...
                             vl::real hc32 = c32 * ::sqrt( 2.0 / 3.0 ) / 2.0;
                             vl::real hc31 = c31 * ::sqrt( 2.0 / 3.0 ) / 2.0;

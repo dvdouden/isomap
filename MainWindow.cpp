@@ -87,7 +87,7 @@ void MainWindow::initEvent() {
     m_clientPlayer->controller()->buildUnit( 8, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientPlayer->controller()->buildStructure( 10, 10, isomap::common::StructureType::get( 1 ),
                                                   m_structureOrientation );
-    m_clientAI->controller()->buildUnit( 28, 8, isomap::common::UnitType::get( 1 ), 0 );
+    //m_clientAI->controller()->buildUnit( 28, 8, isomap::common::UnitType::get( 1 ), 0 );
     m_clientAI->controller()->buildStructure( 30, 10, isomap::common::StructureType::get( 2 ), m_structureOrientation );
 
     sendAndReceiveMessages();
@@ -442,6 +442,29 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
         }
 
+        case vl::Key_Q:
+            m_renderTerrain->data().toggleSlopes();
+            break;
+
+
+        case vl::Key_E:
+            m_renderTerrain->data().incSlope( m_cursorX, m_cursorY );
+            break;
+
+
+        case vl::Key_R:
+            m_renderTerrain->data().raise( m_cursorX, m_cursorY );
+            break;
+
+
+        case vl::Key_T:
+            m_renderTerrain->data().lower( m_cursorX, m_cursorY );
+            break;
+
+        case vl::Key_Tab:
+            m_renderTerrain->data().splode( m_cursorX, m_cursorY, 16 );
+            break;
+
         default:
             Applet::keyPressEvent( ch, key );
             break;
@@ -704,7 +727,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     int c1 = (3u + m_orientation) % 4u;
     int c2 = (2u + m_orientation) % 4u;
 
-    for ( int i = 0; i < 16; ++i ) {
+    for ( int i = 0; i < 18; ++i ) {
         // for each tile, we need to find the top line
         // translate the two corners to screen space
         // then find the last tile for which the screen coordinates fall below the line
@@ -712,11 +735,11 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
             int x0, y0, x1, y1;
 
             if ( x_first == ((m_orientation % 2) == 0) ) {
-                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c1 ), c1, x0, y0 );
-                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c2 ), c2, x1, y1 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->corner( temp_x, temp_y, c1 ), c1, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->corner( temp_x, temp_y, c2 ), c2, x1, y1 );
             } else {
-                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c0 ), c0, x0, y0 );
-                worldToScreen( temp_x, temp_y, m_renderTerrain->getCorner( temp_x, temp_y, c1 ), c1, x1, y1 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->corner( temp_x, temp_y, c0 ), c0, x0, y0 );
+                worldToScreen( temp_x, temp_y, m_renderTerrain->corner( temp_x, temp_y, c1 ), c1, x1, y1 );
             }
             vl::fvec4 color;
             if ( isBelow( dx, dy, x0, y0, x1, y1 ) ) {
@@ -924,7 +947,7 @@ void MainWindow::renderStructurePlacement( int x, int y ) {
 }
 
 
-void MainWindow::place( int x, int y ) {
+void MainWindow::place( int x, int y, bool first ) {
     m_cursorX = x;
     m_cursorY = y;
     switch ( m_mode ) {
@@ -1007,7 +1030,13 @@ void MainWindow::place( int x, int y ) {
 
         case Flatten: {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() ) {
-                m_renderTerrain->data().flatten( x, y );
+                static uint8_t h = 0;
+                if ( first ) {
+                    m_renderTerrain->data().flatten( x, y );
+                    h = m_renderTerrain->data().safeHeight( x, y );
+                } else {
+                    m_renderTerrain->data().flatten( x, y, h );
+                }
             }
             break;
         }
@@ -1390,7 +1419,7 @@ void MainWindow::updateText() {
                                           "Slope: %b08n\n"
                                           "Ore: %n\n"
                                           "Occupancy: %b08n\n"
-                                          "Path: %b08n\n"  )
+                                          "Path: %b08n\n" )
                                          << fps()
                                          << getModeName()
                                          << m_controllingPlayer->name()
@@ -1402,7 +1431,7 @@ void MainWindow::updateText() {
                                          << m_renderTerrain->slopeMap()[idx]
                                          << m_renderTerrain->oreMap()[idx]
                                          << m_renderTerrain->occupancyMap()[idx]
-                                         << m_renderTerrain->pathMap()[idx]);
+                                         << m_renderTerrain->pathMap()[idx] );
             } else {
                 m_text->setText( vl::Say( "FPS %n\n"
                                           "Mode: %s\n"

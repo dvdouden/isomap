@@ -42,7 +42,7 @@ public:
 
     void highlight( int x, int y );
 
-    void place( int x, int y );
+    void place( int x, int y, bool first );
 
     void focusTileAt( int tile_x, int tile_y, int screen_x, int screen_y );
 
@@ -78,8 +78,8 @@ protected:
 
     int m_angle = 0;
 
-    int m_width = 64;
-    int m_height = 64;
+    int m_width = 128;
+    int m_height = 128;
     bool m_paused = true;
     bool m_renderColumn = false;
 

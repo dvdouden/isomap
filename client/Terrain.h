@@ -88,12 +88,6 @@ namespace isomap {
 
             void unreserve( uint32_t worldX, uint32_t worldY, const common::FootPrint* footPrint );
 
-
-            uint8_t getCorner( uint32_t x, uint32_t y, uint32_t c ) const {
-                return m_data.heightMap[y * m_width + x] -
-                       (uint8_t( m_data.slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
-            }
-
             void addStructure( Structure* structure );
 
             void removeStructure( Structure* structure );
@@ -112,7 +106,13 @@ namespace isomap {
 
             Unit* getUnitAt( uint32_t x, uint32_t y ) const;
 
-            uint8_t getCornerSafe( int x, int y, int c ) const;
+            uint8_t safeCorner( int32_t x, int32_t y, uint32_t c ) const {
+                return m_data.safeCorner( x, y, c );
+            }
+
+            uint8_t corner( uint32_t x, uint32_t y, uint32_t c ) const {
+                return m_data.corner( x, y, c );
+            }
 
             common::TerrainData& data() {
                 return m_data;

@@ -137,15 +137,6 @@ namespace isomap {
             return tmp;
         }
 
-        uint8_t safe_height( uint8_t* heightMap, uint32_t width, uint32_t height, int x, int y ) {
-            if ( y < 0 ) y = 0;
-            if ( y >= height ) y = height - 1;
-            if ( x < 0 ) x = 0;
-            if ( x >= width ) x = width - 1;
-            return heightMap[y * width + x];
-        }
-
-
         Terrain* TerrainGenerator::generate( uint32_t width, uint32_t height ) {
             auto* terrain = new Terrain( width, height );
             auto& data = terrain->data();
@@ -220,10 +211,10 @@ namespace isomap {
                 for ( int y = 0; y < height; ++y ) {
                     for ( int x = 0; x < width; ++x ) {
                         auto h = heightMap[y * width + x];
-                        auto h2 = safe_height( heightMap, width, height, x, y - 1 );
-                        auto h4 = safe_height( heightMap, width, height, x + 1, y );
-                        auto h6 = safe_height( heightMap, width, height, x, y + 1 );
-                        auto h8 = safe_height( heightMap, width, height, x - 1, y );
+                        auto h2 = data.safeHeight( x, y - 1 );
+                        auto h4 = data.safeHeight( x + 1, y );
+                        auto h6 = data.safeHeight( x, y + 1 );
+                        auto h8 = data.safeHeight( x - 1, y );
 
                         if ( h2 == h4 && h4 == h6 && h6 == h8 && h != h2 ) {
                             heightMap[y * width + x] = h2;
@@ -236,14 +227,14 @@ namespace isomap {
             for ( int y = 0; y < height; ++y ) {
                 for ( int x = 0; x < width; ++x ) {
                     auto h = heightMap[y * width + x];
-                    auto h1 = safe_height( heightMap, width, height, x - 1, y - 1 );
-                    auto h2 = safe_height( heightMap, width, height, x, y - 1 );
-                    auto h3 = safe_height( heightMap, width, height, x + 1, y - 1 );
-                    auto h4 = safe_height( heightMap, width, height, x + 1, y );
-                    auto h5 = safe_height( heightMap, width, height, x + 1, y + 1 );
-                    auto h6 = safe_height( heightMap, width, height, x, y + 1 );
-                    auto h7 = safe_height( heightMap, width, height, x - 1, y + 1 );
-                    auto h8 = safe_height( heightMap, width, height, x - 1, y );
+                    auto h1 = data.safeHeight( x - 1, y - 1 );
+                    auto h2 = data.safeHeight( x, y - 1 );
+                    auto h3 = data.safeHeight( x + 1, y - 1 );
+                    auto h4 = data.safeHeight( x + 1, y );
+                    auto h5 = data.safeHeight( x + 1, y + 1 );
+                    auto h6 = data.safeHeight( x, y + 1 );
+                    auto h7 = data.safeHeight( x - 1, y + 1 );
+                    auto h8 = data.safeHeight( x - 1, y );
 
                     auto ha = h;
                     if ( (h8 < h || h1 < h || h2 < h) && !(h8 < h - 1 || h1 < h - 1 || h2 < h - 1) ) {
@@ -272,39 +263,7 @@ namespace isomap {
             }
 
             // now calculate the corners of each tile
-            uint8_t* scratchSlope = data.slopeMap;
-            for ( int y = 0; y < height; ++y ) {
-                for ( int x = 0; x < width; ++x ) {
-                    auto h = heightMap[y * width + x];
-                    auto h1 = safe_height( heightMap, width, height, x - 1, y - 1 );
-                    auto h2 = safe_height( heightMap, width, height, x, y - 1 );
-                    auto h3 = safe_height( heightMap, width, height, x + 1, y - 1 );
-                    auto h4 = safe_height( heightMap, width, height, x + 1, y );
-                    auto h5 = safe_height( heightMap, width, height, x + 1, y + 1 );
-                    auto h6 = safe_height( heightMap, width, height, x, y + 1 );
-                    auto h7 = safe_height( heightMap, width, height, x - 1, y + 1 );
-                    auto h8 = safe_height( heightMap, width, height, x - 1, y );
-
-                    uint8_t slope = 0;
-                    if ( (h8 < h || h1 < h || h2 < h) && !(h8 < h - 1 || h1 < h - 1 || h2 < h - 1) ) {
-                        slope |= 0b0000'0001u;
-                    }
-
-                    if ( (h2 < h || h3 < h || h4 < h) && !(h2 < h - 1 || h3 < h - 1 || h4 < h - 1) ) {
-                        slope |= 0b0000'0010u;
-                    }
-
-                    if ( (h4 < h || h5 < h || h6 < h) && !(h4 < h - 1 || h5 < h - 1 || h6 < h - 1) ) {
-                        slope |= 0b0000'0100u;
-                    }
-
-                    if ( (h6 < h || h7 < h || h8 < h) && !(h6 < h - 1 || h7 < h - 1 || h8 < h - 1) ) {
-                        slope |= 0b0000'1000u;
-                    }
-                    *scratchSlope = slope;
-                    ++scratchSlope;
-                }
-            }
+            data.updateSlopes();
 
             // calculate if the tile has a cliff side
             data.updateCliffs();

@@ -46,41 +46,6 @@ namespace isomap {
             }
         }
 
-        uint8_t Terrain::getCornerSafe( int x, int y, int c ) const {
-            if ( x < 0 ) {
-                x = 0;
-                if ( c == 1 ) {
-                    c = 0;
-                } else if ( c == 2 ) {
-                    c = 3;
-                }
-            } else if ( x >= m_width ) {
-                x = (int)m_width - 1;
-                if ( c == 0 ) {
-                    c = 1;
-                } else if ( c == 3 ) {
-                    c = 2;
-                }
-            }
-            if ( y < 0 ) {
-                y = 0;
-                if ( c == 2 ) {
-                    c = 1;
-                } else if ( c == 3 ) {
-                    c = 0;
-                }
-            } else if ( y >= m_height ) {
-                y = (int)m_height - 1;
-                if ( c == 0 ) {
-                    c = 3;
-                } else if ( c == 1 ) {
-                    c = 2;
-                }
-            }
-            return m_data.heightMap[y * m_width + x] -
-                   (uint8_t( m_data.slopeMap[y * m_width + x] >> uint32_t( c ) ) & 0b0000'0001u);
-        }
-
         void Terrain::updateFog() {
             if ( !m_updateFog ) {
                 return;
