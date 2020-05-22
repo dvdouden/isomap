@@ -169,6 +169,9 @@ namespace isomap {
 
                         ++quads;
 
+                        // FIXME: double check which corners to use
+                        // cliff my be on "my" side or the "other" side
+
                         if ( slope & common::slope::bitCliffDown ) {
                             auto c03 = m_terrain->safeCorner( x, y - 1, 3 );
                             auto c02 = m_terrain->safeCorner( x, y - 1, 2 );

@@ -687,8 +687,8 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     vl::real sub_x = worldTileX - ::floor( worldTileX );
     vl::real sub_y = worldTileY - ::floor( worldTileY );
 
-    world_x = (int)::floor(worldTileX);
-    world_y = (int)::floor(worldTileY);
+    world_x = (int)::floor( worldTileX );
+    world_y = (int)::floor( worldTileY );
 
     // our current world coordinates do not take the height of the tile into account, it assumes each tile has height 0
     // in order to fix that, we need to look at a few more tiles towards the camera
