@@ -58,23 +58,7 @@ namespace isomap {
                     int32_t oldTileX = tileX();
                     int32_t oldTileY = tileY();
 
-                    m_data.updateMotion();
-
-                    // FIXME: move out of bounds check to somewhere else
-                    if ( m_data.x < 0 ) {
-                        m_data.x = 0;
-                    } else if ( m_data.x >= m_player->terrain()->width() * math::fix::precision ) {
-                        m_data.x = (m_player->terrain()->width() - 1) * math::fix::precision;
-                    }
-                    if ( m_data.y < 0 ) {
-                        m_data.y = 0;
-                    } else if ( m_data.y >= m_player->terrain()->height() * math::fix::precision ) {
-                        m_data.y = (m_player->terrain()->height() - 1) * math::fix::precision;
-                    }
-
-                    // FIXME: move height calculation to somewhere else
-                    m_data.z = m_player->terrain()->heightMap()[tileY() * m_player->terrain()->width() + tileX()] *
-                               math::fix::precision;
+                    m_data.updateMotion( m_player->terrain()->data() );
 
                     if ( tileX() != oldTileX || tileY() != oldTileY ) {
                         m_player->terrain()->updateUnit( this, oldTileX, oldTileY );

@@ -1,9 +1,10 @@
 #include "UnitData.h"
 #include "../util/math.h"
+#include "TerrainData.h"
 
 namespace isomap {
     namespace common {
-        void UnitData::updateMotion() {
+        void UnitData::updateMotion( const TerrainData& terrain ) {
             if ( state == Idle ) {
                 return;
             }
@@ -14,22 +15,19 @@ namespace isomap {
             x += dX;
             y += dY;
 
-            // FIXME: bounds checking!
-            /*
             if ( x < 0 ) {
                 x = 0;
-            } else if ( x >= terrain->width()  * math::fix::precision) {
-                x = (terrain->width() - 1)  * math::fix::precision;
+            } else if ( x >= terrain.mapWidth * math::fix::precision ) {
+                x = (terrain.mapWidth - 1) * math::fix::precision;
             }
             if ( y < 0 ) {
                 y = 0;
-            } else if ( y >= terrain->height()  * math::fix::precision) {
-                y = (terrain->height() - 1) * math::fix::precision;
-            }*/
-            // FIXME: height!
-            //m_data.z = terrain->heightMap()[(m_data.y /  math::fix::precision) * terrain->width() + (m_data.x /  math::fix::precision)] * math::fix::precision;
-            // FIXME: fog!
-            //player()->unFog( m_data.x/  math::fix::precision, m_data.y/  math::fix::precision, 20 );
+            } else if ( y >= terrain.mapHeight * math::fix::precision ) {
+                y = (terrain.mapHeight - 1) * math::fix::precision;
+            }
+
+            z = terrain.heightMap[tileY() * terrain.mapWidth + tileX()] * math::fix::precision;
+
             if ( x == wayPoint.x && y == wayPoint.y ) {
                 setState( common::Idle );
             }

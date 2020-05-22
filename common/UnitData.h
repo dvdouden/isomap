@@ -58,7 +58,7 @@ namespace isomap {
 
             static void getMotion( int32_t& dX, int32_t& dY, uint32_t orientation );
 
-            void updateMotion();
+            void updateMotion( const TerrainData& terrain );
 
             const char* stateName() const;
 

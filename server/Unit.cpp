@@ -300,27 +300,11 @@ namespace isomap {
                 }
 
                 case common::Moving: {
-
                     int32_t oldTileX = tileX();
                     int32_t oldTileY = tileY();
 
-                    // let's keep things simple for now...
-                    m_data.updateMotion();
+                    m_data.updateMotion( terrain->data() );
 
-                    // FIXME: move out of bounds check to somewhere else
-                    if ( m_data.x < 0 ) {
-                        m_data.x = 0;
-                    } else if ( m_data.x >= terrain->width() * math::fix::precision ) {
-                        m_data.x = (terrain->width() - 1) * math::fix::precision;
-                    }
-                    if ( m_data.y < 0 ) {
-                        m_data.y = 0;
-                    } else if ( m_data.y >= terrain->height() * math::fix::precision ) {
-                        m_data.y = (terrain->height() - 1) * math::fix::precision;
-                    }
-
-                    // FIXME: move height calculation to somewhere else
-                    m_data.z = terrain->heightMap()[tileY() * terrain->width() + tileX()] * math::fix::precision;
                     if ( tileY() != oldTileY || tileX() != oldTileX ) {
                         player()->unFog( tileX(), tileY(), 10 );
                         player()->match()->updateSubscriptions( this );
