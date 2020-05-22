@@ -3,6 +3,7 @@
 #include <vector>
 #include "FootPrint.h"
 #include "TerrainData.h"
+#include "../util/math.h"
 
 namespace isomap {
     namespace common {
@@ -538,6 +539,98 @@ namespace isomap {
                 updateSlopes( startX, startY, endX - startX, endY - startY );
             }
             updateCliffs( startX, startY, endX - startX, endY - startY );
+        }
+
+        int32_t TerrainData::heightAt( uint32_t fixX, uint32_t fixY ) const {
+            uint32_t tileX = fixX / math::fix::precision;
+            uint32_t tileY = fixY / math::fix::precision;
+            uint32_t subX = fixX % math::fix::precision;
+            uint32_t subY = fixY % math::fix::precision;
+
+            int32_t height = heightMap[tileY * mapWidth + tileX] * math::fix::precision;
+
+            uint8_t slopes = slopeMap[tileY * mapWidth + tileX] & 0b0000'1111u;
+
+            switch ( slopes ) {
+                default:
+                case 0:
+                    return height;
+
+                case 0b0011u:   // south edge raised
+                    return height + (math::fix::precision - subY);
+                case 0b0110u:   // east edge raised
+                    return height + subX;
+                case 0b1100u:   // north edge raised
+                    return height + subY;
+                case 0b1001u:   // west edge raised
+                    return height + (math::fix::precision - subX);
+
+                case 0b0001u:   // southwest corner raised
+                    if ( subX + subY > math::fix::precision ) {
+                        return height + subX - subY;
+                    } else {
+                        return height + math::fix::precision - (subX + subY);
+                    }
+                case 0b0010u:   // southeast corner raised
+                    if ( subX > subY ) { // southeast half
+                        return height + subX - subY;
+                    } else { // northwest half
+                        return height;
+                    }
+                case 0b0100u:   // northeast corner raised
+                    if ( subX + subY > math::fix::precision ) {
+                        return height + subX + subY - math::fix::precision;
+                    } else {
+                        return height;
+                    }
+                case 0b1000u:   // northwest corner raised
+                    if ( subX > subY ) { // southeast half
+                        return height;
+                    } else { // northwest half
+                        return height + subY - subX;
+                    }
+
+                case 0b0101u:   // southwest and northeast corners raised
+                    if ( subX > subY ) { // southeast half
+                        return height + math::fix::precision - (subX - subY);
+                    } else { // northwest half
+                        return height + math::fix::precision - (subY - subX);
+                    }
+                case 0b1010u:   // southeast and northwest corners raised
+                    if ( subX + subY > math::fix::precision ) {
+                        return height + math::fix::precision - (subX + subY - math::fix::precision);
+                    } else {
+                        return height + subX + subY;
+                    }
+
+                case 0b0111u:   // all but northwest corner raised
+                    if ( subX > subY ) { // southeast half
+                        return height + math::fix::precision;
+                    } else { // northwest half
+                        return height + math::fix::precision - (subY - subX);
+                    }
+                case 0b1011u:   // all but northeast corner raised
+                    if ( subX + subY > math::fix::precision ) {
+                        return height + math::fix::precision - (subX + subY - math::fix::precision);
+                    } else {
+                        return height + math::fix::precision;
+                    }
+                case 0b1101u:   // all but southeast corner raised
+                    if ( subX > subY ) { // southeast half
+                        return height + math::fix::precision - (subX - subY);
+                    } else { // northwest half
+                        return height + math::fix::precision;
+                    }
+                case 0b1110u:   // all but southwest corner raised
+                    if ( subX + subY > math::fix::precision ) {
+                        return height + math::fix::precision;
+                    } else {
+                        return height + subX + subY;
+                    }
+
+                case 0b1111u:
+                    return height + math::fix::precision;
+            }
         }
 
 

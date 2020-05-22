@@ -101,6 +101,8 @@ namespace isomap {
             uint8_t calcSlopeBits( uint32_t x, uint32_t y ) const;
 
             void splode( uint32_t x, uint32_t y, uint32_t radius );
+
+            int32_t heightAt( uint32_t fixX, uint32_t fixY ) const;
         };
 
     }

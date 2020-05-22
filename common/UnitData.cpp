@@ -26,7 +26,7 @@ namespace isomap {
                 y = (terrain.mapHeight - 1) * math::fix::precision;
             }
 
-            z = terrain.heightMap[tileY() * terrain.mapWidth + tileX()] * math::fix::precision;
+            z = terrain.heightAt( x, y );
 
             if ( x == wayPoint.x && y == wayPoint.y ) {
                 setState( common::Idle );
