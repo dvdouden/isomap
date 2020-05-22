@@ -134,8 +134,6 @@ add_executable(
         util/math.cpp
 )
 
-message("Hello ${VL_LIBRARIES}")
-
 if (MINGW)
     target_link_libraries(IsoMap ${VL_LIBRARIES} ${OPENGL_LIBRARIES} -static)
 elseif (USE_GLUT)

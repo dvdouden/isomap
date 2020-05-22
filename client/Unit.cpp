@@ -36,7 +36,8 @@ namespace isomap {
                 case common::UnitServerMessage::Stop:
                 case common::UnitServerMessage::Done:
                 case common::UnitServerMessage::Abort:
-                case common::UnitServerMessage::Unload: {
+                case common::UnitServerMessage::Unload:
+                case common::UnitServerMessage::Load: {
                     uint32_t oldTileX = tileX();
                     uint32_t oldTileY = tileY();
                     m_data = msg->data();
@@ -45,7 +46,6 @@ namespace isomap {
                     }
                     break;
                 }
-
             }
             if ( m_controller ) {
                 m_controller->onMessage( msg->type() );
@@ -86,6 +86,7 @@ namespace isomap {
                 case common::Constructing:
                 case common::Harvesting:
                 case common::Unloading:
+                case common::Loading:
                     break;
             }
 

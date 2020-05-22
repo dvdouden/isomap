@@ -82,11 +82,11 @@ namespace isomap {
 
             uint8_t corner( uint32_t x, uint32_t y, uint32_t c ) const;
 
-            uint8_t safeHeight( int32_t x, int32_t y) const;
+            uint8_t safeHeight( int32_t x, int32_t y ) const;
 
             void toggleSlopes();
 
-            void incSlope( uint32_t x, uint32_t y);
+            void incSlope( uint32_t x, uint32_t y );
 
             void updateCliffs();
 
@@ -100,7 +100,7 @@ namespace isomap {
 
             uint8_t calcSlopeBits( uint32_t x, uint32_t y ) const;
 
-            void splode( uint32_t x, uint32_t y, uint32_t radius);
+            void splode( uint32_t x, uint32_t y, uint32_t radius );
         };
 
     }

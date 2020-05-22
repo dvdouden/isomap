@@ -7,12 +7,12 @@ namespace isomap {
             if ( state == Idle ) {
                 return;
             }
-            int32_t dX = wayPoint.x * math::fix::precision - x;
-            int32_t dY = wayPoint.y * math::fix::precision - y;
+            int32_t dX = wayPoint.x - x;
+            int32_t dY = wayPoint.y - y;
             orientation = getOrientation( dX, dY );
             getMotion( dX, dY, orientation );
-            x += dX * math::fix::precision / 16;
-            y += dY * math::fix::precision / 16;
+            x += dX;
+            y += dY;
 
             // FIXME: bounds checking!
             /*
@@ -30,9 +30,8 @@ namespace isomap {
             //m_data.z = terrain->heightMap()[(m_data.y /  math::fix::precision) * terrain->width() + (m_data.x /  math::fix::precision)] * math::fix::precision;
             // FIXME: fog!
             //player()->unFog( m_data.x/  math::fix::precision, m_data.y/  math::fix::precision, 20 );
-            if ( x == wayPoint.x * math::fix::precision && y == wayPoint.y * math::fix::precision ) {
-                lastState = state;
-                state = common::Idle;
+            if ( x == wayPoint.x && y == wayPoint.y ) {
+                setState( common::Idle );
             }
         }
 
@@ -65,38 +64,39 @@ namespace isomap {
         }
 
         void UnitData::getMotion( int32_t& dX, int32_t& dY, uint32_t orientation ) {
+            int32_t speed = math::fix::precision / 16;
             switch ( orientation ) {
                 case 0:
                     dX = 0;
-                    dY = 1;
+                    dY = speed;
                     break;
                 case 1:
-                    dX = 1;
-                    dY = 1;
+                    dX = speed;
+                    dY = speed;
                     break;
                 case 2:
-                    dX = 1;
+                    dX = speed;
                     dY = 0;
                     break;
                 case 3:
-                    dX = 1;
-                    dY = -1;
+                    dX = speed;
+                    dY = -speed;
                     break;
                 case 4:
                     dX = 0;
-                    dY = -1;
+                    dY = -speed;
                     break;
                 case 5:
-                    dX = -1;
-                    dY = -1;
+                    dX = -speed;
+                    dY = -speed;
                     break;
                 case 6:
-                    dX = -1;
+                    dX = -speed;
                     dY = 0;
                     break;
                 case 7:
-                    dX = -1;
-                    dY = 1;
+                    dX = -speed;
+                    dY = speed;
                     break;
                 default:
                     dX = 0;
@@ -117,6 +117,8 @@ namespace isomap {
                     return "harvesting";
                 case Unloading:
                     return "unloading";
+                case Loading:
+                    return "loading";
             }
             return "unknown";
         }

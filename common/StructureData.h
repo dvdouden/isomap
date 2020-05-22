@@ -14,6 +14,7 @@ namespace isomap {
             uint32_t z = 0;
             uint32_t orientation = 0;
             uint32_t constructionProgress = 0;
+            uint32_t creditsStored = 0;
         };
 
     }

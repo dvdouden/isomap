@@ -31,8 +31,13 @@ namespace isomap {
                 return m_canHarvest;
             }
 
-            void setMaxPayload( uint32_t maxPayload ) {
+            void setPayload( uint32_t initialPayload, uint32_t maxPayload ) {
+                m_initialPayload = initialPayload;
                 m_maxPayload = maxPayload;
+            }
+
+            uint32_t initialPayload() const {
+                return m_initialPayload;
             }
 
             uint32_t maxPayload() const {
@@ -59,6 +64,7 @@ namespace isomap {
             std::string m_name;
             bool m_canConstruct;
             bool m_canHarvest;
+            uint32_t m_initialPayload = 0;
             uint32_t m_maxPayload = 0;
             id_t m_dockStructureId = 0;
 

@@ -80,8 +80,8 @@ namespace isomap {
                         vl::real( m_unit->y() ) / math::fix::fPrecision,
                         vl::real( m_unit->z() ) / math::fix::fPrecision * ::sqrt( 2.0 / 3.0 ) / 2.0 );
                 // 3. move model back to 0,0 make sure to use new orientation
-                matrix *= vl::mat4::getTranslation( 1.0 / 2.0,
-                                                    1.0 / 2.0, 0 );
+                /*matrix *= vl::mat4::getTranslation( 1.0 / 2.0,
+                                                    1.0 / 2.0, 0 );*/
                 // 2. rotate to correct orientation
                 matrix *= vl::mat4::getRotation( m_unit->orientation() * -45.0, 0, 0, 1 );
 

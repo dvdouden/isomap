@@ -16,6 +16,7 @@ namespace isomap {
                 m_data( {id(), unitType->id(), 0, x * math::fix::precision, y * math::fix::precision,
                          z * math::fix::precision, orientation} ),
                 m_type( unitType ) {
+            m_data.payload = unitType->initialPayload();
         }
 
 
@@ -92,7 +93,7 @@ namespace isomap {
                 }
 
                 case common::UnitCommandMessage::Unload: {
-                    if ( !m_type->canHarvest() ) {
+                    if ( m_type->maxPayload() == 0 ) {
                         printf( "[%d] Received Unload command but unit has no payload!\n", id() );
                         player()->match()->enqueueMessage(
                                 this,
@@ -118,126 +119,226 @@ namespace isomap {
                                     common::UnitServerMessage::unloadMsg( m_data ) ) );
                     break;
                 }
+                case common::UnitCommandMessage::Load: {
+                    if ( m_type->maxPayload() == 0 ) {
+                        printf( "[%d] Received Load command but unit has no payload!\n", id() );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::abortMsg( m_data ) ) );
+                        break;
+                    }
+                    // FIXME: check if we're on a tile boundary
+                    // FIXME: check if we're on a docking tile
+                    m_data.setState( common::Loading );
+                    if ( m_data.payload == m_type->maxPayload() ) {
+                        m_data.setState( common::Idle );
+                        player()->match()->enqueueMessage(
+                                this,
+                                common::PlayerServerMessage::unitMsg(
+                                        common::UnitServerMessage::doneMsg( m_data ) ) );
+                        break;
+                    }
+
+                    player()->match()->enqueueMessage(
+                            this,
+                            common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::loadMsg( m_data ) ) );
+                    break;
+                }
             }
         }
 
         common::PlayerServerMessage* Unit::update( Terrain* terrain ) {
-            if ( m_wayPoints.empty() && m_data.state == common::Idle ) {
-                return nullptr;
-            }
-
-            if ( m_data.state == common::Constructing ) {
-                auto* structure = player()->getStructure( m_data.structureId );
-                if ( structure == nullptr || structure->constructionCompleted() ) {
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
-                } else {
-                    structure->constructionTick();
-                    return nullptr;
-                }
-            } else if ( m_data.state == common::Harvesting ) {
-                if ( m_data.payload == m_type->maxPayload() ) {
-                    //printf( "Harvester full, payload is %d\n", m_data.payload );
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
-                }
-                uint8_t oreTile = player()->terrain()->harvest( tileX(), tileY() );
-                if ( oreTile > 0 ) {
-                    m_data.payload++;
-                    //printf( "Harvesting from tile %d, %d, ore amount was %d\n", tileX(), tileY(), oreTile );
-                }
-                if ( oreTile <= 1 || m_data.payload == m_type->maxPayload() ) {
-                    //printf( "Harvesting done, payload is now %d\n", m_data.payload );
-                    m_data.setState( common::Idle );
-                    if ( oreTile == 1 ) {
-                        player()->terrain()->markCellDirty( tileX(), tileY() );
-                    }
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
-                }
-                if ( m_data.payload % 64 == 0 ) {
-                    //printf( "Updating payload %d\n", m_data.payload );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
-                }
-                return nullptr;
-            } else if ( m_data.state == common::Unloading ) {
-                if ( m_data.payload == 0 ) {
-                    //printf( "Harvester empty, payload is %d\n", m_data.payload );
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
-                }
-                auto* structure = terrain->getConstructedStructureAt( tileX(), tileY() );
-                if ( structure == nullptr ) {
-                    printf( "Harvester not at structure, abort unloading\n" );
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
-                }
-                if ( structure->type()->id() != m_type->dockStructureType() ) {
-                    printf( "Harvester at wrong structure type %d, abort unloading\n", structure->type()->id() );
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
-                }
-                if ( (terrain->occupancy( tileX(), tileY() ) & common::occupancy::bitDockingPoint) == 0 ) {
-                    printf( "Harvester at not at docking point, abort unloading\n" );
-                    m_data.setState( common::Idle );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
-                }
-                m_data.payload -= player()->incCredits( 1 );
-
-                if ( m_data.payload == 0 ) {
-                    //printf( "Harvester empty, payload is %d\n", m_data.payload );
-                    m_data.setState( common::Idle );
-                    player()->markDirty();
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
-                }
-                if ( m_data.payload % 64 == 0 ) {
-                    //printf( "Updating payload %d\n", m_data.payload );
-                    return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::harvestMsg( m_data ) );
-                }
-                return nullptr;
-            }
 
             common::PlayerServerMessage* msg = nullptr;
-            if ( m_data.state == common::Idle ) {
-                m_data.setState( common::Moving );
-                m_data.wayPoint = m_wayPoints.back();
-                m_wayPoints.pop_back();
-                msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );
-            }
 
-            int32_t oldTileX = tileX();
-            int32_t oldTileY = tileY();
+            switch ( m_data.state ) {
+                case common::Constructing: {
+                    auto* structure = player()->getStructure( m_data.structureId );
+                    if ( structure == nullptr || structure->constructionCompleted() ) {
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    } else {
+                        if ( m_data.payload > 0 ) {
+                            structure->constructionTick();
+                            m_data.payload--;
+                        } else {
+                            return common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::abortMsg( m_data ) );
+                        }
 
-            // let's keep things simple for now...
-            m_data.updateMotion();
+                        if ( structure->constructionCompleted() ) {
+                            return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                        }
 
-            // FIXME: move out of bounds check to somewhere else
-            if ( m_data.x < 0 ) {
-                m_data.x = 0;
-            } else if ( m_data.x >= terrain->width() * math::fix::precision ) {
-                m_data.x = (terrain->width() - 1) * math::fix::precision;
-            }
-            if ( m_data.y < 0 ) {
-                m_data.y = 0;
-            } else if ( m_data.y >= terrain->height() * math::fix::precision ) {
-                m_data.y = (terrain->height() - 1) * math::fix::precision;
-            }
+                        if ( m_data.payload % 64 == 0 ) {
+                            //printf( "Updating payload %d\n", m_data.payload );
+                            return common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::statusMsg( m_data ) );
+                        }
+                        return nullptr;
+                    }
+                }
 
-            // FIXME: move height calculation to somewhere else
-            m_data.z = terrain->heightMap()[tileY() * terrain->width() + tileX()] * math::fix::precision;
-            if ( tileY() != oldTileY || tileX() != oldTileX ) {
-                player()->unFog( tileX(), tileY(), 10 );
-                player()->match()->updateSubscriptions( this );
-                terrain->updateUnit( this, oldTileX, oldTileY );
-            }
+                case common::Harvesting: {
+                    if ( m_data.payload == m_type->maxPayload() ) {
+                        //printf( "Harvester full, payload is %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    uint8_t oreTile = player()->terrain()->harvest( tileX(), tileY() );
+                    if ( oreTile > 0 ) {
+                        m_data.payload++;
+                        //printf( "Harvesting from tile %d, %d, ore amount was %d\n", tileX(), tileY(), oreTile );
+                    }
+                    if ( oreTile <= 1 || m_data.payload == m_type->maxPayload() ) {
+                        //printf( "Harvesting done, payload is now %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        if ( oreTile == 1 ) {
+                            player()->terrain()->markCellDirty( tileX(), tileY() );
+                        }
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    if ( m_data.payload % 64 == 0 ) {
+                        //printf( "Updating payload %d\n", m_data.payload );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::statusMsg( m_data ) );
+                    }
+                    return nullptr;
+                }
 
-            if ( m_data.state == common::Idle ) {
-                // reached wayPoint
-                if ( m_wayPoints.empty() ) {
-                    delete msg;
-                    msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                case common::Unloading: {
+                    if ( m_data.payload == 0 ) {
+                        //printf( "Unit empty, payload is %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    // FIXME: Check if construction is complete!
+                    auto* structure = terrain->getConstructedStructureAt( tileX(), tileY() );
+                    if ( structure == nullptr ) {
+                        printf( "Unit not at structure, abort unloading\n" );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    if ( structure->type()->id() != m_type->dockStructureType() ) {
+                        printf( "Unit at wrong structure type %d, abort unloading\n", structure->type()->id() );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    if ( (terrain->occupancy( tileX(), tileY() ) & common::occupancy::bitDockingPoint) == 0 ) {
+                        printf( "Unit at not at docking point, abort unloading\n" );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    // FIXME: should differ based on structure type
+                    m_data.payload -= player()->incCredits( 1 );
+
+                    if ( m_data.payload == 0 ) {
+                        //printf( "Unit empty, payload is %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        player()->markDirty();
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    if ( m_data.payload % 64 == 0 ) {
+                        //printf( "Updating payload %d\n", m_data.payload );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::statusMsg( m_data ) );
+                    }
+                    return nullptr;
+                }
+
+                case common::Loading: {
+                    if ( m_data.payload == m_type->maxPayload() ) {
+                        //printf( "Unit loaded, payload is %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    // FIXME: Check if construction is complete!
+                    auto* structure = terrain->getConstructedStructureAt( tileX(), tileY() );
+                    if ( structure == nullptr ) {
+                        printf( "Unit not at structure, abort loading\n" );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    if ( structure->type()->id() != m_type->dockStructureType() ) {
+                        printf( "Unit at wrong structure type %d, abort loading\n", structure->type()->id() );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    if ( (terrain->occupancy( tileX(), tileY() ) & common::occupancy::bitDockingPoint) == 0 ) {
+                        printf( "Unit at not at docking point, abort loading\n" );
+                        m_data.setState( common::Idle );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
+                    // FIXME: should differ based on structure type
+                    m_data.payload += player()->decCredits( 1 );
+
+                    if ( m_data.payload == m_type->maxPayload() ) {
+                        //printf( "Unit loaded, payload is %d\n", m_data.payload );
+                        m_data.setState( common::Idle );
+                        player()->markDirty();
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                    }
+                    if ( m_data.payload % 64 == 0 ) {
+                        //printf( "Updating payload %d\n", m_data.payload );
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::statusMsg( m_data ) );
+                    }
+                    return nullptr;
+                }
+
+                case common::Idle: {
+                    if ( m_wayPoints.empty() ) {
+                        return nullptr;
+                    }
+
+                    m_data.setState( common::Moving );
+                    m_data.wayPoint = m_wayPoints.back();
+                    m_data.wayPoint.x = (m_data.wayPoint.x * math::fix::precision) + math::fix::halfPrecision;
+                    m_data.wayPoint.y = (m_data.wayPoint.y * math::fix::precision) + math::fix::halfPrecision;
+                    m_wayPoints.pop_back();
+                    msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );
+                    // FALL THROUGH!
+                }
+
+                case common::Moving: {
+
+                    int32_t oldTileX = tileX();
+                    int32_t oldTileY = tileY();
+
+                    // let's keep things simple for now...
+                    m_data.updateMotion();
+
+                    // FIXME: move out of bounds check to somewhere else
+                    if ( m_data.x < 0 ) {
+                        m_data.x = 0;
+                    } else if ( m_data.x >= terrain->width() * math::fix::precision ) {
+                        m_data.x = (terrain->width() - 1) * math::fix::precision;
+                    }
+                    if ( m_data.y < 0 ) {
+                        m_data.y = 0;
+                    } else if ( m_data.y >= terrain->height() * math::fix::precision ) {
+                        m_data.y = (terrain->height() - 1) * math::fix::precision;
+                    }
+
+                    // FIXME: move height calculation to somewhere else
+                    m_data.z = terrain->heightMap()[tileY() * terrain->width() + tileX()] * math::fix::precision;
+                    if ( tileY() != oldTileY || tileX() != oldTileX ) {
+                        player()->unFog( tileX(), tileY(), 10 );
+                        player()->match()->updateSubscriptions( this );
+                        terrain->updateUnit( this, oldTileX, oldTileY );
+                    }
+
+                    if ( m_data.state == common::Idle ) {
+                        // reached wayPoint
+                        if ( m_wayPoints.empty() ) {
+                            delete msg;
+                            msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
+                        }
+                    }
+                    return msg;
                 }
             }
-            return msg;
+            return nullptr;
+
 
             /*if ( getSubTileX() != 0 || getSubTileY() != 0 ) {
                 // not at a tile boundary, keep moving

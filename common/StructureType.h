@@ -61,7 +61,7 @@ namespace isomap {
 
             id_t m_id;
             id_t m_spawnUnitId = 0;
-            FootPrint* m_footPrint[4];
+            FootPrint* m_footPrint[4]{};
             std::string m_name;
             uint32_t m_creditStorage = 0;
         };

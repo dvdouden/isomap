@@ -24,7 +24,7 @@ namespace isomap {
                                                      new FootPrint( 3, 3,
                                                                     {3, 3, 3,
                                                                      3, 3, 3,
-                                                                     2, 2, 2} ) );
+                                                                     2, occupancy::bitDockAndSpawn | 2u, 2} ) );
 
             s_structureTypes[2] = new StructureType( 2,
                                                      "powerplant",

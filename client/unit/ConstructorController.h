@@ -19,6 +19,8 @@ namespace isomap {
 
                 bool construct( Structure* structure ) override;
 
+                bool load() override;
+
                 void onMessage( common::UnitServerMessage::Type msgType ) override;
 
                 void update() override;
@@ -26,7 +28,7 @@ namespace isomap {
                 void dump() override;
 
             private:
-                void onMove();
+                void onDone();
 
                 void onAbort();
 
@@ -40,6 +42,7 @@ namespace isomap {
 
                 Structure* m_currentStructure = nullptr;
                 id_t m_currentStructureId = 0;
+                bool m_constructing = false;
             };
         }
     }

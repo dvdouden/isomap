@@ -46,27 +46,31 @@ namespace isomap {
             }
 
             int32_t tileX() const {
-                return m_data.x >> math::fix::precisionBits;
+                return m_data.tileX();
             }
 
             int32_t tileY() const {
-                return m_data.y >> math::fix::precisionBits;
+                return m_data.tileY();
             }
 
             int32_t tileZ() const {
-                return m_data.z >> math::fix::precisionBits;
+                return m_data.tileZ();
             }
 
             int32_t subTileX() const {
-                return m_data.x & math::fix::precisionMask;
+                return m_data.subTileX();
             }
 
             int32_t subTileY() const {
-                return m_data.y & math::fix::precisionMask;
+                return m_data.subTileY();
             }
 
             int32_t subTileZ() const {
-                return m_data.z & math::fix::precisionMask;
+                return m_data.subTileZ();
+            }
+
+            bool onCenterOfTile() const {
+                return m_data.onCenterOfTile();
             }
 
             int32_t orientation() const {

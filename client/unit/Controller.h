@@ -27,6 +27,8 @@ namespace isomap {
 
                 virtual bool unload();
 
+                virtual bool load();
+
                 virtual void update();
 
                 virtual void onMessage( common::UnitServerMessage::Type msgType );

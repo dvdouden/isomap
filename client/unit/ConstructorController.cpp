@@ -4,6 +4,7 @@
 #include "../Unit.h"
 #include "WorkProvider.h"
 #include "AdjacentToStructurePathCondition.h"
+#include "DockingTilePathCondition.h"
 
 namespace isomap {
     namespace client {
@@ -17,6 +18,9 @@ namespace isomap {
             ConstructorController::~ConstructorController() = default;
 
             bool ConstructorController::construct( Structure* structure ) {
+                if ( unit()->payloadEmpty() ) {
+                    return false;
+                }
                 if ( unit()->isAdjacentTo( structure ) ) {
                     if ( Controller::construct( structure ) ) {
                         setStructure( structure );
@@ -31,12 +35,31 @@ namespace isomap {
                 return false;
             }
 
-            void ConstructorController::onMessage( common::UnitServerMessage::Type msgType ) {
-                if ( m_currentStructure == nullptr ) {
-                    Controller::onMessage( msgType );
-                    return;
+            bool ConstructorController::load() {
+                m_constructing = false;
+                Structure* constructionYard = assignedStructure();
+                if ( constructionYard != nullptr ) {
+                    // check if we're on the docking tile
+                    if ( constructionYard->dockingTileAt( unit()->tileX(), unit()->tileY() ) ) {
+                        // if so, start unloading
+                        return Controller::unload();
+                    } else {
+                        // if not, move to the construction yard
+                        return Controller::moveTo( StructureDockingTilePathCondition( constructionYard ) );
+                    }
+                }
+                // no assigned construction yard, check if we're on one by chance...
+                if ( Controller::load() ) {
+                    return true;
                 }
 
+                return Controller::moveTo(
+                        StructureTypeDockingTilePathCondition(
+                                unit()->type()->dockStructureType(),
+                                unit()->player()->terrain() ) );
+            }
+
+            void ConstructorController::onMessage( common::UnitServerMessage::Type msgType ) {
                 switch ( msgType ) {
                     case common::UnitServerMessage::Construct:
                     case common::UnitServerMessage::Harvest:
@@ -44,10 +67,11 @@ namespace isomap {
                     case common::UnitServerMessage::Status:
                     case common::UnitServerMessage::MoveTo:
                     case common::UnitServerMessage::Unload:
+                    case common::UnitServerMessage::Load:
                         break;
 
                     case common::UnitServerMessage::Done:
-                        onMove();
+                        onDone();
                         break;
 
                     case common::UnitServerMessage::Abort:
@@ -57,16 +81,29 @@ namespace isomap {
                 Controller::onMessage( msgType );
             }
 
-            void ConstructorController::onMove() {
+            void ConstructorController::onDone() {
                 switch ( unit()->lastState() ) {
                     case common::Moving: // reached target
                         //printf( "Reached target, start constructing\n" );
-                        construct();
+                        if ( m_constructing ) {
+                            construct();
+                        } else {
+                            load();
+                        }
                         break;
 
                     case common::Constructing:
                         //printf( "Construction complete\n" );
                         m_currentStructure = nullptr;
+                        if ( unit()->payloadEmpty() ) {
+                            load();
+                        } else if ( workProvider() != nullptr ) {
+                            workProvider()->unitAvailable( unit() );
+                        }
+                        break;
+
+                    case common::Loading:
+                        //printf( "Loading complete\n" );
                         if ( workProvider() != nullptr ) {
                             workProvider()->unitAvailable( unit() );
                         }
@@ -82,7 +119,7 @@ namespace isomap {
                 switch ( unit()->lastState() ) {
                     case common::Moving:
                         // failed to reach target, retry
-                        printf( "[%d] Construct command given to unit but unable to reach structure, retry!\n",
+                        printf( "[%d] Move command given to unit but unable to reach structure, retry!\n",
                                 unit()->id() );
                         moveTo();
                         break;
@@ -94,6 +131,13 @@ namespace isomap {
                         construct();
                         break;
 
+                    case common::Loading:
+                        // failed to load resources? Retry
+                        printf( "[%d] Load command given to unit but unable to load, retry!\n",
+                                unit()->id() );
+                        load();
+                        break;
+
                     default:
                         // ignore
                         break;
@@ -101,19 +145,21 @@ namespace isomap {
             }
 
             void ConstructorController::update() {
-                if ( m_currentStructure == nullptr ) {
-                    Controller::update();
-                }
+                Controller::update();
             }
 
             void ConstructorController::moveTo() {
-                m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
-                if ( m_currentStructure == nullptr || !Controller::moveTo(
-                        AdjacentToStructurePathCondition( m_currentStructure ) ) ) {
-                    printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
-                            unit()->id(),
-                            m_currentStructureId );
-                    fail();
+                if ( m_constructing ) {
+                    m_currentStructure = unit()->player()->getStructure( m_currentStructureId );
+                    if ( m_currentStructure == nullptr || !Controller::moveTo(
+                            AdjacentToStructurePathCondition( m_currentStructure ) ) ) {
+                        printf( "[%d] Construct command given to unit but unable to reach structure %d!\n",
+                                unit()->id(),
+                                m_currentStructureId );
+                        fail();
+                    }
+                } else {
+                    load();
                 }
             }
 
@@ -133,7 +179,9 @@ namespace isomap {
                 unit()->player()->controller()->onUnableToConstruct(
                         unit()->player()->getStructure( m_currentStructureId ),
                         unit() );
-                if ( workProvider() ) {
+                if ( unit()->payloadEmpty() ) {
+                    load();
+                } else if ( workProvider() ) {
                     workProvider()->unitAvailable( unit() );
                 }
             }
@@ -144,6 +192,7 @@ namespace isomap {
                             unit()->player()->getStructure( m_currentStructureId ),
                             unit() );
                 }
+                m_constructing = true;
                 m_currentStructure = structure;
                 m_currentStructureId = m_currentStructure->id();
                 if ( workProvider() != nullptr ) {
@@ -155,6 +204,7 @@ namespace isomap {
                 Controller::dump();
                 printf( "Current structure id: %d\n", m_currentStructureId );
                 printf( "Current structure: %p\n", m_currentStructure );
+                printf( "Current state: %s\n", m_constructing ? "Construction" : "Loading" );
             }
 
         }

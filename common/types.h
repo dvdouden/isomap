@@ -46,6 +46,7 @@ namespace isomap {
             Constructing,
             Harvesting,
             Unloading,
+            Loading,
         };
 
         struct WayPoint {

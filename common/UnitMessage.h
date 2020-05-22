@@ -15,6 +15,7 @@ namespace isomap {
                 Construct,
                 Harvest,
                 Unload,
+                Load,
             };
 
             explicit UnitCommandMessage( Type type ) :
@@ -42,6 +43,8 @@ namespace isomap {
 
             static UnitCommandMessage* unloadMsg();
 
+            static UnitCommandMessage* loadMsg();
+
         private:
             Type m_type;
             std::vector<WayPoint> m_wayPoints;
@@ -59,6 +62,7 @@ namespace isomap {
                 Done,
                 Abort,
                 Unload,
+                Load,
             };
 
             explicit UnitServerMessage( Type type ) :
@@ -91,6 +95,8 @@ namespace isomap {
             static UnitServerMessage* abortMsg( const UnitData& data );
 
             static UnitServerMessage* unloadMsg( const UnitData& data );
+
+            static UnitServerMessage* loadMsg( const UnitData& data );
 
 
         private:

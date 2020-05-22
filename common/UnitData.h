@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include "../util/math.h"
 
 namespace isomap {
     namespace common {
@@ -22,6 +23,35 @@ namespace isomap {
             void setState( UnitState newState ) {
                 lastState = state;
                 state = newState;
+            }
+
+
+            int32_t tileX() const {
+                return x >> math::fix::precisionBits;
+            }
+
+            int32_t tileY() const {
+                return y >> math::fix::precisionBits;
+            }
+
+            int32_t tileZ() const {
+                return z >> math::fix::precisionBits;
+            }
+
+            int32_t subTileX() const {
+                return x & math::fix::precisionMask;
+            }
+
+            int32_t subTileY() const {
+                return y & math::fix::precisionMask;
+            }
+
+            int32_t subTileZ() const {
+                return z & math::fix::precisionMask;
+            }
+
+            bool onCenterOfTile() const {
+                return subTileX() == math::fix::halfPrecision && subTileY() == math::fix::halfPrecision;
             }
 
             static uint32_t getOrientation( int32_t dX, int32_t dY );

@@ -76,8 +76,8 @@ namespace isomap {
 
             bool Controller::unload() {
                 //printf( "Unit %d unload\n", id() );
-                if ( !m_unit->type()->canHarvest() ) {
-                    printf( "[%d] Unload command given to unit without harvesting abilities!\n",
+                if ( m_unit->type()->maxPayload() == 0 ) {
+                    printf( "[%d] Unload command given to unit without payload!\n",
                             m_unit->id() );
                     return false;
                 }
@@ -98,6 +98,30 @@ namespace isomap {
                 return true;
             }
 
+            bool Controller::load() {
+                //printf( "Unit %d load\n", id() );
+                if ( m_unit->type()->maxPayload() == 0 ) {
+                    printf( "[%d] Load command given to unit without payload!\n",
+                            m_unit->id() );
+                    return false;
+                }
+                auto* structure = m_unit->player()->terrain()->getConstructedStructureAt( m_unit->tileX(),
+                                                                                          m_unit->tileY() );
+                if ( structure == nullptr ) {
+                    return false;
+                }
+                if ( structure->type()->id() != m_unit->type()->dockStructureType() ) {
+                    return false;
+                }
+                if ( !structure->dockingTileAt( m_unit->tileX(), m_unit->tileY() ) ) {
+                    return false;
+                }
+
+                m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                common::UnitCommandMessage::loadMsg() );
+                return true;
+            }
+
             void Controller::dump() {
                 printf( "Controller:\n" );
             }
@@ -110,6 +134,7 @@ namespace isomap {
                     case common::UnitServerMessage::Stop:
                     case common::UnitServerMessage::Abort:
                     case common::UnitServerMessage::Unload:
+                    case common::UnitServerMessage::Load:
                         break;
                     case common::UnitServerMessage::MoveTo:
                         onMove();
@@ -131,7 +156,13 @@ namespace isomap {
                         break;
 
                     case common::Unloading:
+                        // FIXME: depends on structure type
                         m_unit->data().payload -= m_unit->player()->incCredits( 1 );
+                        break;
+
+                    case common::Loading:
+                        // FIXME: depends on structure type
+                        m_unit->data().payload += m_unit->player()->decCredits( 1 );
                         break;
 
                     default:

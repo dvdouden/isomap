@@ -453,7 +453,7 @@ namespace isomap {
             if ( useSlopes ) {
                 updateSlopes( x, y, 1, 1 );
             }
-            updateCliffs( x, y, 1, 1);
+            updateCliffs( x, y, 1, 1 );
         }
 
         void TerrainData::lower( uint32_t x, uint32_t y ) {
@@ -462,14 +462,14 @@ namespace isomap {
             if ( useSlopes ) {
                 updateSlopes( x, y, 1, 1 );
             }
-            updateCliffs( x, y, 1, 1);
+            updateCliffs( x, y, 1, 1 );
         }
 
         void TerrainData::incSlope( uint32_t x, uint32_t y ) {
             uint32_t idx = y * mapWidth + x;
             uint8_t slope = slopeMap[idx];
             slopeMap[idx] = (slope + 1u) % 16u;
-            updateCliffs( x, y, 1, 1);
+            updateCliffs( x, y, 1, 1 );
         }
 
         void TerrainData::splode( uint32_t origX, uint32_t origY, uint32_t radius ) {
@@ -496,22 +496,22 @@ namespace isomap {
             int8_t level = heightMap[origY * mapWidth + origX];
 
             radius += lipWidth;
-            uint32_t startY = radius > origY  ? 0 : origY - radius;
+            uint32_t startY = radius > origY ? 0 : origY - radius;
             uint32_t endY = radius + origY > mapHeight - 1 ? mapHeight - 1 : origY + radius;
-            uint32_t startX = radius > origX  ? 0 : origX - radius;
-            uint32_t endX = radius + origX > mapWidth - 1? mapWidth - 1 : origX + radius;
+            uint32_t startX = radius > origX ? 0 : origX - radius;
+            uint32_t endX = radius + origX > mapWidth - 1 ? mapWidth - 1 : origX + radius;
 
             for ( int32_t y = startY; y <= endY; ++y ) {
                 if ( y < 0 || y >= mapHeight ) {
                     continue;
                 }
 
-                int32_t deltaY = (y - int32_t(origY)) * (y - int32_t(origY));
+                int32_t deltaY = (y - int32_t( origY )) * (y - int32_t( origY ));
                 for ( int32_t x = startX; x <= endX; ++x ) {
                     if ( x < 0 || x >= mapWidth ) {
                         continue;
                     }
-                    int32_t deltaX = (x - int32_t(origX)) * (x - int32_t(origX));
+                    int32_t deltaX = (x - int32_t( origX )) * (x - int32_t( origX ));
 
                     for ( auto& r : radii ) {
                         if ( deltaX + deltaY <= r.first ) {
