@@ -154,6 +154,12 @@ namespace isomap {
                             g = highlight->second.g() * 255;
                             b = highlight->second.b() * 255;
                         }
+                        auto debug = m_debug.find( idx );
+                        if ( debug != m_debug.end() ) {
+                            r = debug->second.r() * 255;
+                            g = debug->second.g() * 255;
+                            b = debug->second.b() * 255;
+                        }
 
                         c[0] = vl::ubvec4( r, g, b, 255 );
                         c[1] = vl::ubvec4( r, g, b, 255 );
@@ -163,7 +169,7 @@ namespace isomap {
 
                         ++quads;
 
-                        if ( slope & 0b0001'0000u ) {
+                        if ( slope & common::slope::bitCliffDown ) {
                             auto c03 = m_terrain->safeCorner( x, y - 1, 3 );
                             auto c02 = m_terrain->safeCorner( x, y - 1, 2 );
                             vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
@@ -186,7 +192,7 @@ namespace isomap {
                             c += 4;
                             ++quads;
                         }
-                        if ( slope & 0b0010'0000u ) {
+                        if ( slope & common::slope::bitCliffRight ) {
                             auto c10 = m_terrain->safeCorner( x + 1, y, 0 );
                             auto c13 = m_terrain->safeCorner( x + 1, y, 3 );
                             vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
@@ -209,7 +215,7 @@ namespace isomap {
                             c += 4;
                             ++quads;
                         }
-                        if ( slope & 0b0100'0000u ) {
+                        if ( slope & common::slope::bitCliffUp ) {
                             auto c21 = m_terrain->safeCorner( x, y + 1, 1 );
                             auto c20 = m_terrain->safeCorner( x, y + 1, 0 );
                             vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
@@ -233,7 +239,7 @@ namespace isomap {
                             c += 4;
                             ++quads;
                         }
-                        if ( slope & 0b1000'0000u ) {
+                        if ( slope & common::slope::bitCliffLeft ) {
                             auto c32 = m_terrain->safeCorner( x - 1, y, 2 );
                             auto c31 = m_terrain->safeCorner( x - 1, y, 1 );
                             // TODO: figure out if we need a quad or a tri...
@@ -305,6 +311,10 @@ namespace isomap {
 
             void Renderer::addCursor( uint32_t x, uint32_t y, const vl::fvec4& color ) {
                 m_cursor[y * m_terrain->width() + x] = color;
+            }
+
+            void Renderer::addDebug( uint32_t x, uint32_t y, const vl::fvec4& color ) {
+                m_debug[y * m_terrain->width() + x] = color;
             }
 
         }

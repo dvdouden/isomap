@@ -54,6 +54,12 @@ namespace isomap {
                     m_highlights.clear();
                 }
 
+                void addDebug( uint32_t x, uint32_t y, const vl::fvec4& color );
+
+                void clearDebug() {
+                    m_debug.clear();
+                }
+
 
             private:
                 Terrain* m_terrain;
@@ -63,6 +69,7 @@ namespace isomap {
 
                 std::map<uint32_t, vl::fvec4> m_cursor;
                 std::map<uint32_t, vl::fvec4> m_highlights;
+                std::map<uint32_t, vl::fvec4> m_debug;
 
                 vl::ref<vl::SceneManagerActorTree> m_sceneManager;
             };

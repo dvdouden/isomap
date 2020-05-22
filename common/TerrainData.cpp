@@ -16,7 +16,7 @@ namespace isomap {
         static const uint8_t s_slopeOffsets[16] = {8, 3, 1, 2, 7, 8, 0, 1, 5, 4, 8, 3, 6, 5, 7, 8};
         //static const uint8_t s_slopeOffsets[16] = { 8, 3, 1, 2, 7, 0, 0, 1, 5, 4, 0, 3, 6, 5, 7, 8 };
 
-        int8_t slope( uint8_t slopeBits, uint8_t orientation ) {
+        int8_t slopeAngle( uint8_t slopeBits, uint8_t orientation ) {
             return 0;
             /*if ( s_slopeOffsets[orientation] == 8 ) {
                 return 0;
@@ -105,54 +105,61 @@ namespace isomap {
             uint32_t startY = y > 0 ? y - 1 : y;
             uint32_t endX = std::min( x + width + 1, mapWidth );
             uint32_t endY = std::min( y + height + 1, mapHeight );
-            // for every tile, we store whether any of the eight surrounding tiles can be reached
-            // height difference between two tiles may not be more than 1
+
+            // we've already calculated whether there's a height difference between two adjacent tiles
+            // so all we need to do is check the cliff bits
             // for diagonal movement, both the horizontal and vertical movement must be possible
             int32_t stride = mapWidth; // NOTE: needs to be signed, will get "funny" results when negating when unsigned
             for ( uint32_t tileY = startY; tileY < endY; ++tileY ) {
                 auto* tmpPathMap = pathMap + tileY * stride + startX;
+                auto* tmpSlopeMap = slopeMap + tileY * stride + startX;
                 auto* tmpHeightMap = heightMap + tileY * stride + startX;
                 auto* tmpOccupancyMap = occupancyMap + tileY * stride + startX;
                 for ( uint32_t tileX = startX; tileX < endX; ++tileX ) {
                     uint8_t pathBits = 0;
-                    uint8_t h = tmpHeightMap[0];
+                    uint8_t slope = tmpSlopeMap[0];
+                    uint8_t height = tmpHeightMap[0];
 
                     // bit 4, down, x, y - 1
-                    if ( tileY > 0 ) {
-                        uint8_t hDown = tmpHeightMap[-stride];
-                        uint8_t oDown = tmpOccupancyMap[-stride];
-                        if ( (hDown == h || hDown - h == 1 || h - hDown == 1) &&
-                             (oDown & occupancy::bitObstructed) == 0 && hDown >= 4 ) {
+                    if ( tileY > 0 && (slope & slope::bitCliffDown) == 0 ) {
+                        uint8_t slopeDown = tmpSlopeMap[-stride];
+                        uint8_t heightDown = tmpHeightMap[-stride];
+                        uint8_t occupancyDown = tmpOccupancyMap[-stride];
+                        if ( (slopeDown & slope::bitCliffUp) == 0 &&
+                             (occupancyDown & occupancy::bitObstructed) == 0 && heightDown >= 4 ) {
                             pathBits |= path::bitDown;
                         }
                     }
 
                     // bit 2, right, x + 1, y
-                    if ( tileX < mapWidth - 1 ) {
-                        uint8_t hRight = tmpHeightMap[1];
-                        uint8_t oRight = tmpOccupancyMap[1];
-                        if ( (hRight == h || hRight - h == 1 || h - hRight == 1) &&
-                             (oRight & occupancy::bitObstructed) == 0 && hRight >= 4 ) {
+                    if ( tileX < mapWidth - 1 && (slope & slope::bitCliffRight) == 0 ) {
+                        uint8_t slopeRight = tmpSlopeMap[1];
+                        uint8_t heightRight = tmpHeightMap[1];
+                        uint8_t occupancyRight = tmpOccupancyMap[1];
+                        if ( (slopeRight & slope::bitCliffLeft) == 0 &&
+                             (occupancyRight & occupancy::bitObstructed) == 0 && heightRight >= 4 ) {
                             pathBits |= path::bitRight;
                         }
                     }
 
                     // bit 0, up, x, y + 1
-                    if ( tileY < mapHeight - 1 ) {
-                        uint8_t hUp = tmpHeightMap[stride];
-                        uint8_t oUp = tmpOccupancyMap[stride];
-                        if ( (hUp == h || hUp - h == 1 || h - hUp == 1) &&
-                             (oUp & occupancy::bitObstructed) == 0 && hUp >= 4 ) {
+                    if ( tileY < mapHeight - 1 && (slope & slope::bitCliffUp) == 0 ) {
+                        uint8_t slopeUp = tmpSlopeMap[stride];
+                        uint8_t heightUp = tmpHeightMap[stride];
+                        uint8_t occupancyUp = tmpOccupancyMap[stride];
+                        if ( (slopeUp & slope::bitCliffDown) == 0 &&
+                             (occupancyUp & occupancy::bitObstructed) == 0 && heightUp >= 4 ) {
                             pathBits |= path::bitUp;
                         }
                     }
 
                     // bit 6, left, x - 1, y
-                    if ( tileX > 0 ) {
-                        uint8_t hLeft = tmpHeightMap[-1];
-                        uint8_t oLeft = tmpOccupancyMap[-1];
-                        if ( (hLeft == h || hLeft - h == 1 || h - hLeft == 1) &&
-                             (oLeft & occupancy::bitObstructed) == 0 && hLeft >= 4 ) {
+                    if ( tileX > 0 && (slope & slope::bitCliffLeft) == 0 ) {
+                        uint8_t slopeLeft = tmpSlopeMap[-1];
+                        uint8_t heightLeft = tmpHeightMap[-1];
+                        uint8_t occupancyLeft = tmpOccupancyMap[-1];
+                        if ( (slopeLeft & slope::bitCliffRight) == 0 &&
+                             (occupancyLeft & occupancy::bitObstructed) == 0 && heightLeft >= 4 ) {
                             pathBits |= path::bitLeft;
                         }
                     }
@@ -161,7 +168,7 @@ namespace isomap {
                     if ( tileX > 0 && tileY > 0 && (pathBits & path::bitDownOrLeft) == path::bitDownOrLeft ) {
                         uint8_t hDownLeft = tmpHeightMap[-stride - 1];
                         uint8_t oDownLeft = tmpOccupancyMap[-stride - 1];
-                        if ( (hDownLeft == h || hDownLeft - h == 1 || h - hDownLeft == 1) &&
+                        if ( (hDownLeft == height || hDownLeft - height == 1 || height - hDownLeft == 1) &&
                              (oDownLeft & occupancy::bitObstructed) == 0 && hDownLeft >= 4 ) {
                             pathBits |= path::bitDownLeft;
                         }
@@ -172,7 +179,7 @@ namespace isomap {
                          (pathBits & path::bitDownOrRight) == path::bitDownOrRight ) {
                         uint8_t hDownRight = tmpHeightMap[-stride + 1];
                         uint8_t oDownRight = tmpOccupancyMap[-stride + 1];
-                        if ( (hDownRight == h || hDownRight - h == 1 || h - hDownRight == 1) &&
+                        if ( (hDownRight == height || hDownRight - height == 1 || height - hDownRight == 1) &&
                              (oDownRight & occupancy::bitObstructed) == 0 && hDownRight >= 4 ) {
                             pathBits |= path::bitDownRight;
                         }
@@ -183,7 +190,7 @@ namespace isomap {
                          (pathBits & path::bitUpOrRight) == path::bitUpOrRight ) {
                         uint8_t hUpRight = tmpHeightMap[stride + 1];
                         uint8_t oUpRight = tmpOccupancyMap[stride + 1];
-                        if ( (hUpRight == h || hUpRight - h == 1 || h - hUpRight == 1) &&
+                        if ( (hUpRight == height || hUpRight - height == 1 || height - hUpRight == 1) &&
                              (oUpRight & occupancy::bitObstructed) == 0 && hUpRight >= 4 ) {
                             pathBits |= path::bitUpRight;
                         }
@@ -193,7 +200,7 @@ namespace isomap {
                     if ( tileX > 0 && tileY < mapHeight - 1 && (pathBits & path::bitUpOrLeft) == path::bitUpOrLeft ) {
                         uint8_t hUpLeft = tmpHeightMap[stride - 1];
                         uint8_t oUpLeft = tmpOccupancyMap[stride - 1];
-                        if ( (hUpLeft == h || hUpLeft - h == 1 || h - hUpLeft == 1) &&
+                        if ( (hUpLeft == height || hUpLeft - height == 1 || height - hUpLeft == 1) &&
                              (oUpLeft & occupancy::bitObstructed) == 0 && hUpLeft >= 4 ) {
                             pathBits |= path::bitUpLeft;
                         }
@@ -201,7 +208,7 @@ namespace isomap {
 
                     *tmpPathMap = pathBits;
                     ++tmpPathMap;
-                    ++tmpHeightMap;
+                    ++tmpSlopeMap;
                     ++tmpOccupancyMap;
                 }
             }
@@ -212,7 +219,7 @@ namespace isomap {
             uint8_t h = heightMap[idx];
 
             uint8_t slope = slopeMap[idx];
-            if ( (slope & 0b0000'1111u) != 0 ) {
+            if ( (slope & slope::slopeMask) != 0 ) {
                 heightMap[idx] = h - 1;
                 if ( useSlopes ) {
                     updateSlopes( x, y, 1, 1 );
@@ -333,16 +340,16 @@ namespace isomap {
             uint8_t cliffBits = 0;
 
             if ( c0 < c03 || c1 > c02 ) {
-                cliffBits |= 0b0001'0000u;
+                cliffBits |= slope::bitCliffDown;
             }
             if ( c1 > c10 || c2 < c13 ) {
-                cliffBits |= 0b0010'0000u;
+                cliffBits |= slope::bitCliffLeft;
             }
             if ( c2 < c21 || c3 < c20 ) {
-                cliffBits |= 0b0100'0000u;
+                cliffBits |= slope::bitCliffUp;
             }
             if ( c3 < c32 || c0 < c31 ) {
-                cliffBits |= 0b1000'0000u;
+                cliffBits |= slope::bitCliffRight;
             }
             return cliffBits;
         }
@@ -361,7 +368,7 @@ namespace isomap {
             for ( int tileY = startY; tileY < endY; ++tileY ) {
                 for ( int tileX = startX; tileX < endX; ++tileX ) {
                     uint32_t idx = tileY * mapWidth + tileX;
-                    slopeMap[idx] = (slopeMap[idx] & 0b0000'1111u) | calcCliffBits( tileX, tileY );
+                    slopeMap[idx] = (slopeMap[idx] & slope::slopeMask) | calcCliffBits( tileX, tileY );
                 }
             }
         }
@@ -455,6 +462,7 @@ namespace isomap {
                 updateSlopes( x, y, 1, 1 );
             }
             updateCliffs( x, y, 1, 1 );
+            updatePathMap( x, y, 1, 1 );
         }
 
         void TerrainData::lower( uint32_t x, uint32_t y ) {
@@ -464,6 +472,7 @@ namespace isomap {
                 updateSlopes( x, y, 1, 1 );
             }
             updateCliffs( x, y, 1, 1 );
+            updatePathMap( x, y, 1, 1 );
         }
 
         void TerrainData::incSlope( uint32_t x, uint32_t y ) {
@@ -471,6 +480,7 @@ namespace isomap {
             uint8_t slope = slopeMap[idx];
             slopeMap[idx] = (slope + 1u) % 16u;
             updateCliffs( x, y, 1, 1 );
+            updatePathMap( x, y, 1, 1 );
         }
 
         void TerrainData::splode( uint32_t origX, uint32_t origY, uint32_t radius ) {
@@ -549,7 +559,7 @@ namespace isomap {
 
             int32_t height = heightMap[tileY * mapWidth + tileX] * math::fix::precision;
 
-            uint8_t slopes = slopeMap[tileY * mapWidth + tileX] & 0b0000'1111u;
+            uint8_t slopes = slopeMap[tileY * mapWidth + tileX] & slope::slopeMask;
 
             switch ( slopes ) {
                 default:

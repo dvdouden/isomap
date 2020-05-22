@@ -22,6 +22,20 @@ namespace isomap {
             const uint8_t bitDownOrRight = bitDown | bitRight;
         }
 
+        namespace slope {
+            const uint8_t bitSlopeDown = 0b0000'0001u;
+            const uint8_t bitSlopeRight = 0b0000'0010u;
+            const uint8_t bitSlopeUp = 0b0000'0100u;
+            const uint8_t bitSlopeLeft = 0b0000'1000u;
+            const uint8_t slopeMask = 0b0000'1111u;
+
+            const uint8_t bitCliffDown = 0b0001'0000u;
+            const uint8_t bitCliffRight = 0b0010'0000u;
+            const uint8_t bitCliffUp = 0b0100'0000u;
+            const uint8_t bitCliffLeft = 0b1000'0000u;
+            const uint8_t cliffMask = 0b1111'0000u;
+        }
+
         namespace occupancy {
             const uint8_t bitObstructed = 0b0000'0001u;
             const uint8_t bitConstructed = 0b0000'0010u;
@@ -33,7 +47,7 @@ namespace isomap {
                     uint32_t( bitObstructed ) | bitConstructed | bitSpawnPoint | bitDockingPoint );
         }
 
-        int8_t slope( uint8_t slopeBits, uint8_t orientation );
+        int8_t slopeAngle( uint8_t slopeBits, uint8_t orientation );
 
 
         // common data structure and methods

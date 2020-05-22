@@ -687,8 +687,8 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     vl::real sub_x = worldTileX - ::floor( worldTileX );
     vl::real sub_y = worldTileY - ::floor( worldTileY );
 
-    world_x = (int)worldTileX;
-    world_y = (int)worldTileY;
+    world_x = (int)::floor(worldTileX);
+    world_y = (int)::floor(worldTileY);
 
     // our current world coordinates do not take the height of the tile into account, it assumes each tile has height 0
     // in order to fix that, we need to look at a few more tiles towards the camera
@@ -727,6 +727,10 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
     int c1 = (3u + m_orientation) % 4u;
     int c2 = (2u + m_orientation) % 4u;
 
+    if ( m_renderColumn ) {
+        m_renderTerrain->renderer()->clearDebug();
+    }
+
     for ( int i = 0; i < 18; ++i ) {
         // for each tile, we need to find the top line
         // translate the two corners to screen space
@@ -750,7 +754,7 @@ void MainWindow::screenToWorld( int screen_x, int screen_y, int& world_x, int& w
                 color = vl::red;
             }
             if ( m_renderColumn ) {
-                m_renderTerrain->renderer()->addHighlight( temp_x, temp_y, color );
+                m_renderTerrain->renderer()->addDebug( temp_x, temp_y, color );
             }
         }
 

@@ -219,7 +219,7 @@ namespace isomap {
                         //printf( "down left\n" );
                         uint32_t idx = tile.from - width - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 5 );
+                            nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 5 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -228,7 +228,7 @@ namespace isomap {
                         //printf( "down\n" );
                         uint32_t idx = tile.from - width;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 4 );
+                            nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 4 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -237,7 +237,7 @@ namespace isomap {
                         //printf( "down right\n" );
                         uint32_t idx = tile.from - width + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 3 );
+                            nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 3 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -246,7 +246,7 @@ namespace isomap {
                         //printf( "right\n" );
                         uint32_t idx = tile.from + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 2 );
+                            nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 2 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -255,7 +255,7 @@ namespace isomap {
                         //printf( "right up\n" );
                         uint32_t idx = tile.from + width + 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 1 );
+                            nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 1 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -264,7 +264,7 @@ namespace isomap {
                         //printf( "up\n" );
                         uint32_t idx = tile.from + width;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 0 );
+                            nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 0 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -273,7 +273,7 @@ namespace isomap {
                         //printf( "up left\n" );
                         uint32_t idx = tile.from + width - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 15 + common::slope( slopeBits, 7 );
+                            nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 7 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
@@ -282,7 +282,7 @@ namespace isomap {
                         //printf( "left\n" );
                         uint32_t idx = tile.from - 1;
                         if ( nodeMap[idx].value == 0 ) {
-                            nodeMap[idx].value = value.value + 10 + common::slope( slopeBits, 6 );
+                            nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 6 );
                             nodeMap[idx].from = tile.from;
                             todo.push( {nodeMap[idx].value, idx} );
                         }
