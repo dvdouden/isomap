@@ -119,26 +119,31 @@ namespace isomap {
                         }
 
                         if ( m_renderOccupancy ) {
-                            if ( m_terrain->occupancyMap()[idx] == 0 ) {
+                            uint8_t occupancy = m_terrain->occupancyMap()[idx];
+                            if ( occupancy == 0 ) {
                                 // free
                                 r = 0;
                                 g = 128;
                                 b = 0;
-                            } else if ( m_terrain->occupancyMap()[idx] == 1 ) {
+                            } else if ( occupancy == 1 ) {
                                 // occupied
                                 r = 128;
                                 g = 0;
                                 b = 0;
-                            } else if ( m_terrain->occupancyMap()[idx] == 2 ) {
+                            } else if ( occupancy == 2 ) {
                                 // reserved
                                 r = 128;
                                 g = 128;
                                 b = 0;
-                            } else if ( m_terrain->occupancyMap()[idx] == 3 ) {
+                            } else if ( occupancy == 3 ) {
                                 // reserved and occupied? :/
                                 r = 128;
                                 g = 64;
                                 b = 0;
+                            } else if ( occupancy & common::occupancy::bitDockAndSpawn ) {
+                                r = 128;
+                                g = 0;
+                                b = 128;
                             }
                         }
 
@@ -169,102 +174,108 @@ namespace isomap {
 
                         ++quads;
 
-                        // FIXME: double check which corners to use
-                        // cliff my be on "my" side or the "other" side
-
                         if ( slope & common::slope::bitCliffDown ) {
                             auto c03 = m_terrain->safeCorner( x, y - 1, 3 );
                             auto c02 = m_terrain->safeCorner( x, y - 1, 2 );
-                            vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            vl::real hc02 = c02 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            // TODO: figure out if we need a quad or a tri...
-                            v[0] = vl::fvec3( (vl::real)x, (vl::real)y, hra );
-                            v[1] = vl::fvec3( (vl::real)x, (vl::real)y, hc03 );
-                            v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc02 );
-                            v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hrb );
-                            v += 4;
-                            n[0] = vl::fvec3( 0, -1, 0 );
-                            n[1] = vl::fvec3( 0, -1, 0 );
-                            n[2] = vl::fvec3( 0, -1, 0 );
-                            n[3] = vl::fvec3( 0, -1, 0 );
-                            n += 4;
-                            c[0] = vl::ubvec4( r, g, b, 255 );
-                            c[1] = vl::ubvec4( r, g, b, 255 );
-                            c[2] = vl::ubvec4( r, g, b, 255 );
-                            c[3] = vl::ubvec4( r, g, b, 255 );
-                            c += 4;
-                            ++quads;
+                            if ( c03 > ha || c02 > hb ) {
+                                vl::real hc03 = c03 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                                vl::real hc02 = c02 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+
+                                // TODO: figure out if we need a quad or a tri...
+                                v[0] = vl::fvec3( (vl::real)x, (vl::real)y, std::min( hra, hc03 ) );
+                                v[1] = vl::fvec3( (vl::real)x, (vl::real)y, hc03 );
+                                v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc02 );
+                                v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y, std::min( hrb, hc02 ) );
+                                v += 4;
+                                n[0] = vl::fvec3( 0, -1, 0 );
+                                n[1] = vl::fvec3( 0, -1, 0 );
+                                n[2] = vl::fvec3( 0, -1, 0 );
+                                n[3] = vl::fvec3( 0, -1, 0 );
+                                n += 4;
+                                c[0] = vl::ubvec4( r, g, b, 255 );
+                                c[1] = vl::ubvec4( r, g, b, 255 );
+                                c[2] = vl::ubvec4( r, g, b, 255 );
+                                c[3] = vl::ubvec4( r, g, b, 255 );
+                                c += 4;
+                                ++quads;
+                            }
                         }
                         if ( slope & common::slope::bitCliffRight ) {
                             auto c10 = m_terrain->safeCorner( x + 1, y, 0 );
                             auto c13 = m_terrain->safeCorner( x + 1, y, 3 );
-                            vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            vl::real hc13 = c13 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            // TODO: figure out if we need a quad or a tri...
-                            v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hrb );
-                            v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc10 );
-                            v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc13 );
-                            v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hrc );
-                            v += 4;
-                            n[0] = vl::fvec3( 1, 0, 0 );
-                            n[1] = vl::fvec3( 1, 0, 0 );
-                            n[2] = vl::fvec3( 1, 0, 0 );
-                            n[3] = vl::fvec3( 1, 0, 0 );
-                            n += 4;
-                            c[0] = vl::ubvec4( r, g, b, 255 );
-                            c[1] = vl::ubvec4( r, g, b, 255 );
-                            c[2] = vl::ubvec4( r, g, b, 255 );
-                            c[3] = vl::ubvec4( r, g, b, 255 );
-                            c += 4;
-                            ++quads;
+                            if ( c10 > hb || c13 > hc ) {
+                                vl::real hc10 = c10 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                                vl::real hc13 = c13 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                                // TODO: figure out if we need a quad or a tri...
+                                v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y, std::min( hrb, hc10 ) );
+                                v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y, hc10 );
+                                v[2] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc13 );
+                                v[3] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, std::min( hrc, hc13 ) );
+                                v += 4;
+                                n[0] = vl::fvec3( 1, 0, 0 );
+                                n[1] = vl::fvec3( 1, 0, 0 );
+                                n[2] = vl::fvec3( 1, 0, 0 );
+                                n[3] = vl::fvec3( 1, 0, 0 );
+                                n += 4;
+                                c[0] = vl::ubvec4( r, g, b, 255 );
+                                c[1] = vl::ubvec4( r, g, b, 255 );
+                                c[2] = vl::ubvec4( r, g, b, 255 );
+                                c[3] = vl::ubvec4( r, g, b, 255 );
+                                c += 4;
+                                ++quads;
+                            }
                         }
                         if ( slope & common::slope::bitCliffUp ) {
                             auto c21 = m_terrain->safeCorner( x, y + 1, 1 );
                             auto c20 = m_terrain->safeCorner( x, y + 1, 0 );
-                            vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            vl::real hc20 = c20 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                            if ( c21 > hc || c20 > hd ) {
+                                vl::real hc21 = c21 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                                vl::real hc20 = c20 * ::sqrt( 2.0 / 3.0 ) / 2.0;
 
-                            // TODO: figure out if we need a quad or a tri...
-                            v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hrc );
-                            v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc21 );
-                            v[2] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc20 );
-                            v[3] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hrd );
-                            v += 4;
-                            n[0] = vl::fvec3( 0, 1, 0 );
-                            n[1] = vl::fvec3( 0, 1, 0 );
-                            n[2] = vl::fvec3( 0, 1, 0 );
-                            n[3] = vl::fvec3( 0, 1, 0 );
-                            n += 4;
-                            c[0] = vl::ubvec4( r, g, b, 255 );
-                            c[1] = vl::ubvec4( r, g, b, 255 );
-                            c[2] = vl::ubvec4( r, g, b, 255 );
-                            c[3] = vl::ubvec4( r, g, b, 255 );
-                            c += 4;
-                            ++quads;
+                                // TODO: figure out if we need a quad or a tri...
+                                v[0] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, std::min( hrc, hc21 ) );
+                                v[1] = vl::fvec3( (vl::real)x + 1, (vl::real)y + 1, hc21 );
+                                v[2] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc20 );
+                                v[3] = vl::fvec3( (vl::real)x, (vl::real)y + 1, std::min( hrd, hc20 ) );
+                                v += 4;
+                                n[0] = vl::fvec3( 0, 1, 0 );
+                                n[1] = vl::fvec3( 0, 1, 0 );
+                                n[2] = vl::fvec3( 0, 1, 0 );
+                                n[3] = vl::fvec3( 0, 1, 0 );
+                                n += 4;
+                                c[0] = vl::ubvec4( r, g, b, 255 );
+                                c[1] = vl::ubvec4( r, g, b, 255 );
+                                c[2] = vl::ubvec4( r, g, b, 255 );
+                                c[3] = vl::ubvec4( r, g, b, 255 );
+                                c += 4;
+                                ++quads;
+                            }
                         }
                         if ( slope & common::slope::bitCliffLeft ) {
                             auto c32 = m_terrain->safeCorner( x - 1, y, 2 );
                             auto c31 = m_terrain->safeCorner( x - 1, y, 1 );
-                            // TODO: figure out if we need a quad or a tri...
-                            vl::real hc32 = c32 * ::sqrt( 2.0 / 3.0 ) / 2.0;
-                            vl::real hc31 = c31 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                            if ( c32 > hd || c31 > ha ) {
+                                // TODO: figure out if we need a quad or a tri...
+                                vl::real hc32 = c32 * ::sqrt( 2.0 / 3.0 ) / 2.0;
+                                vl::real hc31 = c31 * ::sqrt( 2.0 / 3.0 ) / 2.0;
 
-                            v[0] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hrd );
-                            v[1] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc32 );
-                            v[2] = vl::fvec3( (vl::real)x, (vl::real)y, hc31 );
-                            v[3] = vl::fvec3( (vl::real)x, (vl::real)y, hra );
-                            v += 4;
-                            n[0] = vl::fvec3( -1, 0, 0 );
-                            n[1] = vl::fvec3( -1, 0, 0 );
-                            n[2] = vl::fvec3( -1, 0, 0 );
-                            n[3] = vl::fvec3( -1, 0, 0 );
-                            n += 4;
-                            c[0] = vl::ubvec4( r, g, b, 255 );
-                            c[1] = vl::ubvec4( r, g, b, 255 );
-                            c[2] = vl::ubvec4( r, g, b, 255 );
-                            c[3] = vl::ubvec4( r, g, b, 255 );
-                            c += 4;
-                            ++quads;
+                                v[0] = vl::fvec3( (vl::real)x, (vl::real)y + 1, std::min( hrd, hc32 ) );
+                                v[1] = vl::fvec3( (vl::real)x, (vl::real)y + 1, hc32 );
+                                v[2] = vl::fvec3( (vl::real)x, (vl::real)y, hc31 );
+                                v[3] = vl::fvec3( (vl::real)x, (vl::real)y, std::min( hra, hc31 ) );
+                                v += 4;
+                                n[0] = vl::fvec3( -1, 0, 0 );
+                                n[1] = vl::fvec3( -1, 0, 0 );
+                                n[2] = vl::fvec3( -1, 0, 0 );
+                                n[3] = vl::fvec3( -1, 0, 0 );
+                                n += 4;
+                                c[0] = vl::ubvec4( r, g, b, 255 );
+                                c[1] = vl::ubvec4( r, g, b, 255 );
+                                c[2] = vl::ubvec4( r, g, b, 255 );
+                                c[3] = vl::ubvec4( r, g, b, 255 );
+                                c += 4;
+                                ++quads;
+                            }
                         }
                     }
                 }
