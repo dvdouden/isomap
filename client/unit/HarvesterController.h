@@ -28,7 +28,7 @@ namespace isomap {
                 void dump() override;
 
             private:
-                void onMove();
+                void onDone();
 
                 void onAbort();
 

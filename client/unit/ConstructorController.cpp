@@ -95,6 +95,7 @@ namespace isomap {
                     case common::Constructing:
                         //printf( "Construction complete\n" );
                         m_currentStructure = nullptr;
+                        m_currentStructureId = 0;
                         if ( unit()->payloadEmpty() ) {
                             load();
                         } else if ( workProvider() != nullptr ) {

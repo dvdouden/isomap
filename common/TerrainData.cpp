@@ -493,7 +493,7 @@ namespace isomap {
 
         void TerrainData::splode( uint32_t origX, uint32_t origY, uint32_t radius ) {
 
-            std::vector <std::pair<uint32_t, int8_t>> radii;
+            std::vector<std::pair<uint32_t, int8_t>> radii;
 
             // calculate crater shape
             for ( int32_t r = 0; r < radius; ++r ) {

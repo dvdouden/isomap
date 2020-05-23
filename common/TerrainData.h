@@ -43,6 +43,7 @@ namespace isomap {
             const uint8_t bitSpawnPoint = 0b0000'1000u;
             const uint8_t bitDockingPoint = 0b0001'0000u;
             const uint8_t bitDockAndSpawn = bitSpawnPoint | bitDockingPoint;
+            const uint8_t bitsPassable = bitObstructed | bitReserved;
             const uint8_t maskStructureBits = uint8_t(
                     uint32_t( bitObstructed ) | bitConstructed | bitSpawnPoint | bitDockingPoint );
         }
@@ -117,6 +118,22 @@ namespace isomap {
             void splode( uint32_t x, uint32_t y, uint32_t radius );
 
             int32_t heightAt( uint32_t fixX, uint32_t fixY ) const;
+
+            uint8_t occupancy( uint32_t x, uint32_t y ) const {
+                return occupancyMap[y * mapWidth + x];
+            }
+
+            bool impassable( uint32_t x, uint32_t y ) const {
+                return (occupancy( x, y ) & occupancy::bitsPassable) != 0;
+            }
+
+            uint8_t path( uint32_t x, uint32_t y ) const {
+                return pathMap[y * mapWidth + x];
+            }
+
+            bool hasPath( uint32_t x, uint32_t y, uint32_t orientation ) const {
+                return (path( x, y ) & (1u << orientation)) != 0;
+            }
         };
 
     }

@@ -60,7 +60,7 @@ namespace isomap {
                         break;
 
                     case common::UnitServerMessage::Done:
-                        onMove();
+                        onDone();
                         break;
 
                     case common::UnitServerMessage::Abort:
@@ -70,7 +70,7 @@ namespace isomap {
                 Controller::onMessage( msgType );
             }
 
-            void HarvesterController::onMove() {
+            void HarvesterController::onDone() {
                 switch ( unit()->lastState() ) {
                     case common::Moving: // reached target
                         if ( m_harvesting ) {

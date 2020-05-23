@@ -4,14 +4,29 @@
 
 namespace isomap {
     namespace common {
-        void UnitData::updateMotion( const TerrainData& terrain ) {
+        bool UnitData::updateMotion( const TerrainData& terrain ) {
             if ( state == Idle ) {
-                return;
+                return true;
             }
             int32_t dX = wayPoint.x - x;
             int32_t dY = wayPoint.y - y;
             orientation = getOrientation( dX, dY );
-            getMotion( dX, dY, orientation );
+            if ( onCenterOfTile() ) {
+                // about to move to the next tile
+
+                // first check if there's a path to the next tile from the current tile
+                if ( !terrain.hasPath( tileX(), tileY(), orientation ) ) {
+                    return false;
+                }
+                // secondly check if tile is actually available
+                int32_t mX, mY;
+                getMotion( mX, mY, orientation, 1 );
+                if ( terrain.impassable( tileX() + mX, tileY() + mY ) ) {
+                    return false;
+                }
+            }
+
+            getMotion( dX, dY, orientation, math::fix::precision / 16 );
             x += dX;
             y += dY;
 
@@ -31,6 +46,7 @@ namespace isomap {
             if ( x == wayPoint.x && y == wayPoint.y ) {
                 setState( common::Idle );
             }
+            return true;
         }
 
         uint32_t UnitData::getOrientation( int32_t dX, int32_t dY ) {
@@ -61,8 +77,7 @@ namespace isomap {
             }
         }
 
-        void UnitData::getMotion( int32_t& dX, int32_t& dY, uint32_t orientation ) {
-            int32_t speed = math::fix::precision / 16;
+        void UnitData::getMotion( int32_t& dX, int32_t& dY, uint32_t orientation, int32_t speed ) {
             switch ( orientation ) {
                 case 0:
                     dX = 0;

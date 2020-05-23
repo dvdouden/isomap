@@ -303,7 +303,12 @@ namespace isomap {
                     int32_t oldTileX = tileX();
                     int32_t oldTileY = tileY();
 
-                    m_data.updateMotion( terrain->data() );
+                    if ( !m_data.updateMotion( terrain->data() ) ) {
+                        m_data.setState( common::Idle );
+                        delete msg;
+                        m_wayPoints.clear();
+                        return common::PlayerServerMessage::unitMsg( common::UnitServerMessage::abortMsg( m_data ) );
+                    }
 
                     if ( tileY() != oldTileY || tileX() != oldTileX ) {
                         player()->unFog( tileX(), tileY(), 10 );
