@@ -58,7 +58,13 @@ namespace isomap {
                 Structure* assignedStructure();
 
             private:
+                void onDone();
+
                 void onMove();
+
+                void onAbort();
+
+                void updateWayPoints();
 
                 Unit* m_unit;
                 std::vector<common::WayPoint> m_wayPoints;

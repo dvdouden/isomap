@@ -4,13 +4,16 @@
 
 namespace isomap {
     namespace common {
-        bool UnitData::updateMotion( const TerrainData& terrain ) {
+        bool UnitData::updateMotion( TerrainData& terrain ) {
             if ( state == Idle ) {
                 return true;
             }
             int32_t dX = wayPoint.x - x;
             int32_t dY = wayPoint.y - y;
+
             orientation = getOrientation( dX, dY );
+            uint32_t oldTileX = tileX();
+            uint32_t oldTileY = tileY();
             if ( onCenterOfTile() ) {
                 // about to move to the next tile
 
@@ -24,6 +27,7 @@ namespace isomap {
                 if ( terrain.impassable( tileX() + mX, tileY() + mY ) ) {
                     return false;
                 }
+                terrain.reserveUnit( tileX() + mX, tileY() + mY );
             }
 
             getMotion( dX, dY, orientation, math::fix::precision / 16 );
@@ -39,6 +43,10 @@ namespace isomap {
                 y = 0;
             } else if ( y >= terrain.mapHeight * math::fix::precision ) {
                 y = (terrain.mapHeight - 1) * math::fix::precision;
+            }
+
+            if ( tileX() != oldTileX || tileY() != oldTileY ) {
+                terrain.unreserveUnit( oldTileX, oldTileY );
             }
 
             z = terrain.heightAt( x, y );

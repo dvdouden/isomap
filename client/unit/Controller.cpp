@@ -124,6 +124,7 @@ namespace isomap {
 
             void Controller::dump() {
                 printf( "Controller:\n" );
+                printf( "\tWaypoints: %d\n", m_wayPoints.size() );
             }
 
             void Controller::onMessage( common::UnitServerMessage::Type msgType ) {
@@ -132,7 +133,6 @@ namespace isomap {
                     case common::UnitServerMessage::Harvest:
                     case common::UnitServerMessage::Status:
                     case common::UnitServerMessage::Stop:
-                    case common::UnitServerMessage::Abort:
                     case common::UnitServerMessage::Unload:
                     case common::UnitServerMessage::Load:
                         break;
@@ -140,9 +140,10 @@ namespace isomap {
                         onMove();
                         break;
                     case common::UnitServerMessage::Done:
-                        if ( m_unit->lastState() == common::Moving ) {
-                            onMove();
-                        }
+                        onDone();
+                        break;
+                    case common::UnitServerMessage::Abort:
+                        onAbort();
                         break;
                 }
             }
@@ -329,6 +330,22 @@ namespace isomap {
             }
 
             void Controller::onMove() {
+                updateWayPoints();
+            }
+
+            void Controller::onDone() {
+                if ( unit()->lastState() == common::Moving ) {
+                    updateWayPoints();
+                }
+            }
+
+            void Controller::onAbort() {
+                if ( unit()->lastState() == common::Moving ) {
+
+                }
+            }
+
+            void Controller::updateWayPoints() {
                 if ( !m_wayPoints.empty() &&
                      m_wayPoints.back().x == m_unit->tileX() &&
                      m_wayPoints.back().y == m_unit->tileY() ) {

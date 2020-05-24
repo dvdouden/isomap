@@ -22,6 +22,7 @@ namespace isomap {
             s_unitTypes[2] = new UnitType( 2, "harvester", false, true );
             s_unitTypes[2]->setPayload( 0, 700 );
             s_unitTypes[2]->setDockStructureType( 4 );
+            s_unitTypes[3] = new UnitType( 3, "scout", false, false );
         }
 
         void UnitType::clear() {

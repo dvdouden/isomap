@@ -86,10 +86,18 @@ namespace isomap {
             for ( uint32_t y = 0; y < footPrint->height(); ++y ) {
                 for ( uint32_t x = 0; x < footPrint->width(); ++x ) {
                     if ( footPrint->get( x, y ) != 0 ) {
-                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= ~occupancy::bitReserved;
+                        occupancyMap[(y + worldY) * mapWidth + (x + worldX)] &= uint8_t( ~occupancy::bitReserved );
                     }
                 }
             }
+        }
+
+        void TerrainData::reserveUnit( uint32_t worldX, uint32_t worldY ) {
+            occupancyMap[worldY * mapWidth + worldX] |= occupancy::bitUnit;
+        }
+
+        void TerrainData::unreserveUnit( uint32_t worldX, uint32_t worldY ) {
+            occupancyMap[worldY * mapWidth + worldX] &= uint8_t( ~occupancy::bitUnit );
         }
 
         void TerrainData::updatePathMap() {
@@ -376,7 +384,7 @@ namespace isomap {
             for ( int tileY = startY; tileY < endY; ++tileY ) {
                 for ( int tileX = startX; tileX < endX; ++tileX ) {
                     uint32_t idx = tileY * mapWidth + tileX;
-                    slopeMap[idx] = (slopeMap[idx] & slope::slopeMask) | calcCliffBits( tileX, tileY );
+                    slopeMap[idx] = uint8_t( slopeMap[idx] & slope::slopeMask ) | calcCliffBits( tileX, tileY );
                 }
             }
         }
@@ -415,25 +423,25 @@ namespace isomap {
             auto h6 = safeHeight( x, y + 1 );
             auto h7 = safeHeight( x - 1, y + 1 );
             auto h8 = safeHeight( x - 1, y );
-            if ( h == h2 && h == h4 && h == h6 && h == h8 ) {
-                //return 0;
-            }
+            /*if ( h == h2 && h == h4 && h == h6 && h == h8 ) {
+                return 0;
+            }*/
 
             uint8_t slope = 0;
             if ( (h8 > h || h1 > h || h2 > h) && !(h8 > h + 1 || h1 > h + 1 || h2 > h + 1) ) {
-                slope |= 0b0000'0001u;
+                slope |= slope::bitSlopeDownLeft;
             }
 
             if ( (h2 > h || h3 > h || h4 > h) && !(h2 > h + 1 || h3 > h + 1 || h4 > h + 1) ) {
-                slope |= 0b0000'0010u;
+                slope |= slope::bitSlopeDownRight;
             }
 
             if ( (h4 > h || h5 > h || h6 > h) && !(h4 > h + 1 || h5 > h + 1 || h6 > h + 1) ) {
-                slope |= 0b0000'0100u;
+                slope |= slope::bitSlopeUpRight;
             }
 
             if ( (h6 > h || h7 > h || h8 > h) && !(h6 > h + 1 || h7 > h + 1 || h8 > h + 1) ) {
-                slope |= 0b0000'1000u;
+                slope |= slope::bitSlopeUpLeft;
             }
 /*
             if ( h == h2 ) {

@@ -13,8 +13,13 @@ namespace isomap {
         Unit::Unit( Player* owner, int32_t x, int32_t y, int32_t z, common::UnitType* unitType,
                     uint32_t orientation ) :
                 Object( owner ),
-                m_data( {id(), unitType->id(), 0, x * math::fix::precision, y * math::fix::precision,
-                         z * math::fix::precision, orientation} ),
+                m_data( {id(),
+                         unitType->id(),
+                         0,
+                         x * math::fix::precision + math::fix::halfPrecision,
+                         y * math::fix::precision + math::fix::halfPrecision,
+                         z * math::fix::precision,
+                         orientation} ),
                 m_type( unitType ) {
             m_data.payload = unitType->initialPayload();
         }

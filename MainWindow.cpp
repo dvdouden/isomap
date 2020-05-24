@@ -366,28 +366,55 @@ void MainWindow::keyPressEvent( unsigned short ch, vl::EKey key ) {
             break;
 
         case vl::Key_Z:
-            if ( m_structureType > 1 ) {
-                m_structureType--;
+            if ( m_mode == PlaceStructure ) {
+                if ( m_structureType > 1 ) {
+                    m_structureType--;
+                }
+            } else if ( m_mode == PlaceUnit ) {
+                if ( m_unitType > 1 ) {
+                    m_unitType--;
+                }
             }
+
             break;
 
         case vl::Key_X:
-            if ( m_structureType < 5 ) {
-                m_structureType++;
+            if ( m_mode == PlaceStructure ) {
+                if ( m_structureType < 5 ) {
+                    m_structureType++;
+                }
+            } else if ( m_mode == PlaceUnit ) {
+                if ( m_unitType < 3 ) {
+                    m_unitType++;
+                }
             }
             break;
 
         case vl::Key_A:
-            m_structureOrientation--;
-            if ( m_structureOrientation < 0 ) {
-                m_structureOrientation += 4;
+            if ( m_mode == PlaceStructure ) {
+                m_structureOrientation--;
+                if ( m_structureOrientation < 0 ) {
+                    m_structureOrientation += 4;
+                }
+            } else if ( m_mode == PlaceUnit ) {
+                m_unitOrientation--;
+                if ( m_unitOrientation < 0 ) {
+                    m_unitOrientation += 8;
+                }
             }
             break;
 
         case vl::Key_S:
-            m_structureOrientation++;
-            if ( m_structureOrientation >= 4 ) {
-                m_structureOrientation -= 4;
+            if ( m_mode == PlaceStructure ) {
+                m_structureOrientation++;
+                if ( m_structureOrientation >= 4 ) {
+                    m_structureOrientation -= 4;
+                }
+            } else if ( m_mode == PlaceUnit ) {
+                m_unitOrientation++;
+                if ( m_unitOrientation >= 8 ) {
+                    m_unitOrientation -= 8;
+                }
             }
             break;
 
@@ -977,8 +1004,8 @@ void MainWindow::place( int x, int y, bool first ) {
             if ( x >= 0 && x < m_renderTerrain->width() && y >= 0 && y < m_renderTerrain->height() &&
                  m_renderTerrain->isVisible( x, y ) &&
                  (m_renderTerrain->occupancy( x, y ) & isomap::common::occupancy::bitObstructed) == 0 ) {
-                m_controllingPlayer->controller()->buildUnit( x, y, isomap::common::UnitType::get( 1 ),
-                                                              m_structureOrientation );
+                m_controllingPlayer->controller()->buildUnit( x, y, isomap::common::UnitType::get( m_unitType ),
+                                                              m_unitOrientation );
             }
             break;
         }
@@ -1178,7 +1205,7 @@ void MainWindow::updateText() {
                                                  << m_controllingPlayer->maxCredits()
                                                  << m_unitType
                                                  << isomap::common::UnitType::get( m_unitType )->name()
-                                                 << m_structureOrientation
+                                                 << m_unitOrientation
                                                  << m_cursorX
                                                  << m_cursorY );
                     } else {
@@ -1199,7 +1226,7 @@ void MainWindow::updateText() {
                                                  << m_controllingPlayer->maxCredits()
                                                  << m_unitType
                                                  << isomap::common::UnitType::get( m_unitType )->name()
-                                                 << m_structureOrientation
+                                                 << m_unitOrientation
                                                  << m_cursorX
                                                  << m_cursorY );
                     }
@@ -1221,7 +1248,7 @@ void MainWindow::updateText() {
                                              << m_controllingPlayer->maxCredits()
                                              << m_unitType
                                              << isomap::common::UnitType::get( m_unitType )->name()
-                                             << m_structureOrientation
+                                             << m_unitOrientation
                                              << m_cursorX
                                              << m_cursorY );
                 }

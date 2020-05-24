@@ -144,6 +144,10 @@ namespace isomap {
                                 r = 128;
                                 g = 0;
                                 b = 128;
+                            } else if ( occupancy & common::occupancy::bitUnit ) {
+                                r = 0;
+                                g = 255;
+                                b = 255;
                             }
                         }
 

@@ -23,10 +23,10 @@ namespace isomap {
         }
 
         namespace slope {
-            const uint8_t bitSlopeDown = 0b0000'0001u;
-            const uint8_t bitSlopeRight = 0b0000'0010u;
-            const uint8_t bitSlopeUp = 0b0000'0100u;
-            const uint8_t bitSlopeLeft = 0b0000'1000u;
+            const uint8_t bitSlopeDownLeft = 0b0000'0001u;
+            const uint8_t bitSlopeDownRight = 0b0000'0010u;
+            const uint8_t bitSlopeUpRight = 0b0000'0100u;
+            const uint8_t bitSlopeUpLeft = 0b0000'1000u;
             const uint8_t slopeMask = 0b0000'1111u;
 
             const uint8_t bitCliffDown = 0b0001'0000u;
@@ -42,8 +42,9 @@ namespace isomap {
             const uint8_t bitReserved = 0b0000'0100u;
             const uint8_t bitSpawnPoint = 0b0000'1000u;
             const uint8_t bitDockingPoint = 0b0001'0000u;
+            const uint8_t bitUnit = 0b0010'0000u;
             const uint8_t bitDockAndSpawn = bitSpawnPoint | bitDockingPoint;
-            const uint8_t bitsPassable = bitObstructed | bitReserved;
+            const uint8_t bitsPassable = uint8_t( bitObstructed | bitReserved ) | bitUnit;
             const uint8_t maskStructureBits = uint8_t(
                     uint32_t( bitObstructed ) | bitConstructed | bitSpawnPoint | bitDockingPoint );
         }
@@ -80,6 +81,10 @@ namespace isomap {
             void reserve( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
 
             void unreserve( uint32_t x, uint32_t y, const common::FootPrint* footPrint );
+
+            void reserveUnit( uint32_t x, uint32_t y );
+
+            void unreserveUnit( uint32_t x, uint32_t y );
 
             void updatePathMap();
 
