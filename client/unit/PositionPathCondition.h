@@ -19,7 +19,6 @@ namespace isomap {
                 uint32_t m_target;
             };
 
-
         }
 
     }

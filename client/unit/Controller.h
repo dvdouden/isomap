@@ -66,6 +66,8 @@ namespace isomap {
 
                 void updateWayPoints();
 
+                std::vector<common::WayPoint> findPath( const PathCondition& pathCondition ) const;
+
                 Unit* m_unit;
                 std::vector<common::WayPoint> m_wayPoints;
                 WorkProvider* m_workProvider = nullptr;

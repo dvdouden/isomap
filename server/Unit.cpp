@@ -322,7 +322,8 @@ namespace isomap {
                     int32_t oldTileY = tileY();
 
                     if ( !m_data.updateMotion( terrain->data() ) ) {
-                        printf( "[%d] Halt!\n", id() );
+                        printf( "[%d] Halt! %d,%d while moving to %d,%d\n", id(), m_data.x, m_data.y, m_data.wayPoint.x,
+                                m_data.wayPoint.y );
                         m_data.setState( common::Idle );
                         delete msg;
                         m_wayPoints.clear();

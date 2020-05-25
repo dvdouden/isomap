@@ -86,6 +86,10 @@ namespace isomap {
 
             void unreserveUnit( uint32_t x, uint32_t y );
 
+            bool reservedByUnit( uint32_t x, uint32_t y ) const {
+                return (occupancy( x, y ) & occupancy::bitUnit) != 0;
+            }
+
             void updatePathMap();
 
             void updatePathMap( uint32_t x, uint32_t y, uint32_t width, uint32_t height );

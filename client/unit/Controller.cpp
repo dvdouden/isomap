@@ -6,6 +6,7 @@
 #include "../Structure.h"
 #include "../Player.h"
 #include "../Terrain.h"
+#include "WayPointRetryPathCondition.h"
 
 namespace isomap {
     namespace client {
@@ -176,12 +177,76 @@ namespace isomap {
             }
 
             bool Controller::moveTo( const PathCondition& pathCondition ) {
-                m_wayPoints.clear();
+                m_wayPoints = findPath( pathCondition );
+                if ( !m_wayPoints.empty() ) {
+                    m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                    common::UnitCommandMessage::moveMsg(
+                                                                            m_wayPoints ) );
+                    return true;
+                }
+                return false;
+            }
 
+            Structure* Controller::assignedStructure() {
+                if ( m_assignedStructureId == 0 ) {
+                    return nullptr;
+                }
+                Structure* structure = m_unit->player()->getStructure( m_assignedStructureId );
+                if ( structure == nullptr ) {
+                    m_assignedStructureId = 0;
+                }
+                return structure;
+            }
+
+            void Controller::onMove() {
+                updateWayPoints();
+            }
+
+            void Controller::onDone() {
+                if ( unit()->lastState() == common::Moving ) {
+                    updateWayPoints();
+                }
+            }
+
+            void Controller::onAbort() {
+                if ( unit()->lastState() == common::Moving ) {
+                    printf( "Unit stopped moving at %d, %d while moving to %d, %d\n",
+                            unit()->data().x, unit()->data().y, unit()->data().wayPoint.x, unit()->data().wayPoint.y );
+                    if ( !unit()->player()->terrain()->data().hasPath( unit()->tileX(), unit()->tileY(),
+                                                                       unit()->orientation() ) ) {
+                        printf( "Due to landscape or structure change!\n" );
+                    } else if ( unit()->player()->terrain()->data().reservedByUnit( unit()->tileX(),
+                                                                                    unit()->tileY() ) ) {
+                        printf( "Reserved by unit\n" );
+                    }
+                    std::vector<common::WayPoint> wayPoints = findPath(
+                            WayPointRetryPathCondition(
+                                    m_wayPoints.back(),
+                                    unit()->player()->terrain()->data(),
+                                    300 ) );
+                    if ( !wayPoints.empty() ) {
+                        m_wayPoints.pop_back();
+                        m_wayPoints.insert( m_wayPoints.end(), wayPoints.begin(), wayPoints.end() );
+                        m_unit->player()->controller()->enqueueMessage( m_unit->id(),
+                                                                        common::UnitCommandMessage::moveMsg(
+                                                                                m_wayPoints ) );
+                    }
+                }
+            }
+
+            void Controller::updateWayPoints() {
+                if ( !m_wayPoints.empty() &&
+                     m_wayPoints.back().x == m_unit->tileX() &&
+                     m_wayPoints.back().y == m_unit->tileY() ) {
+                    m_wayPoints.pop_back();
+                }
+            }
+
+            std::vector<common::WayPoint> Controller::findPath( const PathCondition& pathCondition ) const {
                 auto* terrain = m_unit->player()->terrain();
 
-                auto width = terrain->width();
-                auto height = terrain->height();
+                uint32_t width = terrain->width();
+                uint32_t height = terrain->height();
 
                 // create buffer for A* algorithm
                 struct node {
@@ -219,138 +284,116 @@ namespace isomap {
                     if ( canReach & common::path::bitDownLeft ) {
                         //printf( "down left\n" );
                         uint32_t idx = tile.from - width - 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 5 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitDown ) {
                         //printf( "down\n" );
                         uint32_t idx = tile.from - width;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 4 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitDownRight ) {
                         //printf( "down right\n" );
                         uint32_t idx = tile.from - width + 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 3 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitRight ) {
                         //printf( "right\n" );
                         uint32_t idx = tile.from + 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 2 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitUpRight ) {
                         //printf( "right up\n" );
                         uint32_t idx = tile.from + width + 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 1 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitUp ) {
                         //printf( "up\n" );
                         uint32_t idx = tile.from + width;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 0 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitUpLeft ) {
                         //printf( "up left\n" );
                         uint32_t idx = tile.from + width - 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 15 + common::slopeAngle( slopeBits, 7 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                     if ( canReach & common::path::bitLeft ) {
                         //printf( "left\n" );
                         uint32_t idx = tile.from - 1;
-                        if ( nodeMap[idx].value == 0 ) {
+                        if ( nodeMap[idx].value == 0 && pathCondition.canReach( tile.from, idx ) ) {
                             nodeMap[idx].value = value.value + 10 + common::slopeAngle( slopeBits, 6 );
                             nodeMap[idx].from = tile.from;
-                            todo.push( {nodeMap[idx].value, idx} );
+                            if ( nodeMap[idx].value < pathCondition.maxValue() ) {
+                                todo.push( {nodeMap[idx].value, idx} );
+                            }
                         }
                     }
                 }
-                if ( found ) {
-                    printf( "Found a route!\n" );
-                    uint8_t lastOrientation = 8;
-                    while ( targetIdx != startIdx ) {
-                        auto wayPointX = (int32_t)(targetIdx % width);
-                        auto wayPointY = (int32_t)(targetIdx / width);
-                        //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, wayPointX, wayPointY );
-                        targetIdx = nodeMap[targetIdx].from;
 
-                        auto tile_x = (int32_t)(targetIdx % width);
-                        auto tile_y = (int32_t)(targetIdx / width);
-                        uint8_t orientation = common::UnitData::getOrientation( wayPointX - tile_x,
-                                                                                wayPointY - tile_y );
-                        if ( m_wayPoints.empty() || orientation != lastOrientation ) {
-                            m_wayPoints.push_back( {wayPointX, wayPointY} );
-                            lastOrientation = orientation;
-                        }
-
-                    }
-                    m_unit->player()->controller()->enqueueMessage( m_unit->id(),
-                                                                    common::UnitCommandMessage::moveMsg(
-                                                                            m_wayPoints ) );
-                    return true;
-                } else {
+                if ( !found ) {
                     printf( "No route!\n" );
-                    return false;
+                    return std::vector<common::WayPoint>();
                 }
-            }
+                printf( "Found a route!\n" );
+                std::vector<common::WayPoint> wayPoints;
+                uint8_t lastOrientation = 8;
+                while ( targetIdx != startIdx ) {
+                    auto wayPointX = (int32_t)(targetIdx % width);
+                    auto wayPointY = (int32_t)(targetIdx / width);
+                    //printf( "[%d]: %d %d\n", nodeMap[targetIdx].value, wayPointX, wayPointY );
+                    targetIdx = nodeMap[targetIdx].from;
 
-            Structure* Controller::assignedStructure() {
-                if ( m_assignedStructureId == 0 ) {
-                    return nullptr;
+                    auto tile_x = (int32_t)(targetIdx % width);
+                    auto tile_y = (int32_t)(targetIdx / width);
+                    uint8_t orientation = common::UnitData::getOrientation( wayPointX - tile_x,
+                                                                            wayPointY - tile_y );
+                    if ( wayPoints.empty() || orientation != lastOrientation ) {
+                        wayPoints.push_back( {wayPointX, wayPointY} );
+                        lastOrientation = orientation;
+                    }
                 }
-                Structure* structure = m_unit->player()->getStructure( m_assignedStructureId );
-                if ( structure == nullptr ) {
-                    m_assignedStructureId = 0;
-                }
-                return structure;
-            }
-
-            void Controller::onMove() {
-                updateWayPoints();
-            }
-
-            void Controller::onDone() {
-                if ( unit()->lastState() == common::Moving ) {
-                    updateWayPoints();
-                }
-            }
-
-            void Controller::onAbort() {
-                if ( unit()->lastState() == common::Moving ) {
-
-                }
-            }
-
-            void Controller::updateWayPoints() {
-                if ( !m_wayPoints.empty() &&
-                     m_wayPoints.back().x == m_unit->tileX() &&
-                     m_wayPoints.back().y == m_unit->tileY() ) {
-                    m_wayPoints.pop_back();
-                }
+                return wayPoints;
             }
 
         }

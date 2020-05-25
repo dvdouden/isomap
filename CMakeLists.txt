@@ -92,6 +92,7 @@ add_executable(
         client/unit/PositionPathCondition.h
         client/unit/Renderer.cpp
         client/unit/Renderer.h
+        client/unit/WayPointRetryPathCondition.h
         client/unit/WorkProvider.h
         common/types.h
         common/FootPrint.cpp
