@@ -31,6 +31,10 @@ namespace isomap {
                 case common::UnitCommandMessage::Move:
                     // FIXME: stop doing what you're doing!
                     m_wayPoints = msg->wayPoints();
+                    printf( "[%d] (%d,%d) move to %d waypoints\n", id(), tileX(), tileY(), m_wayPoints.size() );
+                    for ( auto& wayPoint : m_wayPoints ) {
+                        printf( "\t%d,%d\n", wayPoint.x, wayPoint.y );
+                    }
                     break;
 
                 case common::UnitCommandMessage::Construct: {
@@ -294,12 +298,21 @@ namespace isomap {
                     if ( m_wayPoints.empty() ) {
                         return nullptr;
                     }
+                    printf( "[%d] moving to next way point %d, %d (%d remaining)\n", id(), m_wayPoints.back().x,
+                            m_wayPoints.back().y, m_wayPoints.size() );
 
                     m_data.setState( common::Moving );
-                    m_data.wayPoint = m_wayPoints.back();
-                    m_data.wayPoint.x = (m_data.wayPoint.x * math::fix::precision) + math::fix::halfPrecision;
-                    m_data.wayPoint.y = (m_data.wayPoint.y * math::fix::precision) + math::fix::halfPrecision;
-                    m_wayPoints.pop_back();
+                    do {
+                        if ( m_wayPoints.empty() ) {
+                            m_data.setState( common::Idle );
+                            return common::PlayerServerMessage::unitMsg(
+                                    common::UnitServerMessage::doneMsg( m_data ) );;
+                        }
+                        m_data.wayPoint = m_wayPoints.back();
+                        m_data.wayPoint.x = (m_data.wayPoint.x * math::fix::precision) + math::fix::halfPrecision;
+                        m_data.wayPoint.y = (m_data.wayPoint.y * math::fix::precision) + math::fix::halfPrecision;
+                        m_wayPoints.pop_back();
+                    } while ( m_data.x == m_data.wayPoint.x && m_data.y == m_data.wayPoint.y );
                     msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::moveToMsg( m_data ) );
                     // FALL THROUGH!
                 }
@@ -309,6 +322,7 @@ namespace isomap {
                     int32_t oldTileY = tileY();
 
                     if ( !m_data.updateMotion( terrain->data() ) ) {
+                        printf( "[%d] Halt!\n", id() );
                         m_data.setState( common::Idle );
                         delete msg;
                         m_wayPoints.clear();
@@ -324,6 +338,7 @@ namespace isomap {
                     if ( m_data.state == common::Idle ) {
                         // reached wayPoint
                         if ( m_wayPoints.empty() ) {
+                            printf( "[%d] Done!\n", id() );
                             delete msg;
                             msg = common::PlayerServerMessage::unitMsg( common::UnitServerMessage::doneMsg( m_data ) );
                         }

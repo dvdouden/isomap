@@ -14,17 +14,21 @@ namespace isomap {
             orientation = getOrientation( dX, dY );
             uint32_t oldTileX = tileX();
             uint32_t oldTileY = tileY();
+            uint32_t oldSubX = subTileX();
+            uint32_t oldSubY = subTileY();
             if ( onCenterOfTile() ) {
                 // about to move to the next tile
 
                 // first check if there's a path to the next tile from the current tile
                 if ( !terrain.hasPath( tileX(), tileY(), orientation ) ) {
+                    printf( "No path at %d, %d in direction %d\n", tileX(), tileY(), orientation );
                     return false;
                 }
                 // secondly check if tile is actually available
                 int32_t mX, mY;
                 getMotion( mX, mY, orientation, 1 );
                 if ( terrain.impassable( tileX() + mX, tileY() + mY ) ) {
+                    printf( "Path blocked at %d, %d\n", tileX() + mX, tileY() + mY );
                     return false;
                 }
                 terrain.reserveUnit( tileX() + mX, tileY() + mY );
@@ -45,8 +49,14 @@ namespace isomap {
                 y = (terrain.mapHeight - 1) * math::fix::precision;
             }
 
+            // unreserve old tile when moving to new tile
             if ( tileX() != oldTileX || tileY() != oldTileY ) {
-                terrain.unreserveUnit( oldTileX, oldTileY );
+                // special case: when moving upLeft or downRight, we're going to pass through x.0, y.0
+                // in those cases, we should not unreserve
+                // for example, when moving from [2.5, 1.5] to [3.5, 0.5], we're going to cross through [3.0, 1.0]
+                if ( !(oldSubX == 0 && oldSubY == 0 && (orientation == 3 || orientation == 7)) ) {
+                    terrain.unreserveUnit( oldTileX, oldTileY );
+                }
             }
 
             z = terrain.heightAt( x, y );

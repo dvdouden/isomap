@@ -53,6 +53,9 @@ namespace isomap {
         }
 
         void Unit::update() {
+            if ( !m_visible ) {
+                return;
+            }
             switch ( m_data.state ) {
                 case common::Moving: {
                     int32_t oldTileX = tileX();
@@ -94,6 +97,14 @@ namespace isomap {
                 m_visible = false;
                 if ( m_renderer ) {
                     m_renderer->setInvisible();
+                }
+                m_player->terrain()->data().unreserveUnit( tileX(), tileY() );
+                if ( m_data.state == common::Moving ) {
+                    printf( "Was moving out of sight, currently at %d.%d, %d.%d\n", tileX(), subTileX(), tileY(),
+                            subTileY() );
+                    int32_t mX, mY;
+                    common::UnitData::getMotion( mX, mY, m_data.orientation, 1 );
+                    m_player->terrain()->data().unreserveUnit( tileX() + mX, tileY() + mY );
                 }
             }
         }
