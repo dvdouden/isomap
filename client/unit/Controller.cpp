@@ -125,7 +125,7 @@ namespace isomap {
 
             void Controller::dump() {
                 printf( "Controller:\n" );
-                printf( "\tWaypoints: %d\n", m_wayPoints.size() );
+                printf( "\tWaypoints: %lu\n", m_wayPoints.size() );
             }
 
             void Controller::onMessage( common::UnitServerMessage::Type msgType ) {
@@ -219,14 +219,9 @@ namespace isomap {
                                                                                     unit()->tileY() ) ) {
                         printf( "Reserved by unit\n" );
                     }
-                    std::vector<common::WayPoint> wayPoints = findPath(
-                            WayPointRetryPathCondition(
-                                    m_wayPoints.back(),
-                                    unit()->player()->terrain()->data(),
-                                    300 ) );
+                    std::vector<common::WayPoint> wayPoints = findAlternativePath( m_wayPoints );
                     if ( !wayPoints.empty() ) {
-                        m_wayPoints.pop_back();
-                        m_wayPoints.insert( m_wayPoints.end(), wayPoints.begin(), wayPoints.end() );
+                        m_wayPoints = wayPoints;
                         m_unit->player()->controller()->enqueueMessage( m_unit->id(),
                                                                         common::UnitCommandMessage::moveMsg(
                                                                                 m_wayPoints ) );
@@ -394,6 +389,52 @@ namespace isomap {
                     }
                 }
                 return wayPoints;
+            }
+
+            std::vector<common::WayPoint> Controller::findAlternativePath( const common::WayPoint& wayPoint, const common::WayPoint& prevWayPoint ) const {
+                uint32_t orientation = common::UnitData::getOrientation( wayPoint.x - prevWayPoint.x, wayPoint.y - prevWayPoint.y );
+                int32_t dX, dY;
+                common::UnitData::getMotion( dX, dY, orientation, 1 );
+
+                int32_t x = prevWayPoint.x + dX;
+                int32_t y = prevWayPoint.y + dY;
+
+                for ( ; ; ) {
+                    common::WayPoint w = { x, y };
+                    std::vector<common::WayPoint> result = findPath(
+                            WayPointRetryPathCondition(
+                                    w,
+                                    unit()->player()->terrain()->data(),
+                                    300 ) );
+                    if ( !result.empty() ) {
+                        return result;
+                    }
+                    if ( w == wayPoint ) {
+                        return std::vector<common::WayPoint>();
+                    }
+                    x += dX;
+                    y += dY;
+                }
+            }
+
+            std::vector<common::WayPoint>
+            Controller::findAlternativePath( const std::vector<common::WayPoint>& wayPoints ) const {
+                std::vector<common::WayPoint> oldRoute = wayPoints;
+                common::WayPoint wp { m_unit->tileX(), m_unit->tileY() };
+
+                while ( !oldRoute.empty() ) {
+                    std::vector<common::WayPoint> newRoute = findAlternativePath( oldRoute.back(), wp );
+                    if ( !newRoute.empty() ) {
+                        if ( newRoute.front() == oldRoute.back() ) {
+                            oldRoute.pop_back();
+                        }
+                        oldRoute.insert( oldRoute.end(), newRoute.begin(), newRoute.end() );
+                        return oldRoute;
+                    }
+                    wp = oldRoute.back();
+                    oldRoute.pop_back();
+                }
+                return std::vector<common::WayPoint>();
             }
 
         }

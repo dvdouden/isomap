@@ -67,6 +67,8 @@ namespace isomap {
                 void updateWayPoints();
 
                 std::vector<common::WayPoint> findPath( const PathCondition& pathCondition ) const;
+                std::vector<common::WayPoint> findAlternativePath( const common::WayPoint& wayPoint, const common::WayPoint& prevWayPoint ) const;
+                std::vector<common::WayPoint> findAlternativePath( const std::vector<common::WayPoint>& wayPoints ) const;
 
                 Unit* m_unit;
                 std::vector<common::WayPoint> m_wayPoints;

@@ -31,7 +31,7 @@ namespace isomap {
                 case common::UnitCommandMessage::Move:
                     // FIXME: stop doing what you're doing!
                     m_wayPoints = msg->wayPoints();
-                    printf( "[%d] (%d,%d) move to %d waypoints\n", id(), tileX(), tileY(), m_wayPoints.size() );
+                    printf( "[%d] (%d,%d) move to %lu waypoints\n", id(), tileX(), tileY(), m_wayPoints.size() );
                     for ( auto& wayPoint : m_wayPoints ) {
                         printf( "\t%d,%d\n", wayPoint.x, wayPoint.y );
                     }
@@ -298,7 +298,7 @@ namespace isomap {
                     if ( m_wayPoints.empty() ) {
                         return nullptr;
                     }
-                    printf( "[%d] moving to next way point %d, %d (%d remaining)\n", id(), m_wayPoints.back().x,
+                    printf( "[%d] moving to next way point %d, %d (%lu remaining)\n", id(), m_wayPoints.back().x,
                             m_wayPoints.back().y, m_wayPoints.size() );
 
                     m_data.setState( common::Moving );

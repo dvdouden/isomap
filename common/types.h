@@ -52,6 +52,14 @@ namespace isomap {
         struct WayPoint {
             int32_t x;
             int32_t y;
+
+            bool operator==( const WayPoint& rhs ) const {
+                return x == rhs.x && y == rhs.y;
+            }
+
+            bool operator!=( const WayPoint& rhs ) const {
+                return !(*this == rhs);
+            }
         };
     }
 }
